@@ -2,7 +2,7 @@ import './globals.css'
 import { Geist, Geist_Mono } from "next/font/google";
 import { Metadata } from 'next'
 import { Providers } from '@/components/providers/theme-provider'
-
+import NavbarWrapper from '@/components/custom/custom-ui/navbar-home-wrapper';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,10 +14,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-
 export const metadata: Metadata = {
-  title: 'Ctrl Alt Work Coworking Space',
-  description: 'Ctrl Alt Work Coworking Space (CAW), launched in 2019, is the first coworking space in Legazpi City, Albay, designed to embody the aesthetics and functionality of a modern shared workspace.',
+  title: 'Barangay Taysan, Legazpi City',
+  description: 'The official website of Barangay Taysan, Legazpi City. Find information about officials, services, and contact details.',
   icons: { icon: '/logo.png' },
 }
 
@@ -30,7 +29,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         suppressHydrationWarning
       >
         <Providers>
-          <div className="h-screen" suppressHydrationWarning>
+          <NavbarWrapper /> {/* ✅ Navbar Logic Moved to a Client Component */}
+          <div className="h-screen pt-16">
             {children}
           </div>
         </Providers>
