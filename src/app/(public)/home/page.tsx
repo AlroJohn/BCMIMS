@@ -178,31 +178,43 @@ export default function HomePage() {
       </section>
       
       {/* Location Section */}
-      <section>
-        <h2 className="text-3xl font-bold mb-6">Find Us</h2>
-        <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0">
-            <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.802548850011!2d120.9787395!3d14.5541851!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c9f1b325d4bf%3A0x492c2bd2d5570120!2sCity%20of%20Manila%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1631782430884!5m2!1sen!2sph" 
-              width="100%" 
-              height="100%" 
-              style={{ border: 0 }} 
-              allowFullScreen 
-              loading="lazy"
-            ></iframe>
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 bg-white/90 p-4 backdrop-blur-sm">
-            <div className="flex items-start gap-4">
-              <MapPin className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-semibold text-lg">Barangay Office</h3>
-                <p className="text-gray-700">123 Main Street, Barangay Example, Manila, Philippines</p>
-                <p className="text-gray-700">(02) 8123-4567 | example@barangay.gov.ph</p>
-              </div>
-            </div>
-          </div>
+{/* Location Section */}
+<section>
+  <h2 className="text-3xl font-bold mb-6">Find Us</h2>
+  <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center relative overflow-hidden">
+    <div className="absolute inset-0">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3869.965933518854!2d123.74494231533854!3d13.11304799047676!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33a1000000000000%3A0x0000000000000000!2sBarangay%2056-Taysan%2C%20Albay%2C%20Philippines!5e0!3m2!1sen!2sph!4v1712345678901!5m2!1sen!2sph"
+        width="100%"
+        height="100%"
+        style={{ border: 0 }}
+        allowFullScreen
+        loading="lazy"
+      ></iframe>
+    </div>
+    
+    {/* Custom Map Marker */}
+    <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+      <div className="flex flex-col items-center">
+        <div className="w-6 h-6 rounded-full bg-red-600 border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold">
+          B
         </div>
-      </section>
+        <div className="w-2 h-2 bg-red-600 rotate-45 -mt-1"></div>
+      </div>
+    </div>
+    
+    <div className="absolute bottom-0 left-0 right-0 bg-white/90 p-4 backdrop-blur-sm">
+      <div className="flex items-start gap-4">
+        <MapPin className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
+        <div>
+          <h3 className="font-semibold text-lg">Barangay Taysan Office</h3>
+          <p className="text-gray-700">Barangay 56-Taysan, Albay, Bicol Region, Philippines</p>
+          <p className="text-gray-700">(02) 8123-4567 | taysan@barangay.gov.ph</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
     </div>
   );
 }
