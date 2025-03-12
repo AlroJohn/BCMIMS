@@ -1,12 +1,6 @@
-import Auth from "./auth/page";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return (
-    <div className="min-h-screen">
-      <main className="h-full w-full">
-        <Auth />
-      </main>
-    </div>
-  );
+  // Redirect to /home
+  redirect("/home");
 }
-  

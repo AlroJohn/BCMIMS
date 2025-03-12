@@ -1,10 +1,13 @@
 'use client';
 
+import Navbar from "@/components/custom/custom-ui/navbar-home";
 import SigninWrapper from "../../components/custom/auth-component/signin-form";
 
 const Auth = () => {
     return (
         <div className="relative w-full h-screen flex">
+                        <Navbar />
+
             {/* Fullscreen Background Image */}
             <div className="absolute inset-0">
                 <img 

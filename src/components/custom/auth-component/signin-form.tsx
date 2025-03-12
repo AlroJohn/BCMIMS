@@ -6,9 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/custom/theme/theme-toggle";
 import { useLogin } from "@/hooks/useSignin-hooks";
+import Link from "next/link";
 
 const SigninWrapper = () => {
     const { formData, handleChange, handleSubmit, loading } = useLogin();
+
+    // Updated page routes to remove "/dashboard" since (dashboard) is a Route Group
+    const pages = [
+        { name: "Admin", path: "/admin" },
+        { name: "Education", path: "/education" },
+        { name: "Environment", path: "/environment" },
+        { name: "Finance", path: "/finance" },
+        { name: "Health Services", path: "/health-services" },
+        { name: "Peace Order", path: "/peace-order" },
+        { name: "Public Works", path: "/public-works" },
+    ];
 
     return (
         <div className="flex items-center justify-center h-full w-full p-4">
@@ -61,6 +73,21 @@ const SigninWrapper = () => {
                         >
                             {loading ? "Logging in..." : "LOGIN"}
                         </Button>
+
+                        {/* Add buttons for page navigation */}
+                        <div className="mt-4 space-y-2">
+                            <p className="text-sm text-gray-600">Quick Access:</p>
+                            {pages.map((page) => (
+                                <Button
+                                    key={page.path}
+                                    asChild
+                                >
+                                    <Link href={page.path} className="w-full">
+                                        {page.name}
+                                    </Link>
+                                </Button>
+                            ))}
+                        </div>
                     </form>
                 </CardContent>
             </Card>
