@@ -20,13 +20,14 @@ export default function UploadProjectModal({ onClose }: UploadProjectModalProps)
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const budgetRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    if (!titleRef.current || !descriptionRef.current || !fileRef.current) {
+    if (!titleRef.current || !descriptionRef.current || !fileRef.current || !budgetRef.current) {
       console.error("One or more input refs are not set.");
       setLoading(false);
       return;
@@ -43,6 +44,7 @@ export default function UploadProjectModal({ onClose }: UploadProjectModalProps)
     formData.append("description", descriptionRef.current.value);
     formData.append("postedById", user.id);
     formData.append("proposedDate", selectedDate.toISOString());
+    formData.append("budget", budgetRef.current.value);
 
     if (fileRef.current.files && fileRef.current.files[0]) {
       formData.append("file", fileRef.current.files[0]);
@@ -98,6 +100,16 @@ export default function UploadProjectModal({ onClose }: UploadProjectModalProps)
               type="date"
               value={selectedDate ? selectedDate.toISOString().split("T")[0] : ""}
               onChange={(e) => setSelectedDate(e.target.value ? new Date(e.target.value) : null)}
+              required
+              className="border rounded p-2"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="font-medium">Budget</span>
+            <input
+              type="number"
+              placeholder="Budget"
+              ref={budgetRef}
               required
               className="border rounded p-2"
             />

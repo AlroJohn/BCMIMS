@@ -36,15 +36,17 @@ model ProjectProposal {
   id           String                   @id @default(uuid())
   title        String
   description  String
-  status       ProjectProposalStatus
   proposedDate DateTime                 @default(now())
   fileUrl      String
   postedById   String
+  budget       Float                    // new budget field
   postedBy     User                     @relation(fields: [postedById], references: [id])
   approvedBy   ApprovedBy[]             // Relation to approvals
+  votes        Vote[]
+  
   @@map("project_proposals")
-  votes             Vote[]
 }
+
 
 
 model Vote {
@@ -73,12 +75,6 @@ model ApprovedBy {
   @@map("approved_By")
 }
 
-enum ProjectProposalStatus {
-  pending
-  approved
-  urgent
-  rejected
-}
 enum ApprovedStatus {
   Pending
   Approved

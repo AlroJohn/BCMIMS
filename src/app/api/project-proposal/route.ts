@@ -18,6 +18,7 @@ export async function POST(request: Request) {
     const description = formData.get("description") as string;
     const postedById = formData.get("postedById") as string;
     const proposedDateStr = formData.get("proposedDate") as string;
+    const budgetStr = formData.get("budget") as string;
     const file = formData.get("file") as File;
 
     if (!file) {
@@ -34,11 +35,27 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!budgetStr) {
+      return NextResponse.json(
+        { message: "Budget is required" },
+        { status: 400 }
+      );
+    }
+
     // Convert the proposedDate string to a Date object
     const proposedDate = new Date(proposedDateStr);
     if (isNaN(proposedDate.getTime())) {
       return NextResponse.json(
         { message: "Invalid proposed date" },
+        { status: 400 }
+      );
+    }
+
+    // Parse the budget to a number
+    const budget = parseFloat(budgetStr);
+    if (isNaN(budget)) {
+      return NextResponse.json(
+        { message: "Invalid budget value" },
         { status: 400 }
       );
     }
@@ -49,7 +66,7 @@ export async function POST(request: Request) {
     // Create a unique file name
     const fileName = `${Date.now()}-${file.name}`;
 
-    // Upload the file to Supabase Storage (bucket: "project-files")
+    // Upload the file to Supabase Storage (bucket: "project_files")
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("project_files")
       .upload(fileName, buffer, {
@@ -76,10 +93,10 @@ export async function POST(request: Request) {
       data: {
         title,
         description,
-        status: "pending", // default status
         fileUrl: publicUrl,
         postedById,
-        proposedDate, // new required field
+        proposedDate, // required field
+        budget,       // new budget field
       },
     });
 
