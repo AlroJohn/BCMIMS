@@ -16,7 +16,9 @@ model User {
   role              UserRole 
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
-  projectProposals  ProjectProposal[]   // Back relation: proposals posted by this user
+  projectProposals  ProjectProposal[]   // Proposals posted by this user
+  approvedBy        ApprovedBy[]        // Approvals done by this user
+  votes             Vote[]
   @@map("users")
 }
 
@@ -36,10 +38,39 @@ model ProjectProposal {
   description  String
   status       ProjectProposalStatus
   proposedDate DateTime                 @default(now())
-  approvedby   Json?
+  fileUrl      String
   postedById   String
-  postedBy     User     @relation(fields: [postedById], references: [id])
+  postedBy     User                     @relation(fields: [postedById], references: [id])
+  approvedBy   ApprovedBy[]             // Relation to approvals
   @@map("project_proposals")
+  votes             Vote[]
+}
+
+
+model Vote {
+  id         String          @id @default(uuid())
+  userId     String
+  proposalId String
+  vote       Boolean         // For example: true for 'yes' and false for 'no'
+  votedAt    DateTime        @default(now())
+
+  user       User            @relation(fields: [userId], references: [id])
+  proposal   ProjectProposal @relation(fields: [proposalId], references: [id])
+
+  @@unique([userId, proposalId])
+}
+
+
+
+model ApprovedBy {
+  id          String            @id @default(uuid())
+  userId      String            // This must be required if approval is mandatory
+  status      ApprovedStatus
+  comment     String?
+  proposalId  String            // ID of the project proposal being approved
+  approvedBy  User              @relation(fields: [userId], references: [id])
+  proposal    ProjectProposal   @relation(fields: [proposalId], references: [id])
+  @@map("approved_By")
 }
 
 enum ProjectProposalStatus {
@@ -48,7 +79,11 @@ enum ProjectProposalStatus {
   urgent
   rejected
 }
-
+enum ApprovedStatus {
+  Pending
+  Approved
+  Rejected
+}
 enum UserRole {
   Admin
   Education
