@@ -47,7 +47,7 @@ export async function getBookingsChartData(): Promise<BookingChartData[]> {
   }
 
   // Group bookings by month and type
-  bookings.forEach((booking) => {
+  bookings.forEach((booking: { startTime: { toISOString: () => string; }; type: any; }) => {
     const monthStr = booking.startTime.toISOString().substring(0, 7) // Get YYYY-MM format
     
     // Make sure the month exists in our data (in case of older bookings)

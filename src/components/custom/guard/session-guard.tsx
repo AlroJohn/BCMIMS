@@ -40,12 +40,20 @@ export default function SessionGuard({
         console.log(`Access denied: User role "${role}" not in required roles:`, requiredRoles);
         
         // Redirect based on the user's actual role
-        if (role === "SUPERADMIN") {
-          router.replace("/admin");
-        } else if (role === "CLIENT") {
-          router.replace("/client");
-        } else if (role === "STAFF") {
-          router.replace("/admin/bookings");
+        if (role === "Admin") {
+          router.replace("/Admin");
+        } else if (role === "education") {
+          router.replace("/Environment");
+        } else if (role === "finance") {
+          router.replace("/finance");
+        } else if (role === "HealthServices") {
+          router.replace("/health-services");
+        } else if (role === "PeaceOrder") {
+          router.replace("/peace-order");
+        } else if (role === "PublicWorks") {
+          router.replace("/public-works");
+        } else if (role === "Woomen") {
+          router.replace("/woomen");
         } else {
           // Fallback to home if role is invalid
           router.replace("/auth");
