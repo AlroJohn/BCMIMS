@@ -63,6 +63,7 @@ export default function UploadProjectModal({ onClose }: UploadProjectModalProps)
 
       if (res.ok) {
         onClose();
+        
       } else {
         console.error("Failed to upload");
       }
