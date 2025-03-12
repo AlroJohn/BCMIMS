@@ -120,14 +120,6 @@ export default function ContactPage() {
               </div>
               
               <div className="flex items-start gap-3">
-                <Globe className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold">Website</h3>
-                  <p className="text-gray-600">{contactInfo.website}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3">
                 <Clock className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold">Office Hours</h3>

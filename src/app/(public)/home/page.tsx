@@ -32,7 +32,7 @@ export default function HomePage() {
       </section>
 
       {/* Announcements Section */}
-      <section>
+      {/* <section>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-3xl font-bold">Latest Announcements</h2>
           <Link href="/announcements" className="flex items-center text-blue-600 hover:text-blue-800">
@@ -70,10 +70,10 @@ export default function HomePage() {
             </Card>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* Quick Links */}
-      <section>
+      {/* <section>
         <h2 className="text-3xl font-bold mb-6">Quick Access</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="hover:shadow-lg transition-shadow">
@@ -120,7 +120,7 @@ export default function HomePage() {
             </CardContent>
           </Card>
         </div>
-      </section>
+      </section> */}
 
       {/* Projects Overview */}
       <section>

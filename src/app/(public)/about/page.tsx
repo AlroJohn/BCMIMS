@@ -253,7 +253,7 @@ export default function AboutPage() {
           </div>
           
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle>Age Distribution</CardTitle>
               </CardHeader>
@@ -310,9 +310,9 @@ export default function AboutPage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
             
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle>Employment & Education</CardTitle>
               </CardHeader>
@@ -355,7 +355,7 @@ export default function AboutPage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </section>
