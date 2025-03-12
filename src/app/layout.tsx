@@ -4,9 +4,9 @@ import { Metadata } from 'next'
 import { Providers } from '@/components/providers/theme-provider'
 
 export const metadata: Metadata = {
-  title: 'Ctrl Alt Work Coworking Space',
-  description: 'Ctrl Alt Work Coworking Space (CAW), launched in 2019, is the first coworking space in Legazpi City, Albay, designed to embody the aesthetics and functionality of a modern shared workspace.',
-  icons: { icon: '/logo.png' },
+  title: 'BCMIMS',
+  description: 'The Barangay Taysan Chairperson Monitoring and Information Management System (CMIMS), serves Barangay Taysan, Legazpi City, Albay, providing an innovative platform for community governance, resident services, and information management.',
+  icons: { icon: '/logo.png' }, // Update if a specific barangay logo exists
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
