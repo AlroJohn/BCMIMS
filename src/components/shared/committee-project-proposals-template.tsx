@@ -332,6 +332,7 @@ export default function CommitteeProjectProposalsTemplate({
   const [newProjectDescription, setNewProjectDescription] = useState("");
   const [newProjectBudget, setNewProjectBudget] = useState("");
   const [newProjectDueDate, setNewProjectDueDate] = useState("");
+  const [showMyProposals, setShowMyProposals] = useState(false);
 
   // Set active tab based on URL param if provided
   useEffect(() => {
@@ -351,8 +352,13 @@ export default function CommitteeProjectProposalsTemplate({
       return true;
     });
 
-  // Filter projects based on active tab and search term
-  const filteredProjects = projectProposals.filter(project => {
+// Modified version of the filtering logic
+const filteredProjects = projectProposals.filter(project => {
+    // Filter by My Proposals if selected
+    if (showMyProposals && project.committee !== committeeInfo.name) {
+      return false;
+    }
+    
     // Filter by tab
     if (activeTab === "to-vote" && !isAdmin) {
       // Show only projects that this committee hasn't voted on yet
@@ -651,17 +657,27 @@ const hasVoted = (project: Project) => {
                 {isAdmin ? "All project proposals from all committees" : `All project proposals requiring ${committeeInfo.name} Committee input`}
               </CardDescription>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                <Input 
-                  placeholder="Search projects..." 
-                  className="pl-8"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
+<div className="flex flex-col sm:flex-row gap-2">
+  <div className="relative">
+    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+    <Input 
+      placeholder="Search projects..." 
+      className="pl-8"
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+    />
+  </div>
+  {!isAdmin && (
+    <Button
+      variant={showMyProposals ? "default" : "outline"}
+      size="sm"
+      onClick={() => setShowMyProposals(!showMyProposals)}
+      className="whitespace-nowrap"
+    >
+      {showMyProposals ? "All Proposals" : "My Proposals"}
+    </Button>
+  )}
+</div>
           </div>
         </CardHeader>
         
