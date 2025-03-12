@@ -38,14 +38,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const checkSession = async () => {
       try {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        
+
         if (sessionError) {
           console.error("Session error:", sessionError);
           setError(sessionError.message);
           setLoading(false);
           return;
         }
-        
+
         if (!sessionData?.session) {
           // No session found
           setUser(null);
@@ -56,34 +56,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Set user from session
         setUser(sessionData.session.user);
-        
+
         // Fetch user role with better error handling
         if (sessionData.session.user?.id) {
           try {
             console.log("Fetching role for user ID:", sessionData.session.user.id);
-            
+
             const response = await fetch(
               `/api/users/user-role?userId=${sessionData.session.user.id}`,
-              { 
+              {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 // Add cache: 'no-store' to avoid stale data
                 cache: 'no-store'
               }
             );
-            
+
             // Log the raw response for debugging
             const responseText = await response.text();
             console.log("Role API response:", response.status, responseText);
-            
+
             if (response.ok) {
               try {
                 // Parse the response text
                 const userData = JSON.parse(responseText);
-                
+
+                // In the checkSession function, after parsing userData
                 if (userData && userData.role) {
                   console.log("Setting user role:", userData.role);
                   setRole(userData.role);
+
+                  // Add this block to handle userData
+                  if (userData.userData) {
+                    setUser(prevUser => ({
+                      ...prevUser,
+                      ...userData.userData  // This spreads the phone and other fields directly into user
+                    }));
+                  }
+
                 } else {
                   console.error("Invalid role data format:", userData);
                   setError("Invalid role data format");
@@ -94,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             } else {
               console.error("Failed to fetch user role, status:", response.status);
-              
+
               // Log more details about the error
               try {
                 const errorData = JSON.parse(responseText);
@@ -102,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               } catch (error) {
                 console.error("Raw error response:", responseText);
               }
-              
+
               setError(`Failed to fetch user role: ${response.status}`);
             }
           } catch (err) {
@@ -125,34 +135,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session?.user) {
           setUser(session.user);
-          
+
           // Fetch user role with better error handling
           if (session.user?.id) {
             try {
-              console.log("Auth change: Fetching role for user ID:", session.user.id);
-              
+        
               const response = await fetch(
                 `/api/users/user-role?userId=${session.user.id}`,
-                { 
+                {
                   method: 'GET',
                   headers: { 'Content-Type': 'application/json' },
                   cache: 'no-store'
                 }
               );
-              
+
               const responseText = await response.text();
-              console.log("Auth change role API response:", response.status, responseText);
-              
+            
+
               if (response.ok) {
                 try {
                   const userData = JSON.parse(responseText);
-                  
+
                   if (userData && userData.role) {
-                    console.log("Auth change: Setting user role:", userData.role);
+                 
                     setRole(userData.role);
-                  } else {
-                    console.error("Auth change: Invalid role data format:", userData);
-                  }
+
+                    if (userData.userData) {
+                      setUser(prevUser => ({
+                        ...prevUser,
+                        ...userData.userData
+                      }));
+                    }
+                  } 
                 } catch (parseError) {
                   console.error("Auth change: JSON parse error:", parseError);
                 }
