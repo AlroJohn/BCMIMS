@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../providers/auth-provider";
+import { Input } from "../ui/input";
 
 interface UploadProjectModalProps {
   onClose: () => void;
@@ -93,10 +94,10 @@ export default function UploadProjectModal({ onClose }: UploadProjectModalProps)
             required
             className="border rounded p-2"
           />
-          <input type="file" ref={fileRef} required />
+          <Input type="file" ref={fileRef} required />
           <div className="flex flex-col gap-2">
             <span className="font-medium">Proposed Date</span>
-            <input
+            <Input
               type="date"
               value={selectedDate ? selectedDate.toISOString().split("T")[0] : ""}
               onChange={(e) => setSelectedDate(e.target.value ? new Date(e.target.value) : null)}

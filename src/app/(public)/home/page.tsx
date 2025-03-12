@@ -23,7 +23,7 @@ export default function HomePage() {
               <Button size="lg" className="bg-yellow-500 hover:bg-yellow-600 text-black">
                 View Services
               </Button>
-              <Button size="lg" variant="outline" className="text-black border-white hover:bg-white/10">
+              <Button size="lg" variant="outline" className="text-white border-white bg-white/10 hover:bg-none">
                 Contact Us
               </Button>
             </div>
