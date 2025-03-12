@@ -22,7 +22,7 @@ export function DynamicBreadcrumb() {
   const breadcrumbItems = [
     // Always start with the home/main label
     { 
-      label: 'CTRL + ALT + WORK', 
+      label: 'BCMIMS', 
       href: '/' 
     },
     // Add dynamic path segments

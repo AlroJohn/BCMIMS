@@ -21,6 +21,7 @@ export default function SessionGuard({
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
+    console.log("USER ROLE", user.role)
     // Wait until auth is loaded
     if (loading) return;
 
@@ -30,7 +31,7 @@ export default function SessionGuard({
       router.replace("/");
       return;
     }
-
+    
     // Check role-based access if requiredRoles are specified
     if (requiredRoles.length > 0) {
       // User must have one of the required roles
@@ -40,12 +41,20 @@ export default function SessionGuard({
         console.log(`Access denied: User role "${role}" not in required roles:`, requiredRoles);
         
         // Redirect based on the user's actual role
-        if (role === "SUPERADMIN") {
-          router.replace("/admin");
-        } else if (role === "CLIENT") {
-          router.replace("/client");
-        } else if (role === "STAFF") {
-          router.replace("/admin/bookings");
+        if (role === "Admin") {
+          router.replace("/Admin");
+        } else if (role === "Education") {
+          router.replace("/environment");
+        } else if (role === "Finance") {
+          router.replace("/finance");
+        } else if (role === "HealthServices") {
+          router.replace("/health-services");
+        } else if (role === "PeaceOrder") {
+          router.replace("/peace-order");
+        } else if (role === "PublicWorks") {
+          router.replace("/public-works");
+        } else if (role === "Woomen") {
+          router.replace("/woomen");
         } else {
           // Fallback to home if role is invalid
           router.replace("/auth");

@@ -1,153 +1,92 @@
-// This is your Prisma schema file for Ctrl Alt Work Coworking Space
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql" // Can be changed to mysql, etc.
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// User model for authentication (clients, staff, superadmin)
 model User {
-  id              String     @id @default(uuid())
-  email           String     @unique
-  password        String     // Hashed password
-  name            String
-  phone           String?     // For SMS notifications
-  role            UserRole   @default(CLIENT)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  
-  // Relations
-  bookings        Booking[]
-  payments        Payment[]
-
+  id                String              @id
+  email             String              @unique
+  password          String              // Hashed password
+  name              String
+  phone             String?             // For SMS notifications
+  role              UserRole 
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  projectProposals  ProjectProposal[]   // Proposals posted by this user
+  approvedBy        ApprovedBy[]        // Approvals done by this user
+  votes             Vote[]
   @@map("users")
 }
 
-
-// Spaces/Rooms available for booking, ini su showcase sa dashboard etc.. garo gallery
-model Space {
-  id              String     @id @default(uuid())
-  name            String     // e.g., "Meeting Room A", "Desk 1", etc.
-  description     String?    @db.Text
-  capacity        Int        // Number of people
-  pricePerHour    Decimal    @db.Decimal(10, 2)
-  image           String?    // URL to image
-  isAvailable     Boolean    @default(true)
-  
-  // Relations
-  bookings        Booking[]
-
-  @@map("spaces")
-}
-
-// Booking model for reservations
-model Booking {
-  id              String         @id @default(uuid())
-  bookingNumber   String         @unique // For reference in notifications
-  userId          String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "userId")
-  spaceId         String
-  space           Space          @relation(fields: [spaceId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "spaceId")
-  startTime       DateTime       // Start of reservation
-  endTime         DateTime       // End of reservation
-  status          BookingStatus  @default(PENDING)
-  type            BookingType    @default(SCHEDULED)
-  notes           String?        @db.Text
-  createdAt       DateTime       @default(now())
-  
-  // Relations
-  payments        Payment[]
-
-  @@index([userId])
-  @@index([spaceId])
-  @@index([startTime, endTime])
-  @@map("bookings")
-}
-
-// Payment model
-model Payment {
-  id              String         @id @default(uuid())
-  bookingId       String
-  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "userId")
-  amount          Decimal        @db.Decimal(10, 2)
-  type            PaymentType
-  status          PaymentStatus  @default(PENDING)
-  discountAmount  Decimal        @db.Decimal(10, 2)
-  reference       String?        // Reference number for payments
-  notes           String?
-  createdAt       DateTime       @default(now())
-  processedBy     String?        // ID of staff who processed payment
-
-  @@index([bookingId])
-  @@index([userId])
-  @@map("payments")
-}
-
-// SMS Notification Log
 model Notification {
-  id              String         @id @default(uuid())
-  phone           String         // Recipient phone number
-  message         String         @db.Text
-  status          String         // Delivery status
-  sentAt          DateTime       @default(now())
-  bookingNumber   String?        // Optional reference to booking
-  
+  id            String   @id @default(uuid())
+  phone         String   // Recipient phone number
+  message       String   @db.Text
+  status        String   // Delivery status
+  sentAt        DateTime @default(now())
+  bookingNumber String?  // Optional reference to booking
   @@map("notifications")
 }
 
-// System settings for admin configuration
-model Setting {
-  id              String         @id @default(uuid())
-  key             String         @unique
-  value           String
-  description     String?
-  updatedAt       DateTime       @updatedAt
+model ProjectProposal {
+  id           String                   @id @default(uuid())
+  title        String
+  description  String
+  proposedDate DateTime                 @default(now())
+  fileUrl      String
+  postedById   String
+  budget       Float                    // new budget field
+  postedBy     User                     @relation(fields: [postedById], references: [id])
+  approvedBy   ApprovedBy[]             // Relation to approvals
+  votes        Vote[]
   
-  @@map("settings")
+  @@map("project_proposals")
 }
 
 
 
-// ENUM VALUES
+model Vote {
+  id         String          @id @default(uuid())
+  userId     String
+  proposalId String
+  vote       Boolean         // For example: true for 'yes' and false for 'no'
+  votedAt    DateTime        @default(now())
 
+  user       User            @relation(fields: [userId], references: [id])
+  proposal   ProjectProposal @relation(fields: [proposalId], references: [id])
+
+  @@unique([userId, proposalId])
+}
+
+
+
+model ApprovedBy {
+  id          String            @id @default(uuid())
+  userId      String            // This must be required if approval is mandatory
+  status      ApprovedStatus
+  comment     String?
+  proposalId  String            // ID of the project proposal being approved
+  approvedBy  User              @relation(fields: [userId], references: [id])
+  proposal    ProjectProposal   @relation(fields: [proposalId], references: [id])
+  @@map("approved_By")
+}
+
+enum ApprovedStatus {
+  Pending
+  Approved
+  Rejected
+}
 enum UserRole {
-  SUPERADMIN
-  STAFF
-  CLIENT
-}
-
-enum ClientDiscountType {
-  STUDENT
-  PWD
-  REGULAR
-}
-
-enum BookingStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  COMPLETED
-}
-
-enum BookingType {
-  WALKIN
-  SCHEDULED
-}
-
-enum PaymentType {
-  RESERVATION_FEE
-  FULL_PAYMENT
-  ADDITIONAL_TIME
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  REFUNDED
-  CANCELLED
+  Admin
+  Education
+  Environment
+  Finance
+  HealthServices
+  PeaceOrder
+  PublicWorks
+  Woomen
 }

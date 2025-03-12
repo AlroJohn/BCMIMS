@@ -25,7 +25,7 @@ const SignupWrapper = ({ onToggle }: SignupProps) => {
         <CardHeader className="space-y-1 flex flex-col items-center">
           <div className="flex flex-col items-center">
             <img className="h-16 mb-2" src="/images/logo.png" alt="logo" />
-            <CardTitle className="text-xl font-semibold text-black">Ctrl Alt Work</CardTitle>
+            <CardTitle className="text-xl font-semibold text-black">BCMIMS</CardTitle>
           </div>
         </CardHeader>
 

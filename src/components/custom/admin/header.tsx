@@ -28,7 +28,7 @@ export default function Header() {
         <DynamicBreadcrumb />
       </div>
       <div className="flex items-center gap-2  px-4">
-        <ThemeToggle />
+        {/* <ThemeToggle /> */}
         <Button variant="outline" size="icon" className="rounded-full">
           <Bell className="h-4 w-4" />
           <span className="sr-only">Notifications</span>

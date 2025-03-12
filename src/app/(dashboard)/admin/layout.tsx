@@ -1,26 +1,18 @@
-import Header from "@/components/custom/admin/header"
-import { AppSidebar } from "@/components/custom/custom-ui/app-sidebar"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
+import Header from "@/components/custom/admin/header";
+import { AppSidebar } from "@/components/custom/custom-ui/app-sidebar";
+import SessionGuard from "@/components/custom/guard/session-guard";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
-export default async function AdminLayout({
+export default function AdminLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  // TODO: Add authentication check
-  // const session = await getServerSession()
-  // if (!session || session.user.role !== "ADMIN") {
-  //   redirect("/auth/signin")
-  // }
-
+  // Authentication check is fully removed
   return (
-
-
+    <SessionGuard requiredRoles={["Admin"]}>
     <div className="flex h-screen overflow-hidden">
-
       <div className="flex flex-col flex-1 overflow-hidden">
-
-
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset className="space-y-4">
@@ -30,10 +22,9 @@ export default async function AdminLayout({
               {children}
             </main>
           </SidebarInset>
-        </SidebarProvider>
-
-
+        </SidebarProvider>      
       </div>
     </div>
-  )
+    </SessionGuard>
+  );
 }
