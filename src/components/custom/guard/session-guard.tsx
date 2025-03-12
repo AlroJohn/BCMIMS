@@ -54,7 +54,7 @@ export default function SessionGuard({
         } else if (role === "PublicWorks") {
           router.replace("/public-works");
         } else if (role === "Woomen") {
-          router.replace("/woomen");
+          router.replace("/women");
         } else {
           // Fallback to home if role is invalid
           router.replace("/auth");
