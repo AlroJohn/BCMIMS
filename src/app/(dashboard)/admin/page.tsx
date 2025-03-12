@@ -430,17 +430,17 @@ export default function AdminDashboard() {
     .filter(activity => activity.date >= new Date())
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-  // Calculate distribution of projects by committee for pie chart
-  const committeeProjectCounts = committees.map(committee => {
-    const count = projectProposals.filter(project => 
-      project.committee === committee.name && project.status === "Approved"
-    ).length;
-    
-    return {
-      name: committee.name,
-      value: count
-    };
-  });
+// Calculate distribution of projects by committee for pie chart
+const committeeProjectCounts = committees.map(committee => {
+  const count = projectProposals.filter(project => 
+    project.committee === committee.name && project.status === "Approved"
+  ).length;
+  
+  return {
+    name: committee.name,
+    value: count
+  };
+});
 
   // Calculate monthly budget allocation for bar graph
   const getMonthName = (monthIndex: number) => {
@@ -448,20 +448,20 @@ export default function AdminDashboard() {
     return months[monthIndex];
   };
 
-  const monthlyBudgets = Array.from({ length: 12 }, (_, monthIndex) => {
-    const monthlyTotal = projectProposals
-      .filter(project => 
-        project.status === "Approved" && 
-        project.implementation?.startDate.getMonth() === monthIndex &&
-        project.implementation?.startDate.getFullYear() === 2025
-      )
-      .reduce((sum, project) => sum + project.budget, 0);
-    
-    return {
-      name: getMonthName(monthIndex),
-      value: monthlyTotal
-    };
-  });
+const monthlyBudgets = Array.from({ length: 12 }, (_, monthIndex) => {
+  const monthlyTotal = projectProposals
+    .filter(project => 
+      project.status === "Approved" && 
+      project.implementation?.startDate.getMonth() === monthIndex &&
+      project.implementation?.startDate.getFullYear() === 2025
+    )
+    .reduce((sum, project) => sum + project.budget, 0);
+  
+  return {
+    name: getMonthName(monthIndex),
+    value: monthlyTotal
+  };
+});
 
   // Handler for approving a project
   const openApprovalDialog = (project: any) => {
@@ -647,12 +647,12 @@ const newImplementation = hasEnoughApprovals ? {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h3 className="text-sm font-medium text-gray-500 mb-2">Budget Allocation by Month</h3>
-                <Bargraph />
-              </div>
+                <Bargraph data={monthlyBudgets} />
+                              </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500 mb-2">Project Distribution by Committee</h3>
-                <Piegraph />
-              </div>
+                <Piegraph data={committeeProjectCounts} />
+                              </div>
             </div>
           </CardContent>
         </Card>
@@ -1092,91 +1092,128 @@ const newImplementation = hasEnoughApprovals ? {
       </div>
 
       {/* Approval Dialog */}
-      <Dialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Approve Project Proposal</DialogTitle>
-            <DialogDescription>
-              {selectedProject && `Review and update approvals for "${selectedProject.name}"`}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            {selectedProject && (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Project Details</h3>
-                  <p className="font-medium">{selectedProject.name}</p>
-                  <p className="text-sm text-gray-700">{selectedProject.description}</p>
-                  <div className="mt-1 text-sm">
-                    <span className="text-gray-500">Budget: </span>
-                    <span className="font-medium">₱{selectedProject.budget.toLocaleString()}</span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-gray-500">Due Date: </span>
-                    <span className="font-medium">
-                      {selectedProject.dueDate.toLocaleDateString('en-US', { 
-                        month: 'long', 
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                    </span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-gray-500">Committee: </span>
-                    <span className="font-medium">{selectedProject.committee}</span>
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Committee Approvals</h3>
-                  <div className="space-y-2">
-                    {committees.map((committee) => (
-                      <div key={committee.id} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`committee-${committee.id}`} 
-                          checked={committeeApprovals[committee.id] || false}
-                          onCheckedChange={(checked) => {
-                            setCommitteeApprovals({
-                              ...committeeApprovals,
-                              [committee.id]: checked === true
-                            });
-                          }}
-                        />
-                        <label
-                          htmlFor={`committee-${committee.id}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {committee.name} ({committee.person})
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="mt-4 bg-blue-50 p-3 rounded-md text-sm text-blue-800">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 mt-0.5" />
-                      <p>
-                        Note: A project requires at least 4 committee approvals to be fully approved.
-                        Currently, this project has {Object.values(committeeApprovals).filter(Boolean).length} approvals.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+   {/* Updated Approval Dialog */}
+<Dialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
+  <DialogContent className="sm:max-w-md">
+    <DialogHeader>
+      <DialogTitle>Approve Project Proposal</DialogTitle>
+      <DialogDescription>
+        {selectedProject && `Review details for "${selectedProject.name}"`}
+      </DialogDescription>
+    </DialogHeader>
+    
+    <div className="py-4">
+      {selectedProject && (
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Project Details</h3>
+            <p className="font-medium">{selectedProject.name}</p>
+            <p className="text-sm text-gray-700">{selectedProject.description}</p>
+            <div className="mt-1 text-sm">
+              <span className="text-gray-500">Budget: </span>
+              <span className="font-medium">₱{selectedProject.budget.toLocaleString()}</span>
+            </div>
+            <div className="text-sm">
+              <span className="text-gray-500">Due Date: </span>
+              <span className="font-medium">
+                {selectedProject.dueDate.toLocaleDateString('en-US', { 
+                  month: 'long', 
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </span>
+            </div>
+            <div className="text-sm">
+              <span className="text-gray-500">Committee: </span>
+              <span className="font-medium">{selectedProject.committee}</span>
+            </div>
           </div>
           
-          <DialogFooter className="sm:justify-end">
-            <Button variant="outline" onClick={() => setShowApprovalDialog(false)}>
-              Cancel
-            </Button>
-            <Button variant="default" onClick={handleApprove}>
-              Update Approvals
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Current Committee Approvals</h3>
+            <div className="space-y-2 border rounded-md p-3 bg-gray-50">
+              {committees.map((committee) => {
+                // Find if this committee has an approval record
+                const approval = selectedProject.approvals.find(
+                  (a: { committeeId: number }) => a.committeeId === committee.id
+                );
+                
+                // Determine if approved
+                const isApproved = approval ? approval.approved : false;
+                
+                return (
+                  <div key={committee.id} className="flex items-center justify-between">
+                    <div className="text-sm">
+                      {committee.name} ({committee.person})
+                    </div>
+                    <div>
+                      {isApproved ? (
+                        <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Approved
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Not Approved
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="mt-4 bg-blue-50 p-3 rounded-md text-sm text-blue-800">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 mt-0.5" />
+                <p>
+                  Note: A project requires at least 4 committee approvals to be fully approved.
+                  Currently, this project has {selectedProject.approvals.filter((a: {approved: boolean}) => a.approved).length} approvals.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+    
+    <DialogFooter className="sm:justify-end">
+      <Button variant="outline" onClick={() => setShowApprovalDialog(false)}>
+        Cancel
+      </Button>
+      <Button 
+        variant="default" 
+        onClick={() => {
+          // Create a new approved implementation object
+          const newImplementation = {
+            startDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000), // Start in a week
+            endDate: new Date(selectedProject.dueDate),
+            status: "Scheduled",
+            completion: 0
+          };
+          
+          // Update the project
+          const updatedProjects = projectProposals.map(project => {
+            if (project.id === selectedProject.id) {
+              return {
+                ...project,
+                status: "Approved",
+                implementation: newImplementation
+              };
+            }
+            return project;
+          });
+          
+          setProjectProposals(updatedProjects);
+          setShowApprovalDialog(false);
+        }}
+      >
+        Approve Project
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
 
       {/* Rejection Dialog */}
       <Dialog open={showRejectionDialog} onOpenChange={setShowRejectionDialog}>

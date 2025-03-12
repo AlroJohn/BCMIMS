@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
-import { useEffect, useState } from "react"
 
 import {
   Card,
@@ -17,153 +16,128 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { BookingChartData, getBookingsChartData } from "@/actions/fetching-actions/fetch-booking-count"
 
-
-// Updated chart config to use walkin and scheduled instead of desktop and mobile
+// Updated chart config for budget allocation by month
 const chartConfig = {
-  views: {
-    label: "Bookings",
+  budget: {
+    label: "Budget",
   },
-  walkin: {
-    label: "Data for Walk-in",
+  value: {
+    label: "Budget Allocation",
     color: "hsl(var(--chart-1))",
-  },
-  scheduled: {
-    label: "Data for Scheduled",
-    color: "hsl(var(--chart-2))",
   },
 } satisfies ChartConfig
 
-export function Bargraph() {
-  const [chartData, setChartData] = useState<BookingChartData[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [activeChart, setActiveChart] = 
-    React.useState<keyof typeof chartConfig>("scheduled")
 
-  // Fetch booking data when component mounts
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        const data = await getBookingsChartData()
-        setChartData(data)
-      } catch (error) {
-        console.error("Failed to fetch booking data:", error)
-      } finally {
-        setIsLoading(false)
+interface BargraphProps {
+  data: Array<{
+    name: string;
+    value: number;
+  }>;
+}
+
+
+export function Bargraph({ data }: BargraphProps) {
+  // Use the data prop instead of generating data internally
+  const chartData = data;
+    // For demo purposes, generating data based on the projectProposals from parent component
+  const generateMonthlyBudgetData = () => {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    // Sample data structure similar to what would be calculated in the parent component
+    return monthNames.map((name, index) => {
+      // Creating realistic budget numbers that peak in middle months
+      let value = 0;
+      if (index === 2) value = 15000; // March
+      if (index === 3) value = 35000; // April
+      if (index === 4) value = 80000; // May
+      if (index === 5) value = 60000; // June
+      if (index === 6) value = 75000; // July
+      if (index === 7) value = 90000; // August
+      if (index === 8) value = 200000; // September
+      if (index === 9) value = 50000; // October
+      
+      return {
+        name,
+        value,
       }
-    }
+    });
+  };
 
-    fetchData()
-  }, [])
+  const [activeChart, setActiveChart] = React.useState<keyof typeof chartConfig>("value");
 
   const total = React.useMemo(
     () => ({
-      walkin: chartData.reduce((acc, curr) => acc + curr.walkin, 0),
-      scheduled: chartData.reduce((acc, curr) => acc + curr.scheduled, 0),
+      value: chartData.reduce((acc, curr) => acc + curr.value, 0),
     }),
     [chartData]
-  )
-
-  // Generate date range text for description (e.g., "March 2023 - February 2024")
-  const dateRangeText = React.useMemo(() => {
-    if (chartData.length === 0) return "last 12 months"
-    
-    const startDate = new Date(chartData[0].date + "-01")
-    const endDate = new Date(chartData[chartData.length - 1].date + "-01")
-    
-    const startMonth = startDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })
-    const endMonth = endDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })
-    
-    return `${startMonth} - ${endMonth}`
-  }, [chartData])
+  );
 
   return (
     <Card>
       <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
-          <CardTitle>Booking Statistics</CardTitle>
+          <CardTitle>Budget Allocation</CardTitle>
           <CardDescription>
-            Showing walk-in vs. scheduled bookings for {dateRangeText}
+            Monthly budget allocation for 2025
           </CardDescription>
         </div>
         <div className="flex">
-          {["scheduled", "walkin"].map((key) => {
-            const chart = key as keyof typeof chartConfig
-            return (
-              <button
-                key={chart}
-                data-active={activeChart === chart}
-                className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
-                onClick={() => setActiveChart(chart)}
-              >
-                <span className="text-xs text-muted-foreground">
-                  {chartConfig[chart].label}
-                </span>
-                <span className="text-lg font-bold leading-none sm:text-3xl">
-                  {isLoading ? "..." : total[key as keyof typeof total].toLocaleString()}
-                </span>
-              </button>
-            )
-          })}
+          <div
+            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
+          >
+            <span className="text-xs text-muted-foreground">
+              Total Budget
+            </span>
+            <span className="text-lg font-bold leading-none sm:text-3xl">
+              ₱{total.value.toLocaleString()}
+            </span>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="px-2 sm:p-6">
-        {isLoading ? (
-          <div className="flex h-[250px] items-center justify-center">
-            <p className="text-muted-foreground">Loading booking data...</p>
-          </div>
-        ) : (
-          <ChartContainer
-            config={chartConfig}
-            className="aspect-auto h-[250px] w-full"
+        <ChartContainer
+          config={chartConfig}
+          className="aspect-auto h-[250px] w-full"
+        >
+          <BarChart
+            accessibilityLayer
+            className="rounded-t-xl"
+            data={chartData}
+            margin={{
+              left: 12,
+              right: 12,
+            }}
           >
-            <BarChart
-              accessibilityLayer
-              className="rounded-t-xl"
-              data={chartData}
-              margin={{
-                left: 12,
-                right: 12,
-              }}
-            >
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="date"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                minTickGap={24}
-                
-                tickFormatter={(value) => {
-                  // Convert YYYY-MM to month name
-                  const date = new Date(value + "-01") // Add day to make valid date
-                  return date.toLocaleDateString("en-US", {
-                    month: "short",
-                  })
-                }}
-              />
-              <ChartTooltip
-                content={
-                  <ChartTooltipContent
-                    className="w-[150px]"
-                    nameKey="views"
-                    labelFormatter={(value) => {
-                      // Convert YYYY-MM to month name and year
-                      const date = new Date(value + "-01") // Add day to make valid date
-                      return date.toLocaleDateString("en-US", {
-                        month: "long",
-                        year: "numeric",
-                      })
-                    }}
-                  />
-                }
-              />
-              <Bar className="rounded-t-xl bg-amber-300" dataKey={activeChart} />
-            </BarChart>
-          </ChartContainer>
-        )}
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="name"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              minTickGap={24}
+            />
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  className="w-[150px]"
+                  nameKey="budget"
+                  labelFormatter={(value) => {
+                    return `${value} 2025`;
+                  }}
+                  formatter={(value) => {
+                    return [`₱${Number(value).toLocaleString()}`, "Budget"];
+                  }}
+                />
+              }
+            />
+            <Bar 
+              className="rounded-t-xl fill-blue-500" 
+              dataKey="value" 
+              radius={[4, 4, 0, 0]}
+            />
+          </BarChart>
+        </ChartContainer>
       </CardContent>
     </Card>
   )
