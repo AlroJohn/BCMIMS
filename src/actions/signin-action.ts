@@ -64,7 +64,7 @@ export async function loginUser(data: LoginData) {
           refresh_token: authData.session.refresh_token,
           expires_at: authData.session.expires_at
         },
-        redirectUrl: "/client"
+        redirectUrl: "/admin"
       };
     } else {
       console.error("Authentication succeeded but no session was created");

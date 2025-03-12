@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, UserRole, ProjectProposalStatus } from '@prisma/client'
+import { Prisma, PrismaClient, UserRole } from '@prisma/client'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
 import { faker } from '@faker-js/faker'
@@ -90,24 +90,27 @@ async function main() {
     { name: 'Woomen User', email: 'woomen@example.com', password: 'woomen123', phone: faker.phone.number({ style: 'international' }), role: UserRole.Woomen },
   ]
 
+  // For each custom user, create a Supabase Auth user and then create a Prisma user record using the same ID
   const customUsers = await Promise.all(
     customUsersData.map(async (user) => {
-      // Insert user into Supabase Auth using the admin API with email_confirmed_at set
+      // Create user in Supabase Auth and capture the user id
       const { data, error } = await supabase.auth.admin.createUser({
         email: user.email,
         password: user.password,
         email_confirm: true, // Mark email as confirmed
       })
-      if (error) {
+      if (error || !data?.user) {
         console.error(`Error creating Supabase auth user for ${user.email}:`, error)
-      } else {
-        console.log(`Created Supabase auth user for ${user.email}`)
+        throw error
       }
+      const supabaseUserId = data.user.id
+      console.log(`Created Supabase auth user for ${user.email} with ID: ${supabaseUserId}`)
 
-      // Hash password for Prisma DB and create user record
+      // Hash password for Prisma DB and create user record with matching id
       const hashedPassword = await bcrypt.hash(user.password, 10)
       return prisma.user.create({
         data: {
+          id: supabaseUserId, // Use the same UID from Supabase Auth as the ID in the user table
           name: user.name,
           email: user.email,
           password: hashedPassword,
@@ -121,43 +124,57 @@ async function main() {
 
   // **Step 4: Seeding Random Users**
   console.log('Creating random users...')
-  const userRoles = Object.values(UserRole) as UserRole[]
-  const randomUsers: Prisma.UserCreateManyInput[] = []
-  const randomUsersAuthData: { email: string; password: string }[] = []
+  const randomUsersData: {
+    name: string
+    email: string
+    password: string // plain password for Supabase creation
+    phone: string
+    role: UserRole
+  }[] = []
   for (let i = 0; i < 50; i++) {
     const firstName = faker.person.firstName()
     const lastName = faker.person.lastName()
-    const role = faker.helpers.arrayElement(userRoles)
+    const role = faker.helpers.arrayElement(Object.values(UserRole))
     const email = faker.internet.email({ firstName, lastName })
     const plainPassword = 'password123'
-    randomUsers.push({
+    randomUsersData.push({
       name: `${firstName} ${lastName}`,
       email,
-      password: await bcrypt.hash(plainPassword, 10),
+      password: plainPassword,
       phone: faker.phone.number({ style: 'international' }),
       role,
     })
-    randomUsersAuthData.push({ email, password: plainPassword })
   }
 
-  // Insert random users into Supabase Auth with email_confirmed_at set
+  // For each random user, create a Supabase Auth user, capture the UID, hash the password, and prepare the record for Prisma
+  const randomUsersToInsert: Prisma.UserCreateManyInput[] = []
   await Promise.all(
-    randomUsersAuthData.map(async (user) => {
-      const { error } = await supabase.auth.admin.createUser({
+    randomUsersData.map(async (user) => {
+      const { data, error } = await supabase.auth.admin.createUser({
         email: user.email,
         password: user.password,
         email_confirm: true,
       })
-      if (error) {
+      if (error || !data?.user) {
         console.error(`Error creating Supabase auth user for ${user.email}:`, error)
-      } else {
-        console.log(`Created Supabase auth user for ${user.email}`)
+        return
       }
+      const supabaseUserId = data.user.id
+      console.log(`Created Supabase auth user for ${user.email} with ID: ${supabaseUserId}`)
+      const hashedPassword = await bcrypt.hash(user.password, 10)
+      randomUsersToInsert.push({
+        id: supabaseUserId, // Matching UID from Supabase Auth
+        name: user.name,
+        email: user.email,
+        password: hashedPassword,
+        phone: user.phone,
+        role: user.role,
+      })
     })
   )
 
   // Batch insert random users into Prisma DB
-  await batchInsert<Prisma.UserCreateManyInput>(randomUsers, 10, async (batch) => {
+  await batchInsert<Prisma.UserCreateManyInput>(randomUsersToInsert, 10, async (batch) => {
     await prisma.user.createMany({ data: batch })
   })
   console.log(`Total users created in Prisma DB: ${await prisma.user.count()}`)
