@@ -10,9 +10,9 @@ import {
   GalleryVerticalEnd,
   Map,
   PieChart,
-  SquareTerminal,
+  FileText,  // Added for Project Proposal
+  Users,     // Added for Manage User
 } from "lucide-react"
-
 
 import {
   Sidebar,
@@ -35,7 +35,7 @@ const data = {
   },
   teams: [
     {
-      name: "CTRL + ALT + WORK",
+      name: "BCMIMS",
       logo: '/images/logo.png',
       plan: "Name of user",
     },
@@ -58,115 +58,72 @@ const data = {
       isActive: true,
     },
     {
-      title: "Bookings",
+      title: "Project Proposal",
       url: "#",
-      icon: SquareTerminal,
+      icon: FileText,
       isActive: true,
       items: [
         {
-          title: "All Bookings",
-          url: "/admin/bookings",
+          title: "All Proposals",
+          url: "/admin/project-proposals",
         },
         {
-          title: "Discounted (PWD)",
+          title: "Pending Proposals",
           url: "#",
         },
         {
-          title: "Disounted (Non-PWD)",
+          title: "Approved Proposals",
           url: "#",
         },
         {
-          title: "New Bookings",
+          title: "Rejected Proposals",
           url: "#",
         },
       ],
     },
     {
-      title: "Payments",
+      title: "Manage User",
       url: "#",
-      icon: Bot,
+      icon: Users,
       isActive: true,
       items: [
         {
-          title: "All Payments",
-          url: "/admin/payments",
+          title: "All Users",
+          url: "/admin/manage-users",
         },
         {
-          title: "initial Payments",
-          url: "#",
+          title: "Admin",
+          url: "/admin/manage-users/admin",
         },
         {
-          title: "Pending Payments",
-          url: "#",
+          title: "Education",
+          url: "/admin/manage-users/education",
         },
         {
-          title: "Successful Payments",
-          url: "#",
+          title: "Environment",
+          url: "/admin/manage-users/environment",
+        },
+        {
+          title: "Finance",
+          url: "/admin/manage-users/finance",
+        },
+        {
+          title: "Health Services",
+          url: "/admin/manage-users/health-services",
+        },
+        {
+          title: "Peace Order",
+          url: "/admin/manage-users/peace-order",
+        },
+        {
+          title: "Public Works",
+          url: "/admin/manage-users/public-works",
+        },
+        {
+          title: "Women",
+          url: "/admin/manage-users/public-works",
         },
       ],
-    },
-    // {
-    //   title: "Documentation",
-    //   url: "#",
-    //   icon: BookOpen,
-    //   items: [
-    //     {
-    //       title: "Introduction",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Get Started",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Tutorials",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Changelog",
-    //       url: "#",
-    //     },
-    //   ],
-    // },
-    // {
-    //   title: "Settings",
-    //   url: "#",
-    //   icon: Settings2,
-    //   items: [
-    //     {
-    //       title: "General",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Team",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Billing",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Limits",
-    //       url: "#",
-    //     },
-    //   ],
-    // },
-  ],
-  projects: [
-    {
-      name: "Spaces",
-      url: "/admin/spaces",
-      icon: Frame,
-    },
-    {
-      name: "Notifications",
-      url: "#",
-      icon: Bell,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
     },
   ],
 }
@@ -179,7 +136,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

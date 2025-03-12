@@ -20,6 +20,7 @@ const SigninWrapper = () => {
         { name: "Health Services", path: "/health-services" },
         { name: "Peace Order", path: "/peace-order" },
         { name: "Public Works", path: "/public-works" },
+        { name: "Women", path: "/women" },
     ];
 
     return (
