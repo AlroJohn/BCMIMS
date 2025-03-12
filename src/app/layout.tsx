@@ -17,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         data-theme="light"
         suppressHydrationWarning
       >
+        
         <Providers>
           <div className="h-screen" suppressHydrationWarning>
             {children}
