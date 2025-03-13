@@ -46,14 +46,17 @@ import { Input } from "@/components/ui/input";
 import UploadProjectModal from "./upload-project-modal";
 import { useAuth } from "../providers/auth-provider";
 import { supabase } from "@/lib/supabase-client";
-
+import { Textarea } from "../ui/textarea";
+import { useCallback } from "react";
 // Define types aligned with your Prisma schema
+type VoteStatus = "Approved" | "Rejected";
 type ProjectVote = {
   id: string;
   userId: string;
   proposalId: string;
-  vote: boolean; // true = approved, false = rejected
+  vote: VoteStatus; // "Approved" or "Rejected"
   votedAt: Date;
+  comment: string;
   user: {
     id: string;
     name: string;
@@ -72,8 +75,8 @@ type Project = {
   documentUrl: string; // Maps to fileUrl
   dueDate: Date; // Using proposedDate as placeholder
   dateProposed: Date; // Maps to proposedDate
-  status: string; // Derived from votes
-  rejectionReason: string | null; // Not directly in schema, derived from votes/comments
+  status: string; // Derived from approvedBy records
+  rejectionReason: string | null; // Derived from votes/comments
   votes: ProjectVote[];
   implementation: null; // Not in schema yet
   postedBy: {
@@ -165,7 +168,7 @@ const committeeInfoMap = {
   },
   HEALTH_SERVICES_COMMITTEE: {
     id: 4,
-    name: "Health",
+    name: "HealthServices",
     path: "/health",
     person: "Edna J. Padre",
     description: "Responsible for health initiatives.",
@@ -177,7 +180,7 @@ const committeeInfoMap = {
   },
   PEACE_ORDER_COMMITTEE: {
     id: 5,
-    name: "Peace & Order",
+    name: "PeaceOrder",
     path: "/peace-order",
     person: "Francis Alejo",
     description: "Responsible for maintaining peace and order.",
@@ -189,7 +192,7 @@ const committeeInfoMap = {
   },
   PUBLIC_WORKS_COMMITTEE: {
     id: 6,
-    name: "Public Works",
+    name: "PublicWorks",
     path: "/public-works",
     person: "Roderick A. Madronio",
     description: "Responsible for infrastructure projects.",
@@ -201,7 +204,7 @@ const committeeInfoMap = {
   },
   WOMEN_COMMITTEE: {
     id: 7,
-    name: "Women & Family",
+    name: "Women",
     path: "/women",
     person: "Emma M. Jadie",
     description: "Responsible for women's rights and family programs.",
@@ -222,7 +225,7 @@ const roleToCommittee = {
   HealthServices: { name: "Health", id: 4 },
   PeaceOrder: { name: "Peace & Order", id: 5 },
   PublicWorks: { name: "Public Works", id: 6 },
-  Women: { name: "Women & Family", id: 7 }, // Typo in schema: "Woomen"
+  Women: { name: "Women & Family", id: 7 },
 };
 
 export default function CommitteeProjectProposalsTemplate({
@@ -244,8 +247,6 @@ export default function CommitteeProjectProposalsTemplate({
   const [showVoteDialog, setShowVoteDialog] = useState(false);
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  // We no longer need to let users choose a vote so we default vote to false here,
-  // but when submitting we always send true.
   const [voteStatus, setVoteStatus] = useState<boolean>(false);
   const [voteComment, setVoteComment] = useState("");
   const [showPriorityMatrix, setShowPriorityMatrix] = useState(false);
@@ -255,66 +256,16 @@ export default function CommitteeProjectProposalsTemplate({
   const [votes, setVotes] = useState<any[]>([]);
   const { user } = useAuth();
 
-  // Fetch projects on mount
-
-  const fetchVotes = async () => {
-    try {
-      const response = await fetch("/api/project-proposal/fetch-vote");
-      if (!response.ok) {
-        throw new Error(`Failed to fetch votes: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log("Fetched votes:", data); // Log for debugging
-      
-      // Map the votes data with proper user information
-      setVotes(data.map(vote => ({
-        ...vote,
-        user: vote.user || { id: "unknown", name: "Unknown User", role: "Unknown Role" }
-      })));
-    } catch (err) {
-      console.error("Error fetching votes:", err);
-    }
-  };
-  
-  // Replace the existing useEffect for votes with this:
-  useEffect(() => {
-    // First fetch the votes
-    fetchVotes();
-  
-    // Then set up the realtime subscription
-    const subscription = supabase
-      .channel("public:Vote")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "Vote" },
-        (payload) => {
-          console.log("Realtime vote change:", payload);
-          // Re-fetch all votes when a change occurs
-          fetchVotes();
-        }
-      )
-      .subscribe();
-  
-    // Clean up subscription when component unmounts
-    return () => {
-      supabase.removeChannel(subscription);
-    };
-  }, []);
+  // Fetch votes on mount and subscribe to realtime updates
 
 
-
-
-
- // Inside the useEffect for fetching projects
-useEffect(() => {
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch("/api/project-proposal/fetch-proposal");
       if (!res.ok) throw new Error("Failed to fetch projects");
       const rawProjects = await res.json();
 
-      // Map API response to Project type
       const mappedProjects: Project[] = rawProjects.map((p: any) => {
         const committeeObj =
           roleToCommittee[p.postedBy?.role as keyof typeof roleToCommittee] || {
@@ -322,30 +273,30 @@ useEffect(() => {
             id: -1,
           };
 
-        // Add null checks for votes array
         const votes = Array.isArray(p.votes) ? p.votes : [];
-        const approvalCount = votes.filter((v: any) => v.vote).length;
-        const rejectionCount = votes.filter((v: any) => !v.vote).length;
-
-       // Use the status from the database if it exists, otherwise default to "Pending Approval"
-      const status = p.status || "Pending Approval";
-
-        const rejectionReason = votes.find((v: any) => !v.vote)?.comment || null;
-
-        // Map votes with proper user information
         const mappedVotes = votes.map((v: any) => ({
           id: v.id || "unknown-vote-id",
           userId: v.userId || "unknown-user-id",
           proposalId: v.proposalId || p.id || "unknown-proposal-id",
-          vote: v.vote === true,
+          vote: v.vote,
           votedAt: new Date(v.votedAt || new Date()),
-          // Ensure user data is properly mapped
+          comment: v.comment || "",
           user: {
             id: v.user?.id || "unknown-user-id",
-            name: v.user?.name || "Unknown User", 
+            name: v.user?.name || "Unknown User",
             role: v.user?.role || "Unknown Role",
           },
         }));
+
+        const approvalStatuses = Array.isArray(p.approvedBy)
+          ? p.approvedBy.map((approval: any) => approval.status)
+          : [];
+        let status = "Pending";
+        if (approvalStatuses.includes("Rejected")) {
+          status = "Rejected";
+        } else if (approvalStatuses.includes("Approved")) {
+          status = "Approved";
+        }
 
         return {
           id: p.id || "unknown-id",
@@ -359,7 +310,8 @@ useEffect(() => {
           dueDate: new Date(p.proposedDate || new Date()),
           dateProposed: new Date(p.proposedDate || new Date()),
           status,
-          rejectionReason,
+          rejectionReason:
+            mappedVotes.find((v: any) => v.vote === "Rejected")?.comment || null,
           votes: mappedVotes,
           implementation: null,
           postedBy: {
@@ -369,8 +321,8 @@ useEffect(() => {
           },
         };
       });
-      
-      console.log("Mapped projects:", mappedProjects); // For debugging
+
+      console.log("Mapped projects:", mappedProjects);
       setProjects(mappedProjects);
     } catch (err) {
       setError("Failed to load projects. Please try again later.");
@@ -378,10 +330,13 @@ useEffect(() => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  fetchProjects();
-}, []);
+  // Initial fetch on mount
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
 
   // Sync initialTab
   useEffect(() => {
@@ -393,7 +348,7 @@ useEffect(() => {
   const committeeInfo = committeeInfoMap[committee as keyof typeof committeeInfoMap];
   const projectProposals = isAdmin ? projects : projects.filter(() => true);
 
-  // Memoize filtered projects
+  // Memoize filtered projects based on search and tab
   const filteredProjects = useMemo(() => {
     return projectProposals.filter((project) => {
       const matchesSearch =
@@ -418,7 +373,7 @@ useEffect(() => {
   // Statistics
   const totalProjects = projectProposals.length;
   const approvedProjects = projectProposals.filter((p) => p.status === "Approved").length;
-  const pendingProjects = projectProposals.filter((p) => p.status === "Pending Approval").length;
+  const pendingProjects = projectProposals.filter((p) => p.status === "Pending").length;
   const rejectedProjects = projectProposals.filter((p) => p.status === "Rejected").length;
   const toVoteProjects = !isAdmin
     ? projectProposals.filter(
@@ -429,18 +384,19 @@ useEffect(() => {
       ).length
     : 0;
 
+  // Determine priority based on approval count and due date.
   const determinePriority = (project: Project) => {
+    const approvalCount = project.votes.filter((vote) => vote.vote === "Approved").length;
+    const now = new Date();
+    const daysUntilDue = Math.ceil(
+      (project.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
     if (project.status === "Approved") {
       return { level: "Approved", badge: "bg-green-100 border-green-200 text-green-800" };
     }
     if (project.status === "Rejected") {
       return { level: "Rejected", badge: "bg-red-100 border-red-200 text-red-800" };
     }
-    const approvalCount = project.votes.filter((vote) => vote.vote).length;
-    const now = new Date();
-    const daysUntilDue = Math.ceil(
-      (project.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-    );
     if (approvalCount >= 4 && daysUntilDue <= 30) {
       return { level: "Urgent & Important", badge: "bg-red-100 border-red-200 text-red-800" };
     }
@@ -458,67 +414,63 @@ useEffect(() => {
     setShowProjectDetails(true);
   };
 
-
   const openEditProject = (project: Project) => {
     setSelectedProject(project);
     setShowCreateProject(true);
   };
-  
+
   const openVoteDialog = (project: Project) => {
     setSelectedProject(project);
-    // We no longer let the user choose a vote so we can default to false (or leave it untouched)
-    setVoteComment(""); // Reset any comment (if needed)
+    setVoteComment("");
     setShowVoteDialog(true);
   };
 
-  // When submitVote is clicked, we always send vote: true (approved)
-  const submitVote = async () => {
+  // When submitVote is clicked, we send vote as the passed vote type ("Approved" or "Rejected")
+  const submitVote = async (voteType: VoteStatus) => {
     if (!selectedProject) return;
     try {
       setLoading(true);
-
-      // Use the authenticated user's id
       const currentUserId = user.id;
       if (!currentUserId) {
         throw new Error("Cannot determine user ID for vote.");
       }
-
-      console.log("Submitting vote with data:", {
-        proposalId: selectedProject.id,
-        vote: true,
-        userId: currentUserId,
-      });
-
       const response = await fetch("/api/project-proposal/updateVote", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           proposalId: selectedProject.id,
-          vote: true, // Always approved
+          vote: voteType,
           userId: currentUserId,
+          comment: voteComment,
         }),
       });
-
       const responseText = await response.text();
       console.log("Raw response:", responseText);
-
       if (!response.ok) {
-        throw new Error(`Server error: ${response.status} ${response.statusText} - ${responseText}`);
+        throw new Error(
+          `Server error: ${response.status} ${response.statusText} - ${responseText}`
+        );
       }
+      // Hide the vote dialog
       setShowVoteDialog(false);
+      // Re-fetch projects to update the list after vote submission
+      await fetchProjects();
     } catch (error) {
       console.error("Vote submission failed:", error);
-      setError(error instanceof Error ? error.message : "Failed to submit vote. Please try again.");
+      setError(
+        error instanceof Error ? error.message : "Failed to submit vote. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
+  
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "Approved":
         return "bg-green-100 border-green-200 text-green-800";
-      case "Pending Approval":
+      case "Pending":
         return "bg-blue-100 border-blue-200 text-blue-800";
       case "Rejected":
         return "bg-red-100 border-red-200 text-red-800";
@@ -528,8 +480,8 @@ useEffect(() => {
   };
 
   const getVoteCountBadge = (project: Project) => {
-    const approvalCount = project.votes.filter((vote) => vote.vote).length;
-    const rejectionCount = project.votes.filter((vote) => !vote.vote).length;
+    const approvalCount = project.votes.filter((vote) => vote.vote === "Approved").length;
+    const rejectionCount = project.votes.filter((vote) => vote.vote === "Rejected").length;
     const pendingCount = 7 - (approvalCount + rejectionCount); // Assuming 7 committees
     return (
       <div className="flex gap-1">
@@ -669,7 +621,7 @@ useEffect(() => {
                 <TabsTrigger value="to-vote">To Vote ({toVoteProjects})</TabsTrigger>
               )}
               <TabsTrigger value="approved">Approved ({approvedProjects})</TabsTrigger>
-              <TabsTrigger value="pending approval">Pending ({pendingProjects})</TabsTrigger>
+              <TabsTrigger value="pending">Pending ({pendingProjects})</TabsTrigger>
               {isAdmin && (
                 <TabsTrigger value="rejected">Rejected ({rejectedProjects})</TabsTrigger>
               )}
@@ -725,71 +677,71 @@ useEffect(() => {
                               <Badge className={getStatusBadge(project.status)}>{project.status}</Badge>
                             </td>
                             <td className="p-2">
-  <div className="flex justify-center gap-2">
-    <Button
-      size="sm"
-      variant="outline"
-      className="flex items-center gap-1"
-      onClick={() => openProjectDetails(project)}
-    >
-      <FileText className="h-4 w-4" />
-      <span className="hidden sm:inline">Details</span>
-    </Button>
-    
-    {!isAdmin && project.postedBy.id === user.id && (
-      <Button
-        size="sm"
-        variant="outline"
-        className="flex items-center gap-1"
-        onClick={() => openEditProject(project)}
-      >
-        <Pencil className="h-4 w-4" />
-        <span className="hidden sm:inline">Edit</span>
-      </Button>
-    )}
-    
-    {!isAdmin && !hasVoted(project) && (
-      <Button
-        size="sm"
-        variant="default"
-        className="flex items-center gap-1"
-        onClick={() => openVoteDialog(project)}
-      >
-        <ThumbsUp className="h-4 w-4" />
-        <span className="hidden sm:inline">Vote</span>
-      </Button>
-    )}
-    
-    {isAdmin && project.status === "Pending Approval" && (
-      <div className="flex gap-1">
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-          onClick={() => {
-            setShowProjectDetails(false);
-            if (onApprove) onApprove(project);
-          }}
-        >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Approve</span>
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-          onClick={() => {
-            setShowProjectDetails(false);
-            if (onReject) onReject(project);
-          }}
-        >
-          <XCircle className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Reject</span>
-        </Button>
-      </div>
-    )}
-  </div>
-</td>
+                              <div className="flex justify-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="flex items-center gap-1"
+                                  onClick={() => openProjectDetails(project)}
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  <span className="hidden sm:inline">Details</span>
+                                </Button>
+
+                                {!isAdmin && project.postedBy.id === user.id && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex items-center gap-1"
+                                    onClick={() => openEditProject(project)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Edit</span>
+                                  </Button>
+                                )}
+
+                                {!isAdmin && !hasVoted(project) && project.postedBy.id !== user.id && (
+                                  <Button
+                                    size="sm"
+                                    variant="default"
+                                    className="flex items-center gap-1"
+                                    onClick={() => openVoteDialog(project)}
+                                  >
+                                    <ThumbsUp className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Vote</span>
+                                  </Button>
+                                )}
+
+                                {isAdmin && project.status === "Pending" && (
+                                  <div className="flex gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                                      onClick={() => {
+                                        setShowProjectDetails(false);
+                                        if (onApprove) onApprove(project);
+                                      }}
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-2" />
+                                      <span className="hidden sm:inline">Approve</span>
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+                                      onClick={() => {
+                                        setShowProjectDetails(false);
+                                        if (onReject) onReject(project);
+                                      }}
+                                    >
+                                      <XCircle className="h-4 w-4 mr-2" />
+                                      <span className="hidden sm:inline">Reject</span>
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
                           </tr>
                         );
                       })
@@ -856,71 +808,71 @@ useEffect(() => {
                                 <Badge className={getStatusBadge(project.status)}>{project.status}</Badge>
                               </td>
                               <td className="p-2">
-  <div className="flex justify-center gap-2">
-    <Button
-      size="sm"
-      variant="outline"
-      className="flex items-center gap-1"
-      onClick={() => openProjectDetails(project)}
-    >
-      <FileText className="h-4 w-4" />
-      <span className="hidden sm:inline">Details</span>
-    </Button>
-    
-    {!isAdmin && project.postedBy.id === user.id && (
-      <Button
-        size="sm"
-        variant="outline"
-        className="flex items-center gap-1"
-        onClick={() => openEditProject(project)}
-      >
-        <Pencil className="h-4 w-4" />
-        <span className="hidden sm:inline">Edit</span>
-      </Button>
-    )}
-    
-    {!isAdmin && !hasVoted(project) && (
-      <Button
-        size="sm"
-        variant="default"
-        className="flex items-center gap-1"
-        onClick={() => openVoteDialog(project)}
-      >
-        <ThumbsUp className="h-4 w-4" />
-        <span className="hidden sm:inline">Vote</span>
-      </Button>
-    )}
-    
-    {isAdmin && project.status === "Pending Approval" && (
-      <div className="flex gap-1">
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-          onClick={() => {
-            setShowProjectDetails(false);
-            if (onApprove) onApprove(project);
-          }}
-        >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Approve</span>
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-          onClick={() => {
-            setShowProjectDetails(false);
-            if (onReject) onReject(project);
-          }}
-        >
-          <XCircle className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Reject</span>
-        </Button>
-      </div>
-    )}
-  </div>
-</td>
+                                <div className="flex justify-center gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex items-center gap-1"
+                                    onClick={() => openProjectDetails(project)}
+                                  >
+                                    <FileText className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Details</span>
+                                  </Button>
+
+                                  {!isAdmin && project.postedBy.id === user.id && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex items-center gap-1"
+                                      onClick={() => openEditProject(project)}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                      <span className="hidden sm:inline">Edit</span>
+                                    </Button>
+                                  )}
+
+                                  {!isAdmin && !hasVoted(project) && (
+                                    <Button
+                                      size="sm"
+                                      variant="default"
+                                      className="flex items-center gap-1"
+                                      onClick={() => openVoteDialog(project)}
+                                    >
+                                      <ThumbsUp className="h-4 w-4" />
+                                      <span className="hidden sm:inline">Vote</span>
+                                    </Button>
+                                  )}
+
+                                  {isAdmin && project.status === "Pending" && (
+                                    <div className="flex gap-1">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                                        onClick={() => {
+                                          setShowProjectDetails(false);
+                                          if (onApprove) onApprove(project);
+                                        }}
+                                      >
+                                        <CheckCircle className="h-4 w-4 mr-2" />
+                                        <span className="hidden sm:inline">Approve</span>
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+                                        onClick={() => {
+                                          setShowProjectDetails(false);
+                                          if (onReject) onReject(project);
+                                        }}
+                                      >
+                                        <XCircle className="h-4 w-4 mr-2" />
+                                        <span className="hidden sm:inline">Reject</span>
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
                             </tr>
                           );
                         })
@@ -978,71 +930,71 @@ useEffect(() => {
                             <span className="text-sm text-gray-500">Not started</span>
                           </td>
                           <td className="p-2">
-  <div className="flex justify-center gap-2">
-    <Button
-      size="sm"
-      variant="outline"
-      className="flex items-center gap-1"
-      onClick={() => openProjectDetails(project)}
-    >
-      <FileText className="h-4 w-4" />
-      <span className="hidden sm:inline">Details</span>
-    </Button>
-    
-    {!isAdmin && project.postedBy.id === user.id && (
-      <Button
-        size="sm"
-        variant="outline"
-        className="flex items-center gap-1"
-        onClick={() => openEditProject(project)}
-      >
-        <Pencil className="h-4 w-4" />
-        <span className="hidden sm:inline">Edit</span>
-      </Button>
-    )}
-    
-    {!isAdmin && !hasVoted(project) && (
-      <Button
-        size="sm"
-        variant="default"
-        className="flex items-center gap-1"
-        onClick={() => openVoteDialog(project)}
-      >
-        <ThumbsUp className="h-4 w-4" />
-        <span className="hidden sm:inline">Vote</span>
-      </Button>
-    )}
-    
-    {isAdmin && project.status === "Pending Approval" && (
-      <div className="flex gap-1">
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-          onClick={() => {
-            setShowProjectDetails(false);
-            if (onApprove) onApprove(project);
-          }}
-        >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Approve</span>
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-          onClick={() => {
-            setShowProjectDetails(false);
-            if (onReject) onReject(project);
-          }}
-        >
-          <XCircle className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Reject</span>
-        </Button>
-      </div>
-    )}
-  </div>
-</td>
+                            <div className="flex justify-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex items-center gap-1"
+                                onClick={() => openProjectDetails(project)}
+                              >
+                                <FileText className="h-4 w-4" />
+                                <span className="hidden sm:inline">Details</span>
+                              </Button>
+
+                              {!isAdmin && project.postedBy.id === user.id && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="flex items-center gap-1"
+                                  onClick={() => openEditProject(project)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="hidden sm:inline">Edit</span>
+                                </Button>
+                              )}
+
+                              {!isAdmin && !hasVoted(project) && (
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  className="flex items-center gap-1"
+                                  onClick={() => openVoteDialog(project)}
+                                >
+                                  <ThumbsUp className="h-4 w-4" />
+                                  <span className="hidden sm:inline">Vote</span>
+                                </Button>
+                              )}
+
+                              {isAdmin && project.status === "Pending" && (
+                                <div className="flex gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                                    onClick={() => {
+                                      setShowProjectDetails(false);
+                                      if (onApprove) onApprove(project);
+                                    }}
+                                  >
+                                    <CheckCircle className="h-4 w-4 mr-2" />
+                                    <span className="hidden sm:inline">Approve</span>
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+                                    onClick={() => {
+                                      setShowProjectDetails(false);
+                                      if (onReject) onReject(project);
+                                    }}
+                                  >
+                                    <XCircle className="h-4 w-4 mr-2" />
+                                    <span className="hidden sm:inline">Reject</span>
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </td>
                         </tr>
                       ))
                     ) : (
@@ -1058,7 +1010,7 @@ useEffect(() => {
             </CardContent>
           </TabsContent>
 
-          <TabsContent value="pending approval" className="m-0">
+          <TabsContent value="pending" className="m-0">
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -1099,75 +1051,77 @@ useEffect(() => {
                               </div>
                             </td>
                             <td className="p-2">
-                              <Badge className={priority.badge}>{priority.level}</Badge>
+                              <Badge className={determinePriority(project).badge}>
+                                {determinePriority(project).level}
+                              </Badge>
                             </td>
                             <td className="p-2">{getVoteCountBadge(project)}</td>
                             <td className="p-2">
-  <div className="flex justify-center gap-2">
-    <Button
-      size="sm"
-      variant="outline"
-      className="flex items-center gap-1"
-      onClick={() => openProjectDetails(project)}
-    >
-      <FileText className="h-4 w-4" />
-      <span className="hidden sm:inline">Details</span>
-    </Button>
-    
-    {!isAdmin && project.postedBy.id === user.id && (
-      <Button
-        size="sm"
-        variant="outline"
-        className="flex items-center gap-1"
-        onClick={() => openEditProject(project)}
-      >
-        <Pencil className="h-4 w-4" />
-        <span className="hidden sm:inline">Edit</span>
-      </Button>
-    )}
-    
-    {!isAdmin && !hasVoted(project) && (
-      <Button
-        size="sm"
-        variant="default"
-        className="flex items-center gap-1"
-        onClick={() => openVoteDialog(project)}
-      >
-        <ThumbsUp className="h-4 w-4" />
-        <span className="hidden sm:inline">Vote</span>
-      </Button>
-    )}
-    
-    {isAdmin && project.status === "Pending Approval" && (
-      <div className="flex gap-1">
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-          onClick={() => {
-            setShowProjectDetails(false);
-            if (onApprove) onApprove(project);
-          }}
-        >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Approve</span>
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-          onClick={() => {
-            setShowProjectDetails(false);
-            if (onReject) onReject(project);
-          }}
-        >
-          <XCircle className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Reject</span>
-        </Button>
-      </div>
-    )}
-  </div>
-</td>
+                              <div className="flex justify-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="flex items-center gap-1"
+                                  onClick={() => openProjectDetails(project)}
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  <span className="hidden sm:inline">Details</span>
+                                </Button>
+
+                                {!isAdmin && project.postedBy.id === user.id && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex items-center gap-1"
+                                    onClick={() => openEditProject(project)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Edit</span>
+                                  </Button>
+                                )}
+
+                                {!isAdmin && !hasVoted(project) && (
+                                  <Button
+                                    size="sm"
+                                    variant="default"
+                                    className="flex items-center gap-1"
+                                    onClick={() => openVoteDialog(project)}
+                                  >
+                                    <ThumbsUp className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Vote</span>
+                                  </Button>
+                                )}
+
+                                {isAdmin && project.status === "Pending" && (
+                                  <div className="flex gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                                      onClick={() => {
+                                        setShowProjectDetails(false);
+                                        if (onApprove) onApprove(project);
+                                      }}
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-2" />
+                                      <span className="hidden sm:inline">Approve</span>
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+                                      onClick={() => {
+                                        setShowProjectDetails(false);
+                                        if (onReject) onReject(project);
+                                      }}
+                                    >
+                                      <XCircle className="h-4 w-4 mr-2" />
+                                      <span className="hidden sm:inline">Reject</span>
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
                           </tr>
                         );
                       })
@@ -1225,71 +1179,71 @@ useEffect(() => {
                               {project.rejectionReason || "No reason provided"}
                             </td>
                             <td className="p-2">
-  <div className="flex justify-center gap-2">
-    <Button
-      size="sm"
-      variant="outline"
-      className="flex items-center gap-1"
-      onClick={() => openProjectDetails(project)}
-    >
-      <FileText className="h-4 w-4" />
-      <span className="hidden sm:inline">Details</span>
-    </Button>
-    
-    {!isAdmin && project.postedBy.id === user.id && (
-      <Button
-        size="sm"
-        variant="outline"
-        className="flex items-center gap-1"
-        onClick={() => openEditProject(project)}
-      >
-        <Pencil className="h-4 w-4" />
-        <span className="hidden sm:inline">Edit</span>
-      </Button>
-    )}
-    
-    {!isAdmin && !hasVoted(project) && (
-      <Button
-        size="sm"
-        variant="default"
-        className="flex items-center gap-1"
-        onClick={() => openVoteDialog(project)}
-      >
-        <ThumbsUp className="h-4 w-4" />
-        <span className="hidden sm:inline">Vote</span>
-      </Button>
-    )}
-    
-    {isAdmin && project.status === "Pending Approval" && (
-      <div className="flex gap-1">
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-          onClick={() => {
-            setShowProjectDetails(false);
-            if (onApprove) onApprove(project);
-          }}
-        >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Approve</span>
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-          onClick={() => {
-            setShowProjectDetails(false);
-            if (onReject) onReject(project);
-          }}
-        >
-          <XCircle className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Reject</span>
-        </Button>
-      </div>
-    )}
-  </div>
-</td>
+                              <div className="flex justify-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="flex items-center gap-1"
+                                  onClick={() => openProjectDetails(project)}
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  <span className="hidden sm:inline">Details</span>
+                                </Button>
+
+                                {!isAdmin && project.postedBy.id === user.id && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex items-center gap-1"
+                                    onClick={() => openEditProject(project)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Edit</span>
+                                  </Button>
+                                )}
+
+                                {!isAdmin && !hasVoted(project) && (
+                                  <Button
+                                    size="sm"
+                                    variant="default"
+                                    className="flex items-center gap-1"
+                                    onClick={() => openVoteDialog(project)}
+                                  >
+                                    <ThumbsUp className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Vote</span>
+                                  </Button>
+                                )}
+
+                                {isAdmin && project.status === "Pending" && (
+                                  <div className="flex gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                                      onClick={() => {
+                                        setShowProjectDetails(false);
+                                        if (onApprove) onApprove(project);
+                                      }}
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-2" />
+                                      <span className="hidden sm:inline">Approve</span>
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+                                      onClick={() => {
+                                        setShowProjectDetails(false);
+                                        if (onReject) onReject(project);
+                                      }}
+                                    >
+                                      <XCircle className="h-4 w-4 mr-2" />
+                                      <span className="hidden sm:inline">Reject</span>
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
                           </tr>
                         ))
                       ) : (
@@ -1397,45 +1351,51 @@ useEffect(() => {
                   </div>
                 </div>
                 {/* Votes Section */}
-<div className="space-y-2">
-  <h3 className="text-sm font-medium text-gray-500">
-    Committee Votes ({selectedProject.votes.length})
-  </h3>
-  <div className="bg-gray-50 p-4 rounded-md border">
-    {selectedProject.votes.length > 0 ? (
-      <div className="space-y-3">
-        {selectedProject.votes.map((vote) => (
-          <div key={vote.id} className="flex items-center justify-between border-b pb-2 last:border-b-0">
-            <div>
-              <p className="font-medium">{vote.user.name}</p>
-              <p className="text-xs text-gray-500">{vote.user.role} Committee</p>
-              <p className="text-xs text-gray-400 mt-1">
-                Voted on {new Date(vote.votedAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric'
-                })}
-              </p>
-            </div>
-            <div className="flex items-center">
-              {vote.vote ? (
-                <span className="inline-flex items-center bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">
-                  <ThumbsUp className="h-4 w-4 mr-1" /> Approved
-                </span>
-              ) : (
-                <span className="inline-flex items-center bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm">
-                  <ThumbsDown className="h-4 w-4 mr-1" /> Rejected
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    ) : (
-      <p className="text-sm text-gray-500">No votes yet.</p>
-    )}
-  </div>
-</div>
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-gray-500">
+                    Committee Votes ({selectedProject.votes.length})
+                  </h3>
+                  <div className="bg-gray-50 p-4 rounded-md border">
+                    {selectedProject.votes.length > 0 ? (
+                      <div className="space-y-3">
+                        {selectedProject.votes.map((vote) => (
+                          <div key={vote.id} className="flex items-center justify-between border-b pb-2 last:border-b-0">
+                            <div>
+                              <p className="font-medium">{vote.user.name}</p>
+                              <p className="text-xs text-gray-500">{vote.user.role} Committee</p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                Voted on {new Date(vote.votedAt).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </p>
+                              {vote.comment && (
+                                <>
+                                  <p className="font-medium text-md text-gray-500">Comment :</p>
+                                  <p className="text-xs text-gray-400 mt-1">{vote.comment}</p>
+                                </>
+                              )}
+                            </div>
+                            <div className="flex items-center">
+                              {vote.vote === "Approved" ? (
+                                <span className="inline-flex items-center bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">
+                                  <ThumbsUp className="h-4 w-4 mr-1" /> Approved
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm">
+                                  <ThumbsDown className="h-4 w-4 mr-1" /> Rejected
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">No votes yet.</p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -1454,7 +1414,7 @@ useEffect(() => {
                 Vote Now
               </Button>
             )}
-            {isAdmin && selectedProject && selectedProject.status === "Pending Approval" && (
+            {isAdmin && selectedProject && selectedProject.status === "Pending" && (
               <>
                 <Button
                   variant="outline"
@@ -1505,13 +1465,22 @@ useEffect(() => {
                 </div>
               </div>
             )}
+
+            <Textarea
+              placeholder="Comment"
+              value={voteComment}
+              onChange={(e) => setVoteComment(e.target.value)}
+            />
           </div>
           <DialogFooter className="sm:justify-end">
             <Button variant="outline" onClick={() => setShowVoteDialog(false)}>
               Cancel
             </Button>
-            <Button variant="default" onClick={submitVote}>
-              {loading ? "Submitting..." : "Submit Vote"}
+            <Button variant="default" onClick={() => submitVote("Approved")}>
+              {loading ? "Approving..." : "Approve"}
+            </Button>
+            <Button variant="default" onClick={() => submitVote("Rejected")}>
+              {loading ? "Rejecting..." : "Reject"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1569,14 +1538,14 @@ useEffect(() => {
 
       {/* Upload Project Modal */}
       {showCreateProject && (
-  <UploadProjectModal 
-    onClose={() => {
-      setShowCreateProject(false);
-      setSelectedProject(null); // Reset selected project when closing
-    }} 
-    projectToEdit={selectedProject} 
-  />
-)}
+        <UploadProjectModal
+          onClose={() => {
+            setShowCreateProject(false);
+            setSelectedProject(null);
+          }}
+          projectToEdit={selectedProject}
+        />
+      )}
     </div>
   );
 }

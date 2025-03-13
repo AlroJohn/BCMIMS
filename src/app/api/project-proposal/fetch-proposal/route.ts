@@ -5,24 +5,22 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Use prisma.projectProposal instead of prisma.proposal
     const proposals = await prisma.projectProposal.findMany({
       include: {
         postedBy: {
-          select: {
-            id: true,
-            name: true,
-            role: true,
-          },
+          select: { id: true, name: true, role: true },
         },
         votes: {
           include: {
             user: {
-              select: {
-                id: true,
-                name: true,
-                role: true,
-              },
+              select: { id: true, name: true, role: true },
+            },
+          },
+        },
+        approvedBy: {
+          include: {
+            approvedBy: { 
+              select: { id: true, name: true, role: true },
             },
           },
         },
@@ -30,27 +28,46 @@ export async function GET() {
     });
 
     // Format the data to ensure all required information is present
-    const formattedProposals = proposals.map(proposal => ({
-      ...proposal,
-      postedBy: proposal.postedBy || {
-        id: "unknown",
-        name: "Unknown User",
-        role: "Unknown",
-      },
-      // Format votes to ensure user information is properly included
-      votes: proposal.votes.map(vote => ({
-        ...vote,
-        user: vote.user || {
+    const formattedProposals = proposals.map(proposal => {
+      // Compute overall status from approvedBy records:
+      const approvalStatuses = proposal.approvedBy.map(approval => approval.status);
+      let status = "Pending"; // changed default from "Pending Approval" to "Pending"
+      if (approvalStatuses.includes("Rejected")) {
+        status = "Rejected";
+      } else if (approvalStatuses.includes("Approved")) {
+        status = "Approved";
+      }
+
+      return {
+        ...proposal,
+        status, // add the computed status here
+        postedBy: proposal.postedBy || {
           id: "unknown",
           name: "Unknown User",
           role: "Unknown",
         },
-        // Ensure dates are properly serialized
-        votedAt: vote.votedAt.toISOString(),
-      })),
-      // Ensure dates are properly serialized
-      proposedDate: proposal.proposedDate.toISOString(),
-    }));
+        votes: proposal.votes.map(vote => ({
+          ...vote,
+          user: vote.user || {
+            id: "unknown",
+            name: "Unknown User",
+            role: "Unknown",
+          },
+          votedAt: vote.votedAt.toISOString(),
+        })),
+        approvedBy: proposal.approvedBy.map(approval => ({
+          ...approval,
+          status: approval.status,
+          approvedBy: approval.approvedBy || {
+            id: "unknown",
+            name: "Unknown User",
+            role: "Unknown",
+          },
+          updatedAt: approval.updatedAt.toISOString(),
+        })),
+        proposedDate: proposal.proposedDate.toISOString(),
+      };
+    });
 
     return NextResponse.json(formattedProposals);
   } catch (error) {
@@ -58,3 +75,4 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch proposals' }, { status: 500 });
   }
 }
+

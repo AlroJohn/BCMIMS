@@ -14,11 +14,13 @@ import { toast } from "sonner";
 import { SmsService } from "@/services/twilioService";
 
 // Define the Project type to match the structure in your main component
+type VoteStatus = "Approved" | "Rejected";
 type ProjectVote = {
   id: string;
   userId: string;
   proposalId: string;
-  vote: boolean;
+  vote: VoteStatus;
+  comment: string;
   votedAt: Date;
   user: {
     id: string;
