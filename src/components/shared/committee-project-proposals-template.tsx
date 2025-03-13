@@ -327,12 +327,8 @@ useEffect(() => {
         const approvalCount = votes.filter((v: any) => v.vote).length;
         const rejectionCount = votes.filter((v: any) => !v.vote).length;
 
-        const status =
-          approvalCount >= 4
-            ? "Approved"
-            : rejectionCount >= 4
-            ? "Rejected"
-            : "Pending Approval";
+       // Use the status from the database if it exists, otherwise default to "Pending Approval"
+      const status = p.status || "Pending Approval";
 
         const rejectionReason = votes.find((v: any) => !v.vote)?.comment || null;
 
