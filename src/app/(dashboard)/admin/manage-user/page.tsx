@@ -6,13 +6,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { 
-  AlertCircle, 
-  Check, 
-  PenLine, 
-  Plus, 
-  Search, 
-  Trash2, 
+import {
+  AlertCircle,
+  Check,
+  PenLine,
+  Plus,
+  Search,
+  Trash2,
   UserPlus,
   UserCog,
   Filter,
@@ -20,14 +20,14 @@ import {
   MoreHorizontal
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectGroup, 
-  SelectItem, 
-  SelectLabel, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import {
   DropdownMenu,
@@ -37,17 +37,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import SessionGuard from "@/components/custom/guard/session-guard";
 
 // Define user types
 type UserStatus = "Active" | "Inactive" | "Pending";
@@ -212,13 +213,13 @@ export default function ManageUsersPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<UserStatus | null>(null);
-  
+
   // Dialog states
   const [showAddUserDialog, setShowAddUserDialog] = useState(false);
   const [showEditUserDialog, setShowEditUserDialog] = useState(false);
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  
+
   // Form states for new user
   const [newUserName, setNewUserName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
@@ -226,11 +227,11 @@ export default function ManageUsersPage() {
   const [newUserPosition, setNewUserPosition] = useState("");
   const [newUserPhone, setNewUserPhone] = useState("");
   const [newUserStatus, setNewUserStatus] = useState<UserStatus>("Active");
-  
+
   // Filter users based on active tab, search term, and filters
   useEffect(() => {
     let result = [...users];
-    
+
     // Filter by tab
     if (activeTab === "active") {
       result = result.filter(user => user.status === "Active");
@@ -239,38 +240,38 @@ export default function ManageUsersPage() {
     } else if (activeTab === "pending") {
       result = result.filter(user => user.status === "Pending");
     }
-    
+
     // Filter by search term
     if (searchTerm) {
       const lowercasedSearch = searchTerm.toLowerCase();
       result = result.filter(
-        user => 
-          user.name.toLowerCase().includes(lowercasedSearch) || 
+        user =>
+          user.name.toLowerCase().includes(lowercasedSearch) ||
           user.email.toLowerCase().includes(lowercasedSearch) ||
           user.position.toLowerCase().includes(lowercasedSearch) ||
           user.phone.includes(searchTerm)
       );
     }
-    
+
     // Filter by committee/role
     if (selectedRole) {
       result = result.filter(user => user.role === selectedRole);
     }
-    
+
     // Filter by status
     if (selectedStatus) {
       result = result.filter(user => user.status === selectedStatus);
     }
-    
+
     setFilteredUsers(result);
   }, [users, searchTerm, activeTab, selectedRole, selectedStatus]);
-  
+
   // Calculate statistics
   const totalUsers = users.length;
   const activeUsers = users.filter(user => user.status === "Active").length;
   const inactiveUsers = users.filter(user => user.status === "Inactive").length;
   const pendingUsers = users.filter(user => user.status === "Pending").length;
-  
+
   // Function to handle adding a new user
   const handleAddUser = () => {
     const newUser: User = {
@@ -285,16 +286,16 @@ export default function ManageUsersPage() {
       dateAdded: new Date(),
       image: ""
     };
-    
+
     setUsers([...users, newUser]);
     resetFormState();
     setShowAddUserDialog(false);
   };
-  
+
   // Function to handle editing a user
   const handleEditUser = () => {
     if (!selectedUser) return;
-    
+
     const updatedUsers = users.map(user => {
       if (user.id === selectedUser.id) {
         return {
@@ -309,22 +310,22 @@ export default function ManageUsersPage() {
       }
       return user;
     });
-    
+
     setUsers(updatedUsers);
     resetFormState();
     setShowEditUserDialog(false);
   };
-  
+
   // Function to handle deleting a user
   const handleDeleteUser = () => {
     if (!selectedUser) return;
-    
+
     const updatedUsers = users.filter(user => user.id !== selectedUser.id);
     setUsers(updatedUsers);
     setSelectedUser(null);
     setShowDeleteConfirmDialog(false);
   };
-  
+
   // Function to open the edit user dialog
   const openEditUserDialog = (user: User) => {
     setSelectedUser(user);
@@ -336,13 +337,13 @@ export default function ManageUsersPage() {
     setNewUserStatus(user.status);
     setShowEditUserDialog(true);
   };
-  
+
   // Function to open the delete confirmation dialog
   const openDeleteConfirmDialog = (user: User) => {
     setSelectedUser(user);
     setShowDeleteConfirmDialog(true);
   };
-  
+
   // Function to reset form state
   const resetFormState = () => {
     setNewUserName("");
@@ -353,7 +354,7 @@ export default function ManageUsersPage() {
     setNewUserStatus("Active");
     setSelectedUser(null);
   };
-  
+
   // Function to get status badge styling
   const getStatusBadge = (status: UserStatus) => {
     switch (status) {
@@ -377,6 +378,7 @@ export default function ManageUsersPage() {
   };
 
   return (
+    <SessionGuard requiredRoles={["Admin"]}>
     <div className="space-y-6 p-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -399,7 +401,7 @@ export default function ManageUsersPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col">
@@ -408,7 +410,7 @@ export default function ManageUsersPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col">
@@ -417,7 +419,7 @@ export default function ManageUsersPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col">
@@ -441,8 +443,8 @@ export default function ManageUsersPage() {
             <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
               <div className="relative flex-grow">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                <Input 
-                  placeholder="Search users..." 
+                <Input
+                  placeholder="Search users..."
                   className="pl-8"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -458,10 +460,10 @@ export default function ManageUsersPage() {
                 <DropdownMenuContent className="w-56">
                   <DropdownMenuLabel>Filter Users</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  
+
                   <div className="p-2">
                     <Label htmlFor="role-filter" className="text-xs block mb-1">Committee / Role</Label>
-                    <Select 
+                    <Select
                       value={selectedRole || ""}
                       onValueChange={(value) => setSelectedRole(value || null)}
                     >
@@ -478,10 +480,10 @@ export default function ManageUsersPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="p-2">
                     <Label htmlFor="status-filter" className="text-xs block mb-1">Status</Label>
-                    <Select 
+                    <Select
                       value={selectedStatus || ""}
                       onValueChange={(value) => setSelectedStatus(value as UserStatus || null)}
                     >
@@ -496,11 +498,11 @@ export default function ManageUsersPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <DropdownMenuSeparator />
                   <div className="p-2">
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       onClick={resetFilters}
                       className="w-full justify-center text-sm"
                     >
@@ -509,7 +511,7 @@ export default function ManageUsersPage() {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="gap-2">
@@ -532,7 +534,7 @@ export default function ManageUsersPage() {
             </div>
           </div>
         </CardHeader>
-        
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-2">
           <div className="px-6">
             <TabsList className="grid w-full grid-cols-4">
@@ -542,7 +544,7 @@ export default function ManageUsersPage() {
               <TabsTrigger value="pending">Pending ({pendingUsers})</TabsTrigger>
             </TabsList>
           </div>
-          
+
           <TabsContent value="all" className="m-0">
             <CardContent>
               <div className="overflow-x-auto">
@@ -564,9 +566,9 @@ export default function ManageUsersPage() {
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-medium uppercase overflow-hidden">
                                 {user.image ? (
-                                  <img 
-                                    src={user.image} 
-                                    alt={user.name} 
+                                  <img
+                                    src={user.image}
+                                    alt={user.name}
                                     className="w-10 h-10 object-cover"
                                   />
                                 ) : (
@@ -619,7 +621,7 @@ export default function ManageUsersPage() {
                                   Change Password
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   className="text-red-600"
                                   onClick={() => openDeleteConfirmDialog(user)}
                                 >
@@ -643,7 +645,7 @@ export default function ManageUsersPage() {
               </div>
             </CardContent>
           </TabsContent>
-          
+
           <TabsContent value="active" className="m-0">
             <CardContent>
               <div className="overflow-x-auto">
@@ -665,9 +667,9 @@ export default function ManageUsersPage() {
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-medium uppercase overflow-hidden">
                                 {user.image ? (
-                                  <img 
-                                    src={user.image} 
-                                    alt={user.name} 
+                                  <img
+                                    src={user.image}
+                                    alt={user.name}
                                     className="w-10 h-10 object-cover"
                                   />
                                 ) : (
@@ -720,7 +722,7 @@ export default function ManageUsersPage() {
                                   Change Password
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   className="text-red-600"
                                   onClick={() => openDeleteConfirmDialog(user)}
                                 >
@@ -744,7 +746,7 @@ export default function ManageUsersPage() {
               </div>
             </CardContent>
           </TabsContent>
-          
+
           <TabsContent value="inactive" className="m-0">
             <CardContent>
               <div className="overflow-x-auto">
@@ -766,9 +768,9 @@ export default function ManageUsersPage() {
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-medium uppercase overflow-hidden">
                                 {user.image ? (
-                                  <img 
-                                    src={user.image} 
-                                    alt={user.name} 
+                                  <img
+                                    src={user.image}
+                                    alt={user.name}
                                     className="w-10 h-10 object-cover"
                                   />
                                 ) : (
@@ -821,7 +823,7 @@ export default function ManageUsersPage() {
                                   Change Password
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   className="text-red-600"
                                   onClick={() => openDeleteConfirmDialog(user)}
                                 >
@@ -845,7 +847,7 @@ export default function ManageUsersPage() {
               </div>
             </CardContent>
           </TabsContent>
-          
+
           <TabsContent value="pending" className="m-0">
             <CardContent>
               <div className="overflow-x-auto">
@@ -867,9 +869,9 @@ export default function ManageUsersPage() {
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-medium uppercase overflow-hidden">
                                 {user.image ? (
-                                  <img 
-                                    src={user.image} 
-                                    alt={user.name} 
+                                  <img
+                                    src={user.image}
+                                    alt={user.name}
                                     className="w-10 h-10 object-cover"
                                   />
                                 ) : (
@@ -922,7 +924,7 @@ export default function ManageUsersPage() {
                                   Change Password
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   className="text-red-600"
                                   onClick={() => openDeleteConfirmDialog(user)}
                                 >
@@ -958,7 +960,7 @@ export default function ManageUsersPage() {
               Create a new user account with appropriate access permissions.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
@@ -969,7 +971,7 @@ export default function ManageUsersPage() {
                 onChange={(e) => setNewUserName(e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
               <Input
@@ -980,7 +982,7 @@ export default function ManageUsersPage() {
                 onChange={(e) => setNewUserEmail(e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
               <Input
@@ -990,11 +992,11 @@ export default function ManageUsersPage() {
                 onChange={(e) => setNewUserPhone(e.target.value)}
               />
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="role">Committee/Role</Label>
-                <Select 
+                <Select
                   value={newUserRole}
                   onValueChange={setNewUserRole}
                 >
@@ -1010,10 +1012,10 @@ export default function ManageUsersPage() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="status">Account Status</Label>
-                <Select 
+                <Select
                   value={newUserStatus}
                   onValueChange={(value) => setNewUserStatus(value as UserStatus)}
                 >
@@ -1028,7 +1030,7 @@ export default function ManageUsersPage() {
                 </Select>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="position">Position/Title</Label>
               <Input
@@ -1038,7 +1040,7 @@ export default function ManageUsersPage() {
                 onChange={(e) => setNewUserPosition(e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="user-avatar">Profile Photo</Label>
               <Input
@@ -1050,12 +1052,12 @@ export default function ManageUsersPage() {
               <p className="text-xs text-gray-500">Upload a profile photo (optional).</p>
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddUserDialog(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleAddUser}
               disabled={!newUserName || !newUserEmail || !newUserRole}
             >
@@ -1074,7 +1076,7 @@ export default function ManageUsersPage() {
               {selectedUser && `Update information for ${selectedUser.name}`}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="edit-name">Full Name</Label>
@@ -1085,7 +1087,7 @@ export default function ManageUsersPage() {
                 onChange={(e) => setNewUserName(e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="edit-email">Email Address</Label>
               <Input
@@ -1096,7 +1098,7 @@ export default function ManageUsersPage() {
                 onChange={(e) => setNewUserEmail(e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="edit-phone">Phone Number</Label>
               <Input
@@ -1106,11 +1108,11 @@ export default function ManageUsersPage() {
                 onChange={(e) => setNewUserPhone(e.target.value)}
               />
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-role">Committee/Role</Label>
-                <Select 
+                <Select
                   value={newUserRole}
                   onValueChange={setNewUserRole}
                 >
@@ -1126,10 +1128,10 @@ export default function ManageUsersPage() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="edit-status">Account Status</Label>
-                <Select 
+                <Select
                   value={newUserStatus}
                   onValueChange={(value) => setNewUserStatus(value as UserStatus)}
                 >
@@ -1144,7 +1146,7 @@ export default function ManageUsersPage() {
                 </Select>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="edit-position">Position/Title</Label>
               <Input
@@ -1154,7 +1156,7 @@ export default function ManageUsersPage() {
                 onChange={(e) => setNewUserPosition(e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="edit-avatar">Change Profile Photo</Label>
               <Input
@@ -1165,26 +1167,26 @@ export default function ManageUsersPage() {
               />
               <p className="text-xs text-gray-500">Upload a new profile photo (optional).</p>
             </div>
-            
+
             {selectedUser && selectedUser.image && (
               <div className="space-y-2">
                 <Label className="block mb-1">Current Photo</Label>
                 <div className="w-16 h-16 rounded-full overflow-hidden border">
-                  <img 
-                    src={selectedUser.image} 
-                    alt={selectedUser.name} 
+                  <img
+                    src={selectedUser.image}
+                    alt={selectedUser.name}
                     className="w-full h-full object-cover"
                   />
                 </div>
               </div>
             )}
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditUserDialog(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleEditUser}
               disabled={!newUserName || !newUserEmail || !newUserRole}
             >
@@ -1203,7 +1205,7 @@ export default function ManageUsersPage() {
               {selectedUser && `Are you sure you want to delete the user account for ${selectedUser.name}? This action cannot be undone.`}
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedUser && (
             <div className="py-4">
               <Alert variant="destructive">
@@ -1213,14 +1215,14 @@ export default function ManageUsersPage() {
                   Deleting this user will remove all associated data and permissions. This action is permanent.
                 </AlertDescription>
               </Alert>
-              
+
               <div className="border rounded-md p-3 mt-4 bg-gray-50">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-medium uppercase overflow-hidden">
                     {selectedUser.image ? (
-                      <img 
-                        src={selectedUser.image} 
-                        alt={selectedUser.name} 
+                      <img
+                        src={selectedUser.image}
+                        alt={selectedUser.name}
                         className="w-10 h-10 object-cover"
                       />
                     ) : (
@@ -1236,12 +1238,12 @@ export default function ManageUsersPage() {
               </div>
             </div>
           )}
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDeleteConfirmDialog(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="destructive"
               onClick={handleDeleteUser}
             >
@@ -1251,5 +1253,6 @@ export default function ManageUsersPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </SessionGuard>
   );
 }

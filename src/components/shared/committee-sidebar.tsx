@@ -64,7 +64,7 @@ export function CommitteeSidebar({
       icon: BarChart,
       color: "text-amber-500"
     },
-    "HEALTH_COMMITTEE": {
+    "HEALTH_SERVICES_COMMITTEE": {
       id: 4,
       name: "Health Services",
       path: "/committee/health-services",

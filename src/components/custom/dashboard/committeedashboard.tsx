@@ -1,19 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bargraph } from "@/components/custom/dashboard/Bargraph";
+
 import { Piegraph } from "@/components/custom/dashboard/Piegraph";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
-  AlertCircle, Calendar, CheckCircle, Clock, Download, FileText, Filter,
-  Pencil, Plus, Search, XCircle
+  Calendar, CheckCircle, Clock, Download, FileText, Filter,
+  Pencil, Search, XCircle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import SessionGuard from "@/components/custom/guard/session-guard";
+
 
 // Create simple Badge component
 const Badge = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
