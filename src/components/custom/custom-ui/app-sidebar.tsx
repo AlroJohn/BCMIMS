@@ -81,50 +81,50 @@ const data = {
         },
       ],
     },
-    {
-      title: "Manage User",
-      url: "#",
-      icon: Users,
-      isActive: true,
-      items: [
-        {
-          title: "All Users",
-          url: "/admin/manage-users",
-        },
-        {
-          title: "Admin",
-          url: "/admin/manage-users/admin",
-        },
-        {
-          title: "Education",
-          url: "/admin/manage-users/education",
-        },
-        {
-          title: "Environment",
-          url: "/admin/manage-users/environment",
-        },
-        {
-          title: "Finance",
-          url: "/admin/manage-users/finance",
-        },
-        {
-          title: "Health Services",
-          url: "/admin/manage-users/health-services",
-        },
-        {
-          title: "Peace Order",
-          url: "/admin/manage-users/peace-order",
-        },
-        {
-          title: "Public Works",
-          url: "/admin/manage-users/public-works",
-        },
-        {
-          title: "Women",
-          url: "/admin/manage-users/public-works",
-        },
-      ],
-    },
+    // {
+    //   title: "Manage User",
+    //   url: "#",
+    //   icon: Users,
+    //   isActive: true,
+    //   items: [
+    //     {
+    //       title: "All Users",
+    //       url: "/admin/manage-users",
+    //     },
+    //     {
+    //       title: "Admin",
+    //       url: "/admin/manage-users/admin",
+    //     },
+    //     {
+    //       title: "Education",
+    //       url: "/admin/manage-users/education",
+    //     },
+    //     {
+    //       title: "Environment",
+    //       url: "/admin/manage-users/environment",
+    //     },
+    //     {
+    //       title: "Finance",
+    //       url: "/admin/manage-users/finance",
+    //     },
+    //     {
+    //       title: "Health Services",
+    //       url: "/admin/manage-users/health-services",
+    //     },
+    //     {
+    //       title: "Peace Order",
+    //       url: "/admin/manage-users/peace-order",
+    //     },
+    //     {
+    //       title: "Public Works",
+    //       url: "/admin/manage-users/public-works",
+    //     },
+    //     {
+    //       title: "Women",
+    //       url: "/admin/manage-users/public-works",
+    //     },
+    //   ],
+    // },
   ],
 }
 

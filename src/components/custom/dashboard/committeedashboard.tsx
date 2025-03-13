@@ -611,7 +611,7 @@ export default function CommitteeDashboard({
                       <p className="font-medium">{committeeInfo.person}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Total Projects</p>
+                      <p className="text-sm text-gray-500">Projects</p>
                       <p className="font-medium">{totalProjects}</p>
                     </div>
                   </div>
