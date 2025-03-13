@@ -44,6 +44,8 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import UploadProjectModal from "./upload-project-modal";
+import { useAuth } from "../providers/auth-provider";
+import { supabase } from "@/lib/supabase-client";
 
 // Define types aligned with your Prisma schema
 type ProjectVote = {
@@ -242,14 +244,55 @@ export default function CommitteeProjectProposalsTemplate({
   const [showVoteDialog, setShowVoteDialog] = useState(false);
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [voteStatus, setVoteStatus] = useState<boolean | null>(null);
+  // We no longer need to let users choose a vote so we default vote to false here,
+  // but when submitting we always send true.
+  const [voteStatus, setVoteStatus] = useState<boolean>(false);
   const [voteComment, setVoteComment] = useState("");
   const [showPriorityMatrix, setShowPriorityMatrix] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [votes, setVotes] = useState<any[]>([]);
+  const { user } = useAuth();
 
   // Fetch projects on mount
+
+  const fetchVotes = async () => {
+    const { data, error } = await supabase.from("Vote").select("*");
+    if (error) {
+      console.error("Error fetching votes:", error);
+    } else if (data) {
+      setVotes(data);
+    }
+  };
+
+
+
+  useEffect(() => {
+    fetchVotes();
+
+    const subscription = supabase
+      .channel("public:Vote")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "Vote" },
+        (payload) => {
+          console.log("Realtime vote change:", payload);
+          fetchVotes(); // re-fetch votes on any change
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
+
+
+
+
+
+
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -259,59 +302,60 @@ export default function CommitteeProjectProposalsTemplate({
         const rawProjects = await res.json();
 
         // Map API response to Project type
-     // Map API response to Project type
-const mappedProjects: Project[] = rawProjects.map((p: any) => {
-  const committee =
-    roleToCommittee[p.postedBy?.role as keyof typeof roleToCommittee] || {
-      name: "Unknown",
-      id: -1,
-    };
-  
-  // Add null checks for votes array
-  const votes = Array.isArray(p.votes) ? p.votes : [];
-  const approvalCount = votes.filter((v: any) => v.vote).length;
-  const rejectionCount = votes.filter((v: any) => !v.vote).length;
-  
-  const status =
-    approvalCount >= 4 ? "Approved" :
-    rejectionCount >= 4 ? "Rejected" :
-    "Pending Approval";
-  
-  const rejectionReason = votes.find((v: any) => !v.vote)?.comment || null;
+        const mappedProjects: Project[] = rawProjects.map((p: any) => {
+          const committeeObj =
+            roleToCommittee[p.postedBy?.role as keyof typeof roleToCommittee] || {
+              name: "Unknown",
+              id: -1,
+            };
 
-  return {
-    id: p.id || "unknown-id",
-    name: p.title || "Untitled Project",
-    description: p.description || "",
-    committee: committee.name,
-    committeeId: committee.id,
-    budget: p.budget || 0,
-    documentTitle: p.fileUrl ? p.fileUrl.split("/").pop() || "Document" : "Document",
-    documentUrl: p.fileUrl || "",
-    dueDate: new Date(p.proposedDate || new Date()), // Placeholder; adjust if dueDate added
-    dateProposed: new Date(p.proposedDate || new Date()),
-    status,
-    rejectionReason,
-    votes: votes.map((v: any) => ({
-      id: v.id || "unknown-vote-id",
-      userId: v.userId || "unknown-user-id",
-      proposalId: v.proposalId || p.id || "unknown-proposal-id",
-      vote: v.vote === true,
-      votedAt: new Date(v.votedAt || new Date()),
-      user: {
-        id: v.user?.id || "unknown-user-id",
-        name: v.user?.name || "Unknown User",
-        role: v.user?.role || "Unknown Role"
-      },
-    })),
-    implementation: null, // Add if schema extends
-    postedBy: {
-      id: p.postedBy?.id || "unknown-poster-id",
-      name: p.postedBy?.name || "Unknown User",
-      role: p.postedBy?.role || "Unknown Role"
-    },
-  };
-});
+          // Add null checks for votes array
+          const votes = Array.isArray(p.votes) ? p.votes : [];
+          const approvalCount = votes.filter((v: any) => v.vote).length;
+          const rejectionCount = votes.filter((v: any) => !v.vote).length;
+
+          const status =
+            approvalCount >= 4
+              ? "Approved"
+              : rejectionCount >= 4
+              ? "Rejected"
+              : "Pending Approval";
+
+          const rejectionReason = votes.find((v: any) => !v.vote)?.comment || null;
+
+          return {
+            id: p.id || "unknown-id",
+            name: p.title || "Untitled Project",
+            description: p.description || "",
+            committee: committeeObj.name,
+            committeeId: committeeObj.id,
+            budget: p.budget || 0,
+            documentTitle: p.fileUrl ? p.fileUrl.split("/").pop() || "Document" : "Document",
+            documentUrl: p.fileUrl || "",
+            dueDate: new Date(p.proposedDate || new Date()),
+            dateProposed: new Date(p.proposedDate || new Date()),
+            status,
+            rejectionReason,
+            votes: votes.map((v: any) => ({
+              id: v.id || "unknown-vote-id",
+              userId: v.userId || "unknown-user-id",
+              proposalId: v.proposalId || p.id || "unknown-proposal-id",
+              vote: v.vote === true,
+              votedAt: new Date(v.votedAt || new Date()),
+              user: {
+                id: v.user?.id || "unknown-user-id",
+                name: v.user?.name || "Unknown User",
+                role: v.user?.role || "Unknown Role",
+              },
+            })),
+            implementation: null,
+            postedBy: {
+              id: p.postedBy?.id || "unknown-poster-id",
+              name: p.postedBy?.name || "Unknown User",
+              role: p.postedBy?.role || "Unknown Role",
+            },
+          };
+        });
         setProjects(mappedProjects);
       } catch (err) {
         setError("Failed to load projects. Please try again later.");
@@ -348,7 +392,7 @@ const mappedProjects: Project[] = rawProjects.map((p: any) => {
         const committeeVote = project.votes.find(
           (vote) => vote.user.role === committeeInfo.name.replace(" & ", "")
         );
-        return !committeeVote; // Show if committee hasn't voted
+        return !committeeVote;
       }
 
       if (activeTab === "all" || activeTab === "to-vote") return true;
@@ -362,7 +406,12 @@ const mappedProjects: Project[] = rawProjects.map((p: any) => {
   const pendingProjects = projectProposals.filter((p) => p.status === "Pending Approval").length;
   const rejectedProjects = projectProposals.filter((p) => p.status === "Rejected").length;
   const toVoteProjects = !isAdmin
-    ? projectProposals.filter((project) => !project.votes.some((vote) => vote.user.role === committeeInfo.name.replace(" & ", ""))).length
+    ? projectProposals.filter(
+        (project) =>
+          !project.votes.some(
+            (vote) => vote.user.role === committeeInfo.name.replace(" & ", "")
+          )
+      ).length
     : 0;
 
   const determinePriority = (project: Project) => {
@@ -374,7 +423,9 @@ const mappedProjects: Project[] = rawProjects.map((p: any) => {
     }
     const approvalCount = project.votes.filter((vote) => vote.vote).length;
     const now = new Date();
-    const daysUntilDue = Math.ceil((project.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const daysUntilDue = Math.ceil(
+      (project.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
     if (approvalCount >= 4 && daysUntilDue <= 30) {
       return { level: "Urgent & Important", badge: "bg-red-100 border-red-200 text-red-800" };
     }
@@ -394,125 +445,64 @@ const mappedProjects: Project[] = rawProjects.map((p: any) => {
 
   const openVoteDialog = (project: Project) => {
     setSelectedProject(project);
-    const committeeVote = project.votes.find((vote) => vote.user.role === committeeInfo.name.replace(" & ", ""));
-    setVoteStatus(committeeVote ? committeeVote.vote : null);
-    setVoteComment(""); // No comment field in Vote model yet
+    // We no longer let the user choose a vote so we can default to false (or leave it untouched)
+    setVoteComment(""); // Reset any comment (if needed)
     setShowVoteDialog(true);
   };
 
-// Step 1: Keep only ONE Vote Dialog component
-// Remove one of the duplicate Vote Dialog components completely (around lines 920-960 OR lines 962-1002)
+  // When submitVote is clicked, we always send vote: true (approved)
+  const submitVote = async () => {
+    if (!selectedProject) return;
+    try {
+      setLoading(true);
 
-// Step 2: Update the submitVote function to better handle the response
-const submitVote = async () => {
-  if (!selectedProject) return;
-  try {
-    setLoading(true);
-    
-    // For testing, use a known valid user ID from your database
-    // In a production environment, this would come from your auth context
-    const currentUserId = selectedProject.postedBy?.id;
-    
-    if (!currentUserId) {
-      throw new Error("Cannot determine user ID for vote. Project data may be incomplete.");
-    }
-    
-    console.log("Submitting vote with data:", {
-      proposalId: selectedProject.id,
-      vote: voteStatus,
-      userId: currentUserId
-    });
-    
-    const response = await fetch("/api/project-proposal/vote", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        proposalId: selectedProject.id,
-        vote: voteStatus,
-        userId: currentUserId
-      }),
-    });
-    
-    // Log the raw response for debugging
-    const responseText = await response.text();
-    console.log("Raw response:", responseText);
-    
-    if (!response.ok) {
-      throw new Error(`Server error: ${response.status} ${response.statusText} - ${responseText}`);
-    }
-    
-    // Parse the response text back to JSON
-    const newVote = JSON.parse(responseText);
-    console.log("Parsed vote response:", newVote);
-    
-    // Update the projects state with the new vote
-    const updatedProjects = projects.map((project) => {
-      if (project.id === selectedProject.id) {
-        // Check if the user has already voted on this project
-        const existingVoteIndex = project.votes.findIndex(
-          (v) => v.userId === currentUserId
-        );
-        
-        let updatedVotes;
-        if (existingVoteIndex >= 0) {
-          // Replace the existing vote
-          updatedVotes = [...project.votes];
-          updatedVotes[existingVoteIndex] = newVote;
-        } else {
-          // Add the new vote
-          updatedVotes = [...project.votes, newVote];
-        }
-        
-        // Calculate new status based on updated votes
-        const approvalCount = updatedVotes.filter((v) => v.vote).length;
-        const rejectionCount = updatedVotes.filter((v) => !v.vote).length;
-        
-        let newStatus = project.status;
-        if (approvalCount >= 4) {
-          newStatus = "Approved";
-        } else if (rejectionCount >= 4) {
-          newStatus = "Rejected";
-        } else {
-          newStatus = "Pending Approval";
-        }
-        
-        return {
-          ...project,
-          votes: updatedVotes,
-          status: newStatus
-        };
+      // Use the authenticated user's id
+      const currentUserId = user.id;
+      if (!currentUserId) {
+        throw new Error("Cannot determine user ID for vote.");
       }
-      return project;
-    });
-    
-    setProjects(updatedProjects);
-    setShowVoteDialog(false);
-    
-  } catch (error) {
-    console.error("Vote submission failed:", error);
-    setError(error instanceof Error ? error.message : "Failed to submit vote. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
-  
-  // Helper function to calculate project status
-  const calculateProjectStatus = (project: Project, newVote: ProjectVote) => {
-    const allVotes = [...project.votes, newVote];
-    const approvalCount = allVotes.filter((vote) => vote.vote).length;
-    const rejectionCount = allVotes.filter((vote) => !vote.vote).length;
-    
-    if (approvalCount >= 4) return "Approved";
-    if (rejectionCount >= 4) return "Rejected";
-    return "Pending Approval";
-  }
+
+      console.log("Submitting vote with data:", {
+        proposalId: selectedProject.id,
+        vote: true,
+        userId: currentUserId,
+      });
+
+      const response = await fetch("/api/project-proposal/updateVote", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          proposalId: selectedProject.id,
+          vote: true, // Always approved
+          userId: currentUserId,
+        }),
+      });
+
+      const responseText = await response.text();
+      console.log("Raw response:", responseText);
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status} ${response.statusText} - ${responseText}`);
+      }
+      setShowVoteDialog(false);
+    } catch (error) {
+      console.error("Vote submission failed:", error);
+      setError(error instanceof Error ? error.message : "Failed to submit vote. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "Approved": return "bg-green-100 border-green-200 text-green-800";
-      case "Pending Approval": return "bg-blue-100 border-blue-200 text-blue-800";
-      case "Rejected": return "bg-red-100 border-red-200 text-red-800";
-      default: return "bg-gray-100 border-gray-200 text-gray-800";
+      case "Approved":
+        return "bg-green-100 border-green-200 text-green-800";
+      case "Pending Approval":
+        return "bg-blue-100 border-blue-200 text-blue-800";
+      case "Rejected":
+        return "bg-red-100 border-red-200 text-red-800";
+      default:
+        return "bg-gray-100 border-gray-200 text-gray-800";
     }
   };
 
@@ -522,10 +512,16 @@ const submitVote = async () => {
     const pendingCount = 7 - (approvalCount + rejectionCount); // Assuming 7 committees
     return (
       <div className="flex gap-1">
-        <span className="inline-flex items-center text-green-600 text-xs"><ThumbsUp className="h-3 w-3 mr-1" />{approvalCount}</span>
-        <span className="inline-flex items-center text-red-600 text-xs"><ThumbsDown className="h-3 w-3 mr-1" />{rejectionCount}</span>
+        <span className="inline-flex items-center text-green-600 text-xs">
+          <ThumbsUp className="h-3 w-3 mr-1" />{approvalCount}
+        </span>
+        <span className="inline-flex items-center text-red-600 text-xs">
+          <ThumbsDown className="h-3 w-3 mr-1" />{rejectionCount}
+        </span>
         {pendingCount > 0 && (
-          <span className="inline-flex items-center text-gray-500 text-xs"><Clock className="h-3 w-3 mr-1" />{pendingCount}</span>
+          <span className="inline-flex items-center text-gray-500 text-xs">
+            <Clock className="h-3 w-3 mr-1" />{pendingCount}
+          </span>
         )}
       </div>
     );
@@ -533,7 +529,9 @@ const submitVote = async () => {
 
   const hasVoted = (project: Project) => {
     if (isAdmin) return true;
-    return project.votes.some((vote) => vote.user.role === committeeInfo.name.replace(" & ", ""));
+    return project.votes.some(
+      (vote) => vote.user.role === committeeInfo.name.replace(" & ", "")
+    );
   };
 
   const getProgressClass = () => committeeInfo.progressColor || "bg-blue-500";
@@ -733,18 +731,24 @@ const submitVote = async () => {
                                       size="sm"
                                       variant="outline"
                                       className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-                                      onClick={() => onApprove && onApprove(project)}
+                                      onClick={() => {
+                                        setShowProjectDetails(false);
+                                        if (onApprove) onApprove(project);
+                                      }}
                                     >
-                                      <CheckCircle className="h-4 w-4" />
+                                      <CheckCircle className="h-4 w-4 mr-2" />
                                       <span className="hidden sm:inline">Approve</span>
                                     </Button>
                                     <Button
                                       size="sm"
                                       variant="outline"
                                       className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-                                      onClick={() => onReject && onReject(project)}
+                                      onClick={() => {
+                                        setShowProjectDetails(false);
+                                        if (onReject) onReject(project);
+                                      }}
                                     >
-                                      <XCircle className="h-4 w-4" />
+                                      <XCircle className="h-4 w-4 mr-2" />
                                       <span className="hidden sm:inline">Reject</span>
                                     </Button>
                                   </div>
@@ -839,7 +843,7 @@ const submitVote = async () => {
                                 </div>
                               </td>
                             </tr>
-                          )
+                          );
                         })
                       ) : (
                         <tr>
@@ -1083,294 +1087,210 @@ const submitVote = async () => {
         </Tabs>
       </Card>
 
-
       {/* Project Details Dialog */}
-<Dialog open={showProjectDetails} onOpenChange={setShowProjectDetails}>
-  <DialogContent className="sm:max-w-lg">
-    <DialogHeader>
-      <DialogTitle>Project Details</DialogTitle>
-      <DialogDescription>
-        {selectedProject && `Detailed information for "${selectedProject.name}"`}
-      </DialogDescription>
-    </DialogHeader>
-    <div className="py-4">
-      {selectedProject && (
-        <div className="space-y-6">
-          {/* Project Info Section */}
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-gray-500">Project Information</h3>
-            <div className="bg-gray-50 p-4 rounded-md border">
-              <p className="font-medium text-lg mb-2">{selectedProject.name}</p>
-              <p className="text-sm text-gray-700 mb-4">{selectedProject.description}</p>
-              
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                <div>
-                  <span className="text-gray-500">Proposed by: </span>
-                  <span className="font-medium">{selectedProject.postedBy.name} ({selectedProject.committee})</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Status: </span>
-                  <span className="font-medium">
-                    <Badge className={getStatusBadge(selectedProject.status)}>{selectedProject.status}</Badge>
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Budget: </span>
-                  <span className="font-medium">₱{selectedProject.budget.toLocaleString()}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Committee: </span>
-                  <span className="font-medium">{selectedProject.committee}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Due Date: </span>
-                  <span className="font-medium">
-                    {selectedProject.dueDate.toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Proposed Date: </span>
-                  <span className="font-medium">
-                    {selectedProject.dateProposed.toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Document Section */}
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-gray-500">Project Document</h3>
-            <div className="bg-gray-50 p-4 rounded-md border">
-              <div className="flex items-center">
-                <FileText className="h-6 w-6 text-blue-600 mr-2" />
-                <div>
-                  <p className="font-medium">{selectedProject.documentTitle}</p>
-                  {selectedProject.documentUrl && (
-                    <a 
-                      href={selectedProject.documentUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      View Document
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Votes Section */}
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-gray-500">Committee Votes ({selectedProject.votes.length})</h3>
-            <div className="bg-gray-50 p-4 rounded-md border">
-              {selectedProject.votes.length > 0 ? (
-                <div className="space-y-3">
-                  {selectedProject.votes.map((vote) => (
-                    <div key={vote.id} className="flex items-center justify-between border-b pb-2">
+      <Dialog open={showProjectDetails} onOpenChange={setShowProjectDetails}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Project Details</DialogTitle>
+            <DialogDescription>
+              {selectedProject && `Detailed information for "${selectedProject.name}"`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {selectedProject && (
+              <div className="space-y-6">
+                {/* Project Info Section */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-gray-500">Project Information</h3>
+                  <div className="bg-gray-50 p-4 rounded-md border">
+                    <p className="font-medium text-lg mb-2">{selectedProject.name}</p>
+                    <p className="text-sm text-gray-700 mb-4">{selectedProject.description}</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                       <div>
-                        <p className="font-medium">{vote.user.name}</p>
-                        <p className="text-xs text-gray-500">{vote.user.role} Committee</p>
+                        <span className="text-gray-500">Proposed by: </span>
+                        <span className="font-medium">
+                          {selectedProject.postedBy.name} ({selectedProject.committee})
+                        </span>
                       </div>
-                      <div className="flex items-center">
-                        {vote.vote ? (
-                          <span className="inline-flex items-center text-green-600 text-sm">
-                            <ThumbsUp className="h-4 w-4 mr-1" /> Approved
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center text-red-600 text-sm">
-                            <ThumbsDown className="h-4 w-4 mr-1" /> Rejected
-                          </span>
-                        )}
-                        <span className="text-xs text-gray-500 ml-2">
-                          {vote.votedAt.toLocaleDateString()}
+                      <div>
+                        <span className="text-gray-500">Status: </span>
+                        <span className="font-medium">
+                          <Badge className={getStatusBadge(selectedProject.status)}>
+                            {selectedProject.status}
+                          </Badge>
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Budget: </span>
+                        <span className="font-medium">
+                          ₱{selectedProject.budget.toLocaleString()}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Committee: </span>
+                        <span className="font-medium">{selectedProject.committee}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Due Date: </span>
+                        <span className="font-medium">
+                          {selectedProject.dueDate.toLocaleDateString("en-US", {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Proposed Date: </span>
+                        <span className="font-medium">
+                          {selectedProject.dateProposed.toLocaleDateString("en-US", {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
                         </span>
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              ) : (
-                <p className="text-sm text-gray-500">No votes yet.</p>
-              )}
-            </div>
+                {/* Document Section */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-gray-500">Project Document</h3>
+                  <div className="bg-gray-50 p-4 rounded-md border">
+                    <div className="flex items-center">
+                      <FileText className="h-6 w-6 text-blue-600 mr-2" />
+                      <div>
+                        <p className="font-medium">{selectedProject.documentTitle}</p>
+                        {selectedProject.documentUrl && (
+                          <a
+                            href={selectedProject.documentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:underline"
+                          >
+                            View Document
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Votes Section */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-gray-500">
+                    Committee Votes ({selectedProject.votes.length})
+                  </h3>
+                  <div className="bg-gray-50 p-4 rounded-md border">
+                    {selectedProject.votes.length > 0 ? (
+                      <div className="space-y-3">
+                        {selectedProject.votes.map((vote) => (
+                          <div key={vote.id} className="flex items-center justify-between border-b pb-2">
+                            <div>
+                              <p className="font-medium">{vote.user.name}</p>
+                              <p className="text-xs text-gray-500">{vote.user.role} Committee</p>
+                            </div>
+                            <div className="flex items-center">
+                              {vote.vote ? (
+                                <span className="inline-flex items-center text-green-600 text-sm">
+                                  <ThumbsUp className="h-4 w-4 mr-1" /> Approved
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center text-red-600 text-sm">
+                                  <ThumbsDown className="h-4 w-4 mr-1" /> Rejected
+                                </span>
+                              )}
+                              <span className="text-xs text-gray-500 ml-2">
+                                {vote.votedAt.toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">No votes yet.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
-    </div>
-    <DialogFooter className="sm:justify-end">
-      <Button variant="outline" onClick={() => setShowProjectDetails(false)}>
-        Close
-      </Button>
-      {!isAdmin && selectedProject && !hasVoted(selectedProject) && (
-        <Button
-          variant="default"
-          onClick={() => {
-            setShowProjectDetails(false);
-            openVoteDialog(selectedProject);
-          }}
-        >
-          Vote Now
-        </Button>
-      )}
-      {isAdmin && selectedProject && selectedProject.status === "Pending Approval" && (
-        <>
-          <Button
-            variant="outline"
-            className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-            onClick={() => {
-              setShowProjectDetails(false);
-              if (onApprove) onApprove(selectedProject);
-            }}
-          >
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Approve Project
-          </Button>
-          <Button
-            variant="outline"
-            className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-            onClick={() => {
-              setShowProjectDetails(false);
-              if (onReject) onReject(selectedProject);
-            }}
-          >
-            <XCircle className="h-4 w-4 mr-2" />
-            Reject Project
-          </Button>
-        </>
-      )}
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+          <DialogFooter className="sm:justify-end">
+            <Button variant="outline" onClick={() => setShowProjectDetails(false)}>
+              Close
+            </Button>
+            {!isAdmin && selectedProject && !hasVoted(selectedProject) && (
+              <Button
+                variant="default"
+                onClick={() => {
+                  setShowProjectDetails(false);
+                  openVoteDialog(selectedProject);
+                }}
+              >
+                Vote Now
+              </Button>
+            )}
+            {isAdmin && selectedProject && selectedProject.status === "Pending Approval" && (
+              <>
+                <Button
+                  variant="outline"
+                  className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                  onClick={() => {
+                    setShowProjectDetails(false);
+                    if (onApprove) onApprove(selectedProject);
+                  }}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Approve Project
+                </Button>
+                <Button
+                  variant="outline"
+                  className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+                  onClick={() => {
+                    setShowProjectDetails(false);
+                    if (onReject) onReject(selectedProject);
+                  }}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Reject Project
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-{/* Vote Dialog */}
-<Dialog open={showVoteDialog} onOpenChange={setShowVoteDialog}>
-  <DialogContent className="sm:max-w-md">
-    <DialogHeader>
-      <DialogTitle>Vote on Project Proposal</DialogTitle>
-      <DialogDescription>
-        {selectedProject && `Cast your committee's vote for "${selectedProject.name}"`}
-      </DialogDescription>
-    </DialogHeader>
-    <div className="py-4 space-y-4">
-      {selectedProject && (
-        <>
-          <div className="border rounded-lg p-4 bg-gray-50">
-            <h3 className="font-medium">{selectedProject.name}</h3>
-            <p className="text-sm text-gray-700 mt-1">{selectedProject.description}</p>
-            <div className="mt-2 text-xs text-gray-500">
-              <div>Proposed by: {selectedProject.committee} Committee</div>
-              <div>Budget: ₱{selectedProject.budget.toLocaleString()}</div>
-              <div>Due Date: {selectedProject.dueDate.toLocaleDateString()}</div>
-            </div>
+      {/* Vote Dialog */}
+      <Dialog open={showVoteDialog} onOpenChange={setShowVoteDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Vote on Project Proposal</DialogTitle>
+            <DialogDescription>
+              {selectedProject && `Casting your approval vote for "${selectedProject.name}"`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            {selectedProject && (
+              <div className="border rounded-lg p-4 bg-gray-50">
+                <h3 className="font-medium">{selectedProject.name}</h3>
+                <p className="text-sm text-gray-700 mt-1">{selectedProject.description}</p>
+                <div className="mt-2 text-xs text-gray-500">
+                  <div>Proposed by: {selectedProject.committee} Committee</div>
+                  <div>Budget: ₱{selectedProject.budget.toLocaleString()}</div>
+                  <div>Due Date: {selectedProject.dueDate.toLocaleDateString()}</div>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium">Your Vote</h3>
-            <div className="flex gap-3">
-              <Button
-                variant={voteStatus === true ? "default" : "outline"}
-                className={`flex-1 ${voteStatus === true ? "bg-green-600 hover:bg-green-700" : ""}`}
-                onClick={() => setVoteStatus(true)}
-              >
-                <ThumbsUp className="h-4 w-4 mr-2" />
-                Approve
-              </Button>
-              <Button
-                variant={voteStatus === false ? "default" : "outline"}
-                className={`flex-1 ${voteStatus === false ? "bg-red-600 hover:bg-red-700" : ""}`}
-                onClick={() => setVoteStatus(false)}
-              >
-                <ThumbsDown className="h-4 w-4 mr-2" />
-                Reject
-              </Button>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-    <DialogFooter className="sm:justify-end">
-      <Button variant="outline" onClick={() => setShowVoteDialog(false)}>
-        Cancel
-      </Button>
-      <Button
-        variant="default"
-        onClick={submitVote}
-        disabled={voteStatus === null || loading}
-      >
-        {loading ? 'Submitting...' : 'Submit Vote'}
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
-
-
-{/* Vote Dialog */}
-{/* <Dialog open={showVoteDialog} onOpenChange={setShowVoteDialog}>
-  <DialogContent className="sm:max-w-md">
-    <DialogHeader>
-      <DialogTitle>Vote on Project Proposal</DialogTitle>
-      <DialogDescription>
-        {selectedProject && `Cast your committee's vote for "${selectedProject.name}"`}
-      </DialogDescription>
-    </DialogHeader>
-    <div className="py-4 space-y-4">
-      {selectedProject && (
-        <>
-          <div className="border rounded-lg p-4 bg-gray-50">
-            <h3 className="font-medium">{selectedProject.name}</h3>
-            <p className="text-sm text-gray-700 mt-1">{selectedProject.description}</p>
-            <div className="mt-2 text-xs text-gray-500">
-              <div>Proposed by: {selectedProject.committee} Committee</div>
-              <div>Budget: ₱{selectedProject.budget.toLocaleString()}</div>
-              <div>Due Date: {selectedProject.dueDate.toLocaleDateString()}</div>
-            </div>
-          </div>
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium">Your Vote</h3>
-            <div className="flex gap-3">
-              <Button
-                variant={voteStatus === true ? "default" : "outline"}
-                className={`flex-1 ${voteStatus === true ? "bg-green-600 hover:bg-green-700" : ""}`}
-                onClick={() => setVoteStatus(true)}
-              >
-                <ThumbsUp className="h-4 w-4 mr-2" />
-                Approve
-              </Button>
-              <Button
-                variant={voteStatus === false ? "default" : "outline"}
-                className={`flex-1 ${voteStatus === false ? "bg-red-600 hover:bg-red-700" : ""}`}
-                onClick={() => setVoteStatus(false)}
-              >
-                <ThumbsDown className="h-4 w-4 mr-2" />
-                Reject
-              </Button>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-    <DialogFooter className="sm:justify-end">
-      <Button variant="outline" onClick={() => setShowVoteDialog(false)}>
-        Cancel
-      </Button>
-      <Button
-        variant="default"
-        onClick={submitVote}
-        disabled={voteStatus === null}
-      >
-        Submit Vote
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-1</Dialog> */}
+          <DialogFooter className="sm:justify-end">
+            <Button variant="outline" onClick={() => setShowVoteDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="default" onClick={submitVote}>
+              {loading ? "Submitting..." : "Submit Vote"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Priority Matrix Dialog */}
       <Dialog open={showPriorityMatrix} onOpenChange={setShowPriorityMatrix}>
@@ -1427,5 +1347,5 @@ const submitVote = async () => {
         <UploadProjectModal onClose={() => setShowCreateProject(false)} />
       )}
     </div>
-  )
+  );
 }
