@@ -44,7 +44,7 @@ model ProjectProposal {
   approvedBy   ApprovedBy[]             // Relation to approvals
   votes        Vote[]
   
-  @@map("projectProposals")
+  @@map("projectProposals ")
 }
 
 
