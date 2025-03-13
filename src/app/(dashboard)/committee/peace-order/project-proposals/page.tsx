@@ -11,6 +11,6 @@ export default function PeaceOrderProjectProposals() {
   return <SessionGuard requiredRoles={["PeaceOrder"]}><CommitteeProjectProposalsTemplate
     committee="PEACE_ORDER_COMMITTEE"
     initialTab={status || 'all'}
-  />;
+  />
   </SessionGuard>
 }

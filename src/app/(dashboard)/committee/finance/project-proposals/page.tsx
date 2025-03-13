@@ -11,6 +11,6 @@ export default function FinanceProjectProposals() {
   return <SessionGuard requiredRoles={["Finance"]}><CommitteeProjectProposalsTemplate 
     committee="FINANCE_COMMITTEE" 
     initialTab={status || 'all'} 
-  />;
+  />
   </SessionGuard>
 }

@@ -11,6 +11,6 @@ export default function EducationProjectProposals() {
   return <SessionGuard requiredRoles={["Education"]}><CommitteeProjectProposalsTemplate
     committee="EDUCATION_COMMITTEE"
     initialTab={status || 'all'}
-  />;
+  />
   </SessionGuard>
 }

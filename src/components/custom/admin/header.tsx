@@ -41,7 +41,7 @@ export default function Header() {
               className="rounded-full overflow-hidden"
             >
               <Avatar>
-                <AvatarImage src="/placeholder-user.jpg" alt="User" />
+                <AvatarImage src="/" alt="User" />
                 <AvatarFallback>AD</AvatarFallback>
               </Avatar>
               <span className="sr-only">User menu</span>

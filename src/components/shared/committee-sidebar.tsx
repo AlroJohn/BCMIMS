@@ -154,7 +154,7 @@ export function CommitteeSidebar({
     user: {
       name: committeeInfo.name,
       email: `${committeeInfo.name.toLowerCase()}@barangay.gov`,
-      avatar: "/avatars/user.jpg",
+      avatar: "",
     },
     teams: [
       {

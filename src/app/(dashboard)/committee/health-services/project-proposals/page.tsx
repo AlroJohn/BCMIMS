@@ -9,9 +9,9 @@ export default function HealthServicesProjectProposals() {
   const status = searchParams.get('status');
   
   return <SessionGuard requiredRoles={["HealthServices"]}><CommitteeProjectProposalsTemplate 
-    committee="HEALTH_COMMITTEE" 
+    committee="HEALTH_SERVICES_COMMITTEE" 
     initialTab={status || 'all'} 
-  />;
+  />
   </SessionGuard>
 }
 

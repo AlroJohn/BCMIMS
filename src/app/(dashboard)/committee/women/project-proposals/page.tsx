@@ -13,7 +13,7 @@ export default function WomenProjectProposals() {
       <CommitteeProjectProposalsTemplate
         committee="WOMEN_COMMITTEE"
         initialTab={status || 'all'}
-      />;
+      />
     </SessionGuard>
   )
 }

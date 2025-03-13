@@ -11,6 +11,6 @@ export default function PublicWorksProjectProposals() {
   return <SessionGuard requiredRoles={["PublicWorks"]}><CommitteeProjectProposalsTemplate 
     committee="PUBLIC_WORKS_COMMITTEE" 
     initialTab={status || 'all'} 
-  />;
+  />
   </SessionGuard>
 }

@@ -161,7 +161,7 @@ const committeeInfoMap = {
     calendarHighlight: "bg-amber-100",
     calendarDot: "bg-amber-50",
   },
-  HEALTH_COMMITTEE: {
+  HEALTH_SERVICES_COMMITTEE: {
     id: 4,
     name: "Health",
     path: "/health",
@@ -757,7 +757,7 @@ export default function CommitteeProjectProposalsTemplate({
                                 </div>
                               </td>
                             </tr>
-                          );
+                          )
                         })
                       ) : (
                         <tr>
@@ -1219,5 +1219,5 @@ export default function CommitteeProjectProposalsTemplate({
         <UploadProjectModal onClose={() => setShowCreateProject(false)} />
       )}
     </div>
-  );
+  )
 }

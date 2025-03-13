@@ -89,7 +89,7 @@ export default function CommitteeDashboard({
       calendarHighlight: "bg-amber-100",
       calendarDot: "bg-amber-50"
     },
-    "HEALTH_COMMITTEE": {
+    "HEALTH_SERVICES_COMMITTEE": {
       id: 4,
       name: "Health Services",
       path: "/health-services",
@@ -579,16 +579,9 @@ export default function CommitteeDashboard({
     return committeeInfo.progressColor || "bg-blue-500";
   };
 
-  const getCalendarHighlight = () => {
-    return committeeInfo.calendarHighlight || "bg-blue-100";
-  };
 
-  const getCalendarDot = () => {
-    return committeeInfo.calendarDot || "bg-blue-50";
-  };
 
   return (
- 
     <div>
       <div className="min-h-screen w-full p-6 bg-gray-50">
         <div className="flex flex-col gap-6">
@@ -1130,10 +1123,11 @@ export default function CommitteeDashboard({
                           committeeInfoMap[key as keyof typeof committeeInfoMap].id === committeeId
                         );
 
-                        const committeeName = committeeKey ?
-                          committeeInfoMap[committeeKey as keyof typeof committeeInfoMap].name :
-                          "Unknown";
+                        if (!committeeKey) {
+                          return null;
+                        }
 
+                        const committeeName = committeeInfoMap[committeeKey as keyof typeof committeeInfoMap].name;
                         return (
                           <div key={index} className="flex items-center justify-between">
                             <span className="text-sm">{committeeName}</span>
@@ -1281,6 +1275,5 @@ export default function CommitteeDashboard({
         </DialogContent>
       </Dialog>
     </div>
-
   );
 }

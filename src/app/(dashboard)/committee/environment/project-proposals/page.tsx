@@ -11,6 +11,6 @@ export default function EnvironmentProjectProposals() {
   return <SessionGuard requiredRoles={["Environment"]}><CommitteeProjectProposalsTemplate 
     committee="ENVIRONMENT_COMMITTEE" 
     initialTab={status || 'all'} 
-  />;
+  />
   </SessionGuard>
 }
