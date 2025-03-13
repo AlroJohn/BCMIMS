@@ -72,7 +72,7 @@ model ApprovedBy {
   proposalId  String            // ID of the project proposal being approved
   approvedBy  User              @relation(fields: [userId], references: [id])
   proposal    ProjectProposal   @relation(fields: [proposalId], references: [id])
-  @@map("approved_By")
+  @@map("approved_by")
 }
 
 enum ApprovedStatus {

@@ -80,7 +80,7 @@ async function main() {
   // **Step 3: Creating Custom Users in Supabase Auth and Prisma**
   console.log('Creating custom users...')
   const customUsersData = [
-    { name: 'Admin User', email: 'admin@example.com', password: 'test', phone: faker.phone.number({ style: 'international' }), role: UserRole.Admin },
+    { name: 'Admin User', email: 'admin@example.com', password: 'test', phone: '+639630305154', role: UserRole.Admin },
     { name: 'Education User', email: 'education@example.com', password: 'test', phone: faker.phone.number({ style: 'international' }), role: UserRole.Education },
     { name: 'Environment User', email: 'environment@example.com', password: 'test', phone: faker.phone.number({ style: 'international' }), role: UserRole.Environment },
     { name: 'Finance User', email: 'finance@example.com', password: 'test', phone: faker.phone.number({ style: 'international' }), role: UserRole.Finance },

@@ -10,6 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../providers/auth-provider";
 import { Input } from "../ui/input";
+import { toast } from "sonner";
+import { SmsService } from "@/services/twilioService";
 
 interface UploadProjectModalProps {
   onClose: () => void;
@@ -24,18 +26,43 @@ export default function UploadProjectModal({ onClose }: UploadProjectModalProps)
   const budgetRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
 
+  // Import the SMS service
+
+
+// Function to send SMS notification
+const sendSmsNotification = async (proposalData: any) => {
+  try {
+    // Use the SMS service to send notification
+    const result = await SmsService.sendProjectProposalNotification({
+      title: proposalData.title,
+      budget: proposalData.budget,
+      proposedDate: proposalData.proposedDate
+    });
+    
+    if (result.success) {
+      console.log('SMS notification sent successfully');
+    } else {
+      console.error('Failed to send SMS notification:', result.message);
+    }
+  } catch (error) {
+    console.error('Error sending SMS notification:', error);
+  }
+};
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     if (!titleRef.current || !descriptionRef.current || !fileRef.current || !budgetRef.current) {
       console.error("One or more input refs are not set.");
+      toast.error("One or more input fields are missing.");
       setLoading(false);
       return;
     }
 
     if (!selectedDate) {
       console.error("No proposed date selected.");
+      toast.error("Please select a proposed date.");
       setLoading(false);
       return;
     }
@@ -51,6 +78,7 @@ export default function UploadProjectModal({ onClose }: UploadProjectModalProps)
       formData.append("file", fileRef.current.files[0]);
     } else {
       console.error("No file selected.");
+      toast.error("Please select a file to upload.");
       setLoading(false);
       return;
     }
@@ -62,13 +90,25 @@ export default function UploadProjectModal({ onClose }: UploadProjectModalProps)
       });
 
       if (res.ok) {
-        onClose();
+        const data = await res.json();
         
+        // Send SMS notification with proposal data
+        await sendSmsNotification({
+          title: titleRef.current.value,
+          budget: budgetRef.current.value,
+          proposedDate: selectedDate.toISOString()
+        });
+        
+        toast.success("Project proposal submitted successfully!");
+        onClose();
       } else {
-        console.error("Failed to upload");
+        const errorData = await res.json();
+        console.error("Failed to upload", errorData);
+        toast.error(errorData.message || "Failed to upload project proposal.");
       }
     } catch (error) {
       console.error("Error submitting proposal", error);
+      toast.error("An error occurred while submitting your proposal.");
     } finally {
       setLoading(false);
     }
