@@ -47,13 +47,13 @@ export default function AdminDashboard() {
     path: string;
     person: string; // Person in charge of the committee
   }> = [
-    { id: 1, name: "Education", path: "/education", person: "Maria Santos" },
-    { id: 2, name: "Environment", path: "/environment", person: "Juan Cruz" },
-    { id: 3, name: "Finance", path: "/finance", person: "Pedro Reyes" },
-    { id: 4, name: "Health Services", path: "/health-services", person: "Ana Garcia" },
-    { id: 5, name: "Peace Order", path: "/peace-order", person: "Ramon Diaz" },
-    { id: 6, name: "Public Works", path: "/public-works", person: "Elena Lim" },
-    { id: 7, name: "Women", path: "/women", person: "Sofia Mendoza" },
+    { id: 1, name: "Education", path: "/committee/education", person: "Maria Santos" },
+    { id: 2, name: "Environment", path: "/committee/environment", person: "Juan Cruz" },
+    { id: 3, name: "Finance", path: "/committee/finance", person: "Pedro Reyes" },
+    { id: 4, name: "Health Services", path: "/committee/health-services", person: "Ana Garcia" },
+    { id: 5, name: "Peace Order", path: "/committee/peace-order", person: "Ramon Diaz" },
+    { id: 6, name: "Public Works", path: "/committee/public-works", person: "Elena Lim" },
+    { id: 7, name: "Women", path: "/committee/women", person: "Sofia Mendoza" },
   ];
   
   // Project proposals with committee approvals, due dates, and budget

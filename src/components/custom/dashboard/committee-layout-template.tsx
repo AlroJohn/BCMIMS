@@ -3,7 +3,7 @@ import Header from "@/components/custom/admin/header"
 import { CommitteeSidebar } from "@/components/shared/committee-sidebar"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 
-export default async function CommitteeLayoutTemplate({
+export default function CommitteeLayoutTemplate({
   children,
   committee,
 }: {

@@ -589,6 +589,7 @@ export default function CommitteeDashboard({
   };
 
   return (
+ 
     <div>
       <div className="min-h-screen w-full p-6 bg-gray-50">
         <div className="flex flex-col gap-6">
@@ -1281,5 +1282,6 @@ export default function CommitteeDashboard({
         </DialogContent>
       </Dialog>
     </div>
+
   );
 }

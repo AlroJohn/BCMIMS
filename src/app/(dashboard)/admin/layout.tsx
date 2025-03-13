@@ -11,20 +11,20 @@ export default function AdminLayout({
   // Authentication check is fully removed
   return (
     <SessionGuard requiredRoles={["Admin"]}>
-    <div className="flex h-screen overflow-hidden">
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <SidebarProvider>
-          <AppSidebar />
-          <SidebarInset className="space-y-4">
-            {/* Header */}
-            <Header />
-            <main className="flex-1 overflow-y-auto p-4">
-              {children}
-            </main>
-          </SidebarInset>
-        </SidebarProvider>      
+      <div className="flex h-screen overflow-hidden">
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset className="space-y-4">
+              {/* Header */}
+              <Header />
+              <main className="flex-1 overflow-y-auto p-4">
+                {children}
+              </main>
+            </SidebarInset>
+          </SidebarProvider>
+        </div>
       </div>
-    </div>
     </SessionGuard>
   );
 }

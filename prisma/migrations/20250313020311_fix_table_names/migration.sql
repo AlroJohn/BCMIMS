@@ -2,7 +2,7 @@
 CREATE TYPE "ApprovedStatus" AS ENUM ('Pending', 'Approved', 'Rejected');
 
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('Admin', 'Education', 'Environment', 'Finance', 'HealthServices', 'PeaceOrder', 'PublicWorks', 'Woomen');
+CREATE TYPE "UserRole" AS ENUM ('Admin', 'Education', 'Environment', 'Finance', 'HealthServices', 'PeaceOrder', 'PublicWorks', 'Women');
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -31,7 +31,7 @@ CREATE TABLE "notifications" (
 );
 
 -- CreateTable
-CREATE TABLE "project_proposals" (
+CREATE TABLE "projectProposals " (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE "project_proposals" (
     "postedById" TEXT NOT NULL,
     "budget" DOUBLE PRECISION NOT NULL,
 
-    CONSTRAINT "project_proposals_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "projectProposals _pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -72,16 +72,16 @@ CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 CREATE UNIQUE INDEX "Vote_userId_proposalId_key" ON "Vote"("userId", "proposalId");
 
 -- AddForeignKey
-ALTER TABLE "project_proposals" ADD CONSTRAINT "project_proposals_postedById_fkey" FOREIGN KEY ("postedById") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "projectProposals " ADD CONSTRAINT "projectProposals _postedById_fkey" FOREIGN KEY ("postedById") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Vote" ADD CONSTRAINT "Vote_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Vote" ADD CONSTRAINT "Vote_proposalId_fkey" FOREIGN KEY ("proposalId") REFERENCES "project_proposals"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Vote" ADD CONSTRAINT "Vote_proposalId_fkey" FOREIGN KEY ("proposalId") REFERENCES "projectProposals "("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "approved_by" ADD CONSTRAINT "approved_by_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "approved_by" ADD CONSTRAINT "approved_by_proposalId_fkey" FOREIGN KEY ("proposalId") REFERENCES "project_proposals"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "approved_by" ADD CONSTRAINT "approved_by_proposalId_fkey" FOREIGN KEY ("proposalId") REFERENCES "projectProposals "("id") ON DELETE RESTRICT ON UPDATE CASCADE;

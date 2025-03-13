@@ -220,7 +220,7 @@ const roleToCommittee = {
   HealthServices: { name: "Health", id: 4 },
   PeaceOrder: { name: "Peace & Order", id: 5 },
   PublicWorks: { name: "Public Works", id: 6 },
-  Woomen: { name: "Women & Family", id: 7 }, // Typo in schema: "Woomen"
+  Women: { name: "Women & Family", id: 7 }, // Typo in schema: "Woomen"
 };
 
 export default function CommitteeProjectProposalsTemplate({

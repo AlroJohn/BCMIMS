@@ -46,49 +46,49 @@ export function CommitteeSidebar({
     "EDUCATION_COMMITTEE": {
       id: 1,
       name: "Education",
-      path: "/education",
+      path: "/committee/education",
       icon: Bot,
       color: "text-blue-500"
     },
     "ENVIRONMENT_COMMITTEE": {
       id: 2,
       name: "Environment",
-      path: "/environment",
+      path: "/committee/environment",
       icon: Leaf,
       color: "text-green-500"
     },
     "FINANCE_COMMITTEE": {
       id: 3,
       name: "Finance",
-      path: "/finance",
+      path: "/committee/finance",
       icon: BarChart,
       color: "text-amber-500"
     },
     "HEALTH_COMMITTEE": {
       id: 4,
       name: "Health Services",
-      path: "/health-services",
+      path: "/committee/health-services",
       icon: HeartPulse,
       color: "text-red-500"
     },
     "PEACE_ORDER_COMMITTEE": {
       id: 5,
       name: "Peace Order",
-      path: "/peace-order",
+      path: "/committee/peace-order",
       icon: Shield,
       color: "text-purple-500"
     },
     "PUBLIC_WORKS_COMMITTEE": {
       id: 6,
       name: "Public Works",
-      path: "/public-works",
+      path: "/committee/public-works",
       icon: Construction,
       color: "text-indigo-500"
     },
     "WOMEN_COMMITTEE": {
       id: 7,
       name: "Women",
-      path: "/women",
+      path: "/committee/women",
       icon: UserPlus,
       color: "text-pink-500"
     }

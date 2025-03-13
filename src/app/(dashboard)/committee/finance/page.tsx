@@ -1,7 +1,12 @@
 "use client";
 
 import CommitteeDashboard from "@/components/custom/dashboard/committeedashboard";
+import SessionGuard from "@/components/custom/guard/session-guard";
 
 export default function FinancePage() {
-  return <CommitteeDashboard committee="FINANCE_COMMITTEE" />;
+  return (
+    <SessionGuard requiredRoles={["Finance"]}>
+      <CommitteeDashboard committee="FINANCE_COMMITTEE" />
+    </SessionGuard>
+  )
 }

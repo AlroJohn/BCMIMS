@@ -87,7 +87,7 @@ async function main() {
     { name: 'Health Services User', email: 'healthservices@example.com', password: 'test', phone: faker.phone.number({ style: 'international' }), role: UserRole.HealthServices },
     { name: 'Peace Order User', email: 'peaceorder@example.com', password: 'test', phone: faker.phone.number({ style: 'international' }), role: UserRole.PeaceOrder },
     { name: 'Public Works User', email: 'publicworks@example.com', password: 'test', phone: faker.phone.number({ style: 'international' }), role: UserRole.PublicWorks },
-    { name: 'Woomen User', email: 'woomen@example.com', password: 'test', phone: faker.phone.number({ style: 'international' }), role: UserRole.Woomen },
+    { name: 'Women User', email: 'women@example.com', password: 'test', phone: faker.phone.number({ style: 'international' }), role: UserRole.Women },
   ]
 
   // For each custom user, create a Supabase Auth user and then create a Prisma user record using the same ID

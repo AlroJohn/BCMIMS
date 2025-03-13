@@ -5,5 +5,9 @@ export default async function EnvironmentLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <CommitteeLayoutTemplate committee="ENVIRONMENT_COMMITTEE">{children}</CommitteeLayoutTemplate>
+  return (
+
+      <CommitteeLayoutTemplate committee="ENVIRONMENT_COMMITTEE">{children}</CommitteeLayoutTemplate>
+
+  )
 }

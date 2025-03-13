@@ -1,7 +1,12 @@
 "use client";
 
 import CommitteeDashboard from "@/components/custom/dashboard/committeedashboard";
+import SessionGuard from "@/components/custom/guard/session-guard";
 
 export default function WomenPage() {
-  return <CommitteeDashboard committee="WOMEN_COMMITTEE" />;
+  return (
+      <SessionGuard requiredRoles={["Women"]}>
+        <CommitteeDashboard committee="WOMEN_COMMITTEE" />
+      </SessionGuard>
+    )
 }

@@ -303,6 +303,7 @@ export default function EducationDashboard() {
 
   return (
     // <SessionGuard requiredRoles={["EDUCATION_COMMITTEE"]}>
+    <SessionGuard requiredRoles={["Education"]}>
     <div>
       <div className="min-h-screen w-full p-6 bg-gray-50">
         <div className="flex flex-col gap-6">
@@ -995,6 +996,6 @@ export default function EducationDashboard() {
         </DialogContent>
       </Dialog>
     </div>
-    // </SessionGuard>
+    </SessionGuard>
   );
 }

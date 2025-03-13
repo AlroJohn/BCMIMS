@@ -44,7 +44,7 @@ model ProjectProposal {
   approvedBy   ApprovedBy[]             // Relation to approvals
   votes        Vote[]
   
-  @@map("project_proposals")
+  @@map("projectProposals ")
 }
 
 
@@ -88,5 +88,5 @@ enum UserRole {
   HealthServices
   PeaceOrder
   PublicWorks
-  Woomen
+  Women
 }

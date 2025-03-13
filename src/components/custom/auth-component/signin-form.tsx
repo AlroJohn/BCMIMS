@@ -14,13 +14,13 @@ const SigninWrapper = () => {
     // Updated page routes to remove "/dashboard" since (dashboard) is a Route Group
     const pages = [
         { name: "Admin", path: "/admin" },
-        { name: "Education", path: "/education" },
-        { name: "Environment", path: "/environment" },
-        { name: "Finance", path: "/finance" },
-        { name: "Health Services", path: "/health-services" },
-        { name: "Peace Order", path: "/peace-order" },
-        { name: "Public Works", path: "/public-works" },
-        { name: "Women", path: "/women" },
+        { name: "Education", path: "/committee/education" },
+        { name: "Environment", path: "/committee/environment" },
+        { name: "Finance", path: "/committee/finance" },
+        { name: "Health Services", path: "/committee/health-services" },
+        { name: "Peace Order", path: "/committee/peace-order" },
+        { name: "Public Works", path: "/committee/public-works" },
+        { name: "Women", path: "/committee/women" },
     ];
 
     return (
