@@ -12,6 +12,7 @@ import {
   PieChart,
   FileText,  // Added for Project Proposal
   Users,     // Added for Manage User
+  LayoutDashboard, // Added for Committee Dashboards
 } from "lucide-react"
 
 import {
@@ -38,17 +39,7 @@ const data = {
       name: "BCMIMS",
       logo: '/images/logo.png',
       plan: "Name of user",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
+    }
   ],
   navMain: [
     {
@@ -82,46 +73,44 @@ const data = {
       ],
     },
     {
-      title: "Manage User",
-      url: "#",
+      title: "Manage Users",
+      url: "/admin/manage-user",
       icon: Users,
+      isActive: true,
+    },
+    {
+      title: "Committee Dashboards",
+      url: "#",
+      icon: LayoutDashboard,
       isActive: true,
       items: [
         {
-          title: "All Users",
-          url: "/admin/manage-user",
-        },
-        {
-          title: "Admin",
-          url: "/admin/manage-user/admin",
-        },
-        {
           title: "Education",
-          url: "/admin/manage-user/education",
+          url: "/admin/dashboard/education",
         },
         {
           title: "Environment",
-          url: "/admin/manage-user/environment",
+          url: "/admin/dashboard/environment",
         },
         {
           title: "Finance",
-          url: "/admin/manage-user/finance",
+          url: "/admin/dashboard/finance",
         },
         {
           title: "Health Services",
-          url: "/admin/manage-user/health-services",
+          url: "/admin/dashboard/health-services",
         },
         {
           title: "Peace Order",
-          url: "/admin/manage-user/peace-order",
+          url: "/admin/dashboard/peace-order",
         },
         {
           title: "Public Works",
-          url: "/admin/manage-user/public-works",
+          url: "/admin/dashboard/public-works",
         },
         {
           title: "Women",
-          url: "/admin/manage-user/public-works",
+          url: "/admin/dashboard/women",
         },
       ],
     },
@@ -137,9 +126,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
       </SidebarContent>
-      <SidebarFooter>
+      {/* <SidebarFooter>
         <NavUser user={data.user} />
-      </SidebarFooter>
+      </SidebarFooter> */}
       <SidebarRail />
     </Sidebar>
   )
