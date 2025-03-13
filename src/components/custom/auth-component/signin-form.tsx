@@ -78,6 +78,7 @@ const SigninWrapper = () => {
                         {/* Add buttons for page navigation */}
                         <div className="mt-4 space-y-2">
                             <p className="text-sm text-gray-600">Quick Access:</p>
+                            <div className="grid grid-cols-2 gap-2">
                             {pages.map((page) => (
                                 <Button
                                     key={page.path}
@@ -88,6 +89,7 @@ const SigninWrapper = () => {
                                     </Link>
                                 </Button>
                             ))}
+                            </div>
                         </div>
                     </form>
                 </CardContent>
