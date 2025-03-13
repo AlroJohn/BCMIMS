@@ -1,28 +1,60 @@
-// app/api/project-proposals/fetch-proposal/route.ts
+// app/api/project-proposal/fetch-proposal/route.ts
 
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
+    // Use prisma.projectProposal instead of prisma.proposal
     const proposals = await prisma.projectProposal.findMany({
       include: {
-        postedBy: true, // Include the user who posted the proposal
-        votes: true,    // Include votes related to the proposal
-        approvedBy: {
+        postedBy: {
+          select: {
+            id: true,
+            name: true,
+            role: true,
+          },
+        },
+        votes: {
           include: {
-            approvedBy: true, // Include the user who performed the approval
+            user: {
+              select: {
+                id: true,
+                name: true,
+                role: true,
+              },
+            },
           },
         },
       },
     });
 
-    return NextResponse.json(proposals);
+    // Format the data to ensure all required information is present
+    const formattedProposals = proposals.map(proposal => ({
+      ...proposal,
+      postedBy: proposal.postedBy || {
+        id: "unknown",
+        name: "Unknown User",
+        role: "Unknown",
+      },
+      // Format votes to ensure user information is properly included
+      votes: proposal.votes.map(vote => ({
+        ...vote,
+        user: vote.user || {
+          id: "unknown",
+          name: "Unknown User",
+          role: "Unknown",
+        },
+        // Ensure dates are properly serialized
+        votedAt: vote.votedAt.toISOString(),
+      })),
+      // Ensure dates are properly serialized
+      proposedDate: proposal.proposedDate.toISOString(),
+    }));
+
+    return NextResponse.json(formattedProposals);
   } catch (error) {
-    console.error('Failed to fetch project proposals:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch project proposals' },
-      { status: 500 }
-    );
+    console.error('Error fetching proposals:', error);
+    return NextResponse.json({ error: 'Failed to fetch proposals' }, { status: 500 });
   }
 }

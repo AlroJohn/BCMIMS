@@ -258,19 +258,30 @@ export default function CommitteeProjectProposalsTemplate({
   // Fetch projects on mount
 
   const fetchVotes = async () => {
-    const { data, error } = await supabase.from("Vote").select("*");
-    if (error) {
-      console.error("Error fetching votes:", error);
-    } else if (data) {
-      setVotes(data);
+    try {
+      const response = await fetch("/api/project-proposal/fetch-vote");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch votes: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log("Fetched votes:", data); // Log for debugging
+      
+      // Map the votes data with proper user information
+      setVotes(data.map(vote => ({
+        ...vote,
+        user: vote.user || { id: "unknown", name: "Unknown User", role: "Unknown Role" }
+      })));
+    } catch (err) {
+      console.error("Error fetching votes:", err);
     }
   };
-
-
-
+  
+  // Replace the existing useEffect for votes with this:
   useEffect(() => {
+    // First fetch the votes
     fetchVotes();
-
+  
+    // Then set up the realtime subscription
     const subscription = supabase
       .channel("public:Vote")
       .on(
@@ -278,11 +289,13 @@ export default function CommitteeProjectProposalsTemplate({
         { event: "*", schema: "public", table: "Vote" },
         (payload) => {
           console.log("Realtime vote change:", payload);
-          fetchVotes(); // re-fetch votes on any change
+          // Re-fetch all votes when a change occurs
+          fetchVotes();
         }
       )
       .subscribe();
-
+  
+    // Clean up subscription when component unmounts
     return () => {
       supabase.removeChannel(subscription);
     };
@@ -292,81 +305,87 @@ export default function CommitteeProjectProposalsTemplate({
 
 
 
+ // Inside the useEffect for fetching projects
+useEffect(() => {
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/project-proposal/fetch-proposal");
+      if (!res.ok) throw new Error("Failed to fetch projects");
+      const rawProjects = await res.json();
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch("/api/project-proposal/fetch-proposal");
-        if (!res.ok) throw new Error("Failed to fetch projects");
-        const rawProjects = await res.json();
-
-        // Map API response to Project type
-        const mappedProjects: Project[] = rawProjects.map((p: any) => {
-          const committeeObj =
-            roleToCommittee[p.postedBy?.role as keyof typeof roleToCommittee] || {
-              name: "Unknown",
-              id: -1,
-            };
-
-          // Add null checks for votes array
-          const votes = Array.isArray(p.votes) ? p.votes : [];
-          const approvalCount = votes.filter((v: any) => v.vote).length;
-          const rejectionCount = votes.filter((v: any) => !v.vote).length;
-
-          const status =
-            approvalCount >= 4
-              ? "Approved"
-              : rejectionCount >= 4
-              ? "Rejected"
-              : "Pending Approval";
-
-          const rejectionReason = votes.find((v: any) => !v.vote)?.comment || null;
-
-          return {
-            id: p.id || "unknown-id",
-            name: p.title || "Untitled Project",
-            description: p.description || "",
-            committee: committeeObj.name,
-            committeeId: committeeObj.id,
-            budget: p.budget || 0,
-            documentTitle: p.fileUrl ? p.fileUrl.split("/").pop() || "Document" : "Document",
-            documentUrl: p.fileUrl || "",
-            dueDate: new Date(p.proposedDate || new Date()),
-            dateProposed: new Date(p.proposedDate || new Date()),
-            status,
-            rejectionReason,
-            votes: votes.map((v: any) => ({
-              id: v.id || "unknown-vote-id",
-              userId: v.userId || "unknown-user-id",
-              proposalId: v.proposalId || p.id || "unknown-proposal-id",
-              vote: v.vote === true,
-              votedAt: new Date(v.votedAt || new Date()),
-              user: {
-                id: v.user?.id || "unknown-user-id",
-                name: v.user?.name || "Unknown User",
-                role: v.user?.role || "Unknown Role",
-              },
-            })),
-            implementation: null,
-            postedBy: {
-              id: p.postedBy?.id || "unknown-poster-id",
-              name: p.postedBy?.name || "Unknown User",
-              role: p.postedBy?.role || "Unknown Role",
-            },
+      // Map API response to Project type
+      const mappedProjects: Project[] = rawProjects.map((p: any) => {
+        const committeeObj =
+          roleToCommittee[p.postedBy?.role as keyof typeof roleToCommittee] || {
+            name: "Unknown",
+            id: -1,
           };
-        });
-        setProjects(mappedProjects);
-      } catch (err) {
-        setError("Failed to load projects. Please try again later.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchProjects();
-  }, []);
+        // Add null checks for votes array
+        const votes = Array.isArray(p.votes) ? p.votes : [];
+        const approvalCount = votes.filter((v: any) => v.vote).length;
+        const rejectionCount = votes.filter((v: any) => !v.vote).length;
+
+        const status =
+          approvalCount >= 4
+            ? "Approved"
+            : rejectionCount >= 4
+            ? "Rejected"
+            : "Pending Approval";
+
+        const rejectionReason = votes.find((v: any) => !v.vote)?.comment || null;
+
+        // Map votes with proper user information
+        const mappedVotes = votes.map((v: any) => ({
+          id: v.id || "unknown-vote-id",
+          userId: v.userId || "unknown-user-id",
+          proposalId: v.proposalId || p.id || "unknown-proposal-id",
+          vote: v.vote === true,
+          votedAt: new Date(v.votedAt || new Date()),
+          // Ensure user data is properly mapped
+          user: {
+            id: v.user?.id || "unknown-user-id",
+            name: v.user?.name || "Unknown User", 
+            role: v.user?.role || "Unknown Role",
+          },
+        }));
+
+        return {
+          id: p.id || "unknown-id",
+          name: p.title || "Untitled Project",
+          description: p.description || "",
+          committee: committeeObj.name,
+          committeeId: committeeObj.id,
+          budget: p.budget || 0,
+          documentTitle: p.fileUrl ? p.fileUrl.split("/").pop() || "Document" : "Document",
+          documentUrl: p.fileUrl || "",
+          dueDate: new Date(p.proposedDate || new Date()),
+          dateProposed: new Date(p.proposedDate || new Date()),
+          status,
+          rejectionReason,
+          votes: mappedVotes,
+          implementation: null,
+          postedBy: {
+            id: p.postedBy?.id || "unknown-poster-id",
+            name: p.postedBy?.name || "Unknown User",
+            role: p.postedBy?.role || "Unknown Role",
+          },
+        };
+      });
+      
+      console.log("Mapped projects:", mappedProjects); // For debugging
+      setProjects(mappedProjects);
+    } catch (err) {
+      setError("Failed to load projects. Please try again later.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProjects();
+}, []);
 
   // Sync initialTab
   useEffect(() => {
@@ -1176,41 +1195,45 @@ export default function CommitteeProjectProposalsTemplate({
                   </div>
                 </div>
                 {/* Votes Section */}
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-gray-500">
-                    Committee Votes ({selectedProject.votes.length})
-                  </h3>
-                  <div className="bg-gray-50 p-4 rounded-md border">
-                    {selectedProject.votes.length > 0 ? (
-                      <div className="space-y-3">
-                        {selectedProject.votes.map((vote) => (
-                          <div key={vote.id} className="flex items-center justify-between border-b pb-2">
-                            <div>
-                              <p className="font-medium">{vote.user.name}</p>
-                              <p className="text-xs text-gray-500">{vote.user.role} Committee</p>
-                            </div>
-                            <div className="flex items-center">
-                              {vote.vote ? (
-                                <span className="inline-flex items-center text-green-600 text-sm">
-                                  <ThumbsUp className="h-4 w-4 mr-1" /> Approved
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center text-red-600 text-sm">
-                                  <ThumbsDown className="h-4 w-4 mr-1" /> Rejected
-                                </span>
-                              )}
-                              <span className="text-xs text-gray-500 ml-2">
-                                {vote.votedAt.toLocaleDateString()}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">No votes yet.</p>
-                    )}
-                  </div>
-                </div>
+<div className="space-y-2">
+  <h3 className="text-sm font-medium text-gray-500">
+    Committee Votes ({selectedProject.votes.length})
+  </h3>
+  <div className="bg-gray-50 p-4 rounded-md border">
+    {selectedProject.votes.length > 0 ? (
+      <div className="space-y-3">
+        {selectedProject.votes.map((vote) => (
+          <div key={vote.id} className="flex items-center justify-between border-b pb-2 last:border-b-0">
+            <div>
+              <p className="font-medium">{vote.user.name}</p>
+              <p className="text-xs text-gray-500">{vote.user.role} Committee</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Voted on {new Date(vote.votedAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
+                })}
+              </p>
+            </div>
+            <div className="flex items-center">
+              {vote.vote ? (
+                <span className="inline-flex items-center bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">
+                  <ThumbsUp className="h-4 w-4 mr-1" /> Approved
+                </span>
+              ) : (
+                <span className="inline-flex items-center bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm">
+                  <ThumbsDown className="h-4 w-4 mr-1" /> Rejected
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p className="text-sm text-gray-500">No votes yet.</p>
+    )}
+  </div>
+</div>
               </div>
             )}
           </div>
