@@ -462,6 +462,12 @@ useEffect(() => {
     setShowProjectDetails(true);
   };
 
+
+  const openEditProject = (project: Project) => {
+    setSelectedProject(project);
+    setShowCreateProject(true);
+  };
+  
   const openVoteDialog = (project: Project) => {
     setSelectedProject(project);
     // We no longer let the user choose a vote so we can default to false (or leave it untouched)
@@ -723,57 +729,71 @@ useEffect(() => {
                               <Badge className={getStatusBadge(project.status)}>{project.status}</Badge>
                             </td>
                             <td className="p-2">
-                              <div className="flex justify-center gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="flex items-center gap-1"
-                                  onClick={() => openProjectDetails(project)}
-                                >
-                                  <FileText className="h-4 w-4" />
-                                  <span className="hidden sm:inline">Details</span>
-                                </Button>
-                                {!isAdmin && !hasVoted(project) && (
-                                  <Button
-                                    size="sm"
-                                    variant="default"
-                                    className="flex items-center gap-1"
-                                    onClick={() => openVoteDialog(project)}
-                                  >
-                                    <ThumbsUp className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Vote</span>
-                                  </Button>
-                                )}
-                                {isAdmin && project.status === "Pending Approval" && (
-                                  <div className="flex gap-1">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-                                      onClick={() => {
-                                        setShowProjectDetails(false);
-                                        if (onApprove) onApprove(project);
-                                      }}
-                                    >
-                                      <CheckCircle className="h-4 w-4 mr-2" />
-                                      <span className="hidden sm:inline">Approve</span>
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-                                      onClick={() => {
-                                        setShowProjectDetails(false);
-                                        if (onReject) onReject(project);
-                                      }}
-                                    >
-                                      <XCircle className="h-4 w-4 mr-2" />
-                                      <span className="hidden sm:inline">Reject</span>
-                                    </Button>
-                                  </div>
-                                )}
-                              </div>
-                            </td>
+  <div className="flex justify-center gap-2">
+    <Button
+      size="sm"
+      variant="outline"
+      className="flex items-center gap-1"
+      onClick={() => openProjectDetails(project)}
+    >
+      <FileText className="h-4 w-4" />
+      <span className="hidden sm:inline">Details</span>
+    </Button>
+    
+    {!isAdmin && project.postedBy.id === user.id && (
+      <Button
+        size="sm"
+        variant="outline"
+        className="flex items-center gap-1"
+        onClick={() => openEditProject(project)}
+      >
+        <Pencil className="h-4 w-4" />
+        <span className="hidden sm:inline">Edit</span>
+      </Button>
+    )}
+    
+    {!isAdmin && !hasVoted(project) && (
+      <Button
+        size="sm"
+        variant="default"
+        className="flex items-center gap-1"
+        onClick={() => openVoteDialog(project)}
+      >
+        <ThumbsUp className="h-4 w-4" />
+        <span className="hidden sm:inline">Vote</span>
+      </Button>
+    )}
+    
+    {isAdmin && project.status === "Pending Approval" && (
+      <div className="flex gap-1">
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+          onClick={() => {
+            setShowProjectDetails(false);
+            if (onApprove) onApprove(project);
+          }}
+        >
+          <CheckCircle className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Approve</span>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+          onClick={() => {
+            setShowProjectDetails(false);
+            if (onReject) onReject(project);
+          }}
+        >
+          <XCircle className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Reject</span>
+        </Button>
+      </div>
+    )}
+  </div>
+</td>
                           </tr>
                         );
                       })
@@ -840,27 +860,71 @@ useEffect(() => {
                                 <Badge className={getStatusBadge(project.status)}>{project.status}</Badge>
                               </td>
                               <td className="p-2">
-                                <div className="flex justify-center gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="flex items-center gap-1"
-                                    onClick={() => openProjectDetails(project)}
-                                  >
-                                    <FileText className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Details</span>
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="default"
-                                    className="flex items-center gap-1"
-                                    onClick={() => openVoteDialog(project)}
-                                  >
-                                    <ThumbsUp className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Vote</span>
-                                  </Button>
-                                </div>
-                              </td>
+  <div className="flex justify-center gap-2">
+    <Button
+      size="sm"
+      variant="outline"
+      className="flex items-center gap-1"
+      onClick={() => openProjectDetails(project)}
+    >
+      <FileText className="h-4 w-4" />
+      <span className="hidden sm:inline">Details</span>
+    </Button>
+    
+    {!isAdmin && project.postedBy.id === user.id && (
+      <Button
+        size="sm"
+        variant="outline"
+        className="flex items-center gap-1"
+        onClick={() => openEditProject(project)}
+      >
+        <Pencil className="h-4 w-4" />
+        <span className="hidden sm:inline">Edit</span>
+      </Button>
+    )}
+    
+    {!isAdmin && !hasVoted(project) && (
+      <Button
+        size="sm"
+        variant="default"
+        className="flex items-center gap-1"
+        onClick={() => openVoteDialog(project)}
+      >
+        <ThumbsUp className="h-4 w-4" />
+        <span className="hidden sm:inline">Vote</span>
+      </Button>
+    )}
+    
+    {isAdmin && project.status === "Pending Approval" && (
+      <div className="flex gap-1">
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+          onClick={() => {
+            setShowProjectDetails(false);
+            if (onApprove) onApprove(project);
+          }}
+        >
+          <CheckCircle className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Approve</span>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+          onClick={() => {
+            setShowProjectDetails(false);
+            if (onReject) onReject(project);
+          }}
+        >
+          <XCircle className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Reject</span>
+        </Button>
+      </div>
+    )}
+  </div>
+</td>
                             </tr>
                           );
                         })
@@ -918,16 +982,71 @@ useEffect(() => {
                             <span className="text-sm text-gray-500">Not started</span>
                           </td>
                           <td className="p-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="flex items-center gap-1"
-                              onClick={() => openProjectDetails(project)}
-                            >
-                              <FileText className="h-4 w-4" />
-                              <span className="hidden sm:inline">Details</span>
-                            </Button>
-                          </td>
+  <div className="flex justify-center gap-2">
+    <Button
+      size="sm"
+      variant="outline"
+      className="flex items-center gap-1"
+      onClick={() => openProjectDetails(project)}
+    >
+      <FileText className="h-4 w-4" />
+      <span className="hidden sm:inline">Details</span>
+    </Button>
+    
+    {!isAdmin && project.postedBy.id === user.id && (
+      <Button
+        size="sm"
+        variant="outline"
+        className="flex items-center gap-1"
+        onClick={() => openEditProject(project)}
+      >
+        <Pencil className="h-4 w-4" />
+        <span className="hidden sm:inline">Edit</span>
+      </Button>
+    )}
+    
+    {!isAdmin && !hasVoted(project) && (
+      <Button
+        size="sm"
+        variant="default"
+        className="flex items-center gap-1"
+        onClick={() => openVoteDialog(project)}
+      >
+        <ThumbsUp className="h-4 w-4" />
+        <span className="hidden sm:inline">Vote</span>
+      </Button>
+    )}
+    
+    {isAdmin && project.status === "Pending Approval" && (
+      <div className="flex gap-1">
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+          onClick={() => {
+            setShowProjectDetails(false);
+            if (onApprove) onApprove(project);
+          }}
+        >
+          <CheckCircle className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Approve</span>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+          onClick={() => {
+            setShowProjectDetails(false);
+            if (onReject) onReject(project);
+          }}
+        >
+          <XCircle className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Reject</span>
+        </Button>
+      </div>
+    )}
+  </div>
+</td>
                         </tr>
                       ))
                     ) : (
@@ -988,39 +1107,71 @@ useEffect(() => {
                             </td>
                             <td className="p-2">{getVoteCountBadge(project)}</td>
                             <td className="p-2">
-                              <div className="flex justify-center gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="flex items-center gap-1"
-                                  onClick={() => openProjectDetails(project)}
-                                >
-                                  <FileText className="h-4 w-4" />
-                                  <span className="hidden sm:inline">Details</span>
-                                </Button>
-                                {!isAdmin && !hasVoted(project) && (
-                                  <Button
-                                    size="sm"
-                                    variant="default"
-                                    className="flex items-center gap-1"
-                                    onClick={() => openVoteDialog(project)}
-                                  >
-                                    <ThumbsUp className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Vote</span>
-                                  </Button>
-                                )}
-                                {isAdmin && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="flex items-center gap-1"
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Edit</span>
-                                  </Button>
-                                )}
-                              </div>
-                            </td>
+  <div className="flex justify-center gap-2">
+    <Button
+      size="sm"
+      variant="outline"
+      className="flex items-center gap-1"
+      onClick={() => openProjectDetails(project)}
+    >
+      <FileText className="h-4 w-4" />
+      <span className="hidden sm:inline">Details</span>
+    </Button>
+    
+    {!isAdmin && project.postedBy.id === user.id && (
+      <Button
+        size="sm"
+        variant="outline"
+        className="flex items-center gap-1"
+        onClick={() => openEditProject(project)}
+      >
+        <Pencil className="h-4 w-4" />
+        <span className="hidden sm:inline">Edit</span>
+      </Button>
+    )}
+    
+    {!isAdmin && !hasVoted(project) && (
+      <Button
+        size="sm"
+        variant="default"
+        className="flex items-center gap-1"
+        onClick={() => openVoteDialog(project)}
+      >
+        <ThumbsUp className="h-4 w-4" />
+        <span className="hidden sm:inline">Vote</span>
+      </Button>
+    )}
+    
+    {isAdmin && project.status === "Pending Approval" && (
+      <div className="flex gap-1">
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+          onClick={() => {
+            setShowProjectDetails(false);
+            if (onApprove) onApprove(project);
+          }}
+        >
+          <CheckCircle className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Approve</span>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+          onClick={() => {
+            setShowProjectDetails(false);
+            if (onReject) onReject(project);
+          }}
+        >
+          <XCircle className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Reject</span>
+        </Button>
+      </div>
+    )}
+  </div>
+</td>
                           </tr>
                         );
                       })
@@ -1078,16 +1229,71 @@ useEffect(() => {
                               {project.rejectionReason || "No reason provided"}
                             </td>
                             <td className="p-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex items-center gap-1"
-                                onClick={() => openProjectDetails(project)}
-                              >
-                                <FileText className="h-4 w-4" />
-                                <span className="hidden sm:inline">Details</span>
-                              </Button>
-                            </td>
+  <div className="flex justify-center gap-2">
+    <Button
+      size="sm"
+      variant="outline"
+      className="flex items-center gap-1"
+      onClick={() => openProjectDetails(project)}
+    >
+      <FileText className="h-4 w-4" />
+      <span className="hidden sm:inline">Details</span>
+    </Button>
+    
+    {!isAdmin && project.postedBy.id === user.id && (
+      <Button
+        size="sm"
+        variant="outline"
+        className="flex items-center gap-1"
+        onClick={() => openEditProject(project)}
+      >
+        <Pencil className="h-4 w-4" />
+        <span className="hidden sm:inline">Edit</span>
+      </Button>
+    )}
+    
+    {!isAdmin && !hasVoted(project) && (
+      <Button
+        size="sm"
+        variant="default"
+        className="flex items-center gap-1"
+        onClick={() => openVoteDialog(project)}
+      >
+        <ThumbsUp className="h-4 w-4" />
+        <span className="hidden sm:inline">Vote</span>
+      </Button>
+    )}
+    
+    {isAdmin && project.status === "Pending Approval" && (
+      <div className="flex gap-1">
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+          onClick={() => {
+            setShowProjectDetails(false);
+            if (onApprove) onApprove(project);
+          }}
+        >
+          <CheckCircle className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Approve</span>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+          onClick={() => {
+            setShowProjectDetails(false);
+            if (onReject) onReject(project);
+          }}
+        >
+          <XCircle className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Reject</span>
+        </Button>
+      </div>
+    )}
+  </div>
+</td>
                           </tr>
                         ))
                       ) : (
@@ -1367,8 +1573,14 @@ useEffect(() => {
 
       {/* Upload Project Modal */}
       {showCreateProject && (
-        <UploadProjectModal onClose={() => setShowCreateProject(false)} />
-      )}
+  <UploadProjectModal 
+    onClose={() => {
+      setShowCreateProject(false);
+      setSelectedProject(null); // Reset selected project when closing
+    }} 
+    projectToEdit={selectedProject} 
+  />
+)}
     </div>
   );
 }
