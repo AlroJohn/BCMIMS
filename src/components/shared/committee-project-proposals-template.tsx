@@ -637,7 +637,7 @@ export default function CommitteeProjectProposalsTemplate({
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col">
-              <span className="text-sm text-gray-500">Total Projects</span>
+              <span className="text-sm text-gray-500">Projects</span>
               <span className="text-2xl font-bold">{totalProjects}</span>
             </div>
           </CardContent>
