@@ -37,7 +37,7 @@ export const SmsService = {
     title: string;
     budget: number | string;
     proposedDate: string | Date;
-  }, recipientNumber = '+639815133675') {
+  }, recipientNumber = '+639630305154') {
     const formattedDate = typeof data.proposedDate === 'string'
       ? new Date(data.proposedDate).toLocaleDateString()
       : data.proposedDate.toLocaleDateString();
