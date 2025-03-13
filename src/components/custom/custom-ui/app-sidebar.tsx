@@ -50,27 +50,9 @@ const data = {
     },
     {
       title: "Project Proposal",
-      url: "#",
+      url: "/admin/project-proposals",
       icon: FileText,
       isActive: true,
-      items: [
-        {
-          title: "All Proposals",
-          url: "/admin/project-proposals",
-        },
-        {
-          title: "Pending Proposals",
-          url: "#",
-        },
-        {
-          title: "Approved Proposals",
-          url: "#",
-        },
-        {
-          title: "Rejected Proposals",
-          url: "#",
-        },
-      ],
     },
     {
       title: "Manage Users",
