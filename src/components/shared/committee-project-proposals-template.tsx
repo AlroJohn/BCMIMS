@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -45,7 +45,43 @@ import {
 import { Input } from "@/components/ui/input";
 import UploadProjectModal from "./upload-project-modal";
 
-// Create simple Badge component
+// Define types aligned with your Prisma schema
+type ProjectVote = {
+  id: string;
+  userId: string;
+  proposalId: string;
+  vote: boolean; // true = approved, false = rejected
+  votedAt: Date;
+  user: {
+    id: string;
+    name: string;
+    role: string;
+  };
+};
+
+type Project = {
+  id: string;
+  name: string; // Maps to title
+  description: string;
+  committee: string; // Derived from postedBy.role
+  committeeId: number; // Derived from role
+  budget: number;
+  documentTitle: string; // Extracted from fileUrl
+  documentUrl: string; // Maps to fileUrl
+  dueDate: Date; // Using proposedDate as placeholder
+  dateProposed: Date; // Maps to proposedDate
+  status: string; // Derived from votes
+  rejectionReason: string | null; // Not directly in schema, derived from votes/comments
+  votes: ProjectVote[];
+  implementation: null; // Not in schema yet
+  postedBy: {
+    id: string;
+    name: string;
+    role: string;
+  };
+};
+
+// Badge and Progress components
 const Badge = ({
   children,
   className = "",
@@ -60,7 +96,6 @@ const Badge = ({
   </span>
 );
 
-// Create simple Progress component
 const Progress = ({
   value = 0,
   className = "",
@@ -76,39 +111,6 @@ const Progress = ({
   </div>
 );
 
-// Define the type for votes to fix the TypeScript error
-type ProjectVote = {
-  committeeId: number;
-  approved: boolean | null;
-  comment: string | null;
-};
-
-// Define the implementation type
-type ProjectImplementation = {
-  startDate: Date;
-  endDate: Date;
-  status: string;
-  completion: number;
-} | null;
-
-// Define the project type
-export type Project = {
-  id: number;
-  name: string;
-  description: string;
-  committee: string;
-  committeeId: number;
-  budget: number;
-  documentTitle: string;
-  documentUrl: string;
-  dueDate: Date;
-  dateProposed: Date;
-  status: string;
-  rejectionReason: string | null;
-  votes: ProjectVote[];
-  implementation: ProjectImplementation;
-};
-
 // Committee info mapping
 const committeeInfoMap = {
   CAPTAIN_COMMITTEE: {
@@ -116,8 +118,7 @@ const committeeInfoMap = {
     name: "Captain",
     path: "/captain",
     person: "Benjamin D. Rosin",
-    description:
-      "Barangay Captain who oversees all committees and has final approval authority on projects.",
+    description: "Barangay Captain who oversees all committees.",
     budget: 500000,
     themeColor: "slate",
     progressColor: "bg-slate-500",
@@ -129,8 +130,7 @@ const committeeInfoMap = {
     name: "Education",
     path: "/education",
     person: "Baberly A. De Baguio",
-    description:
-      "Responsible for educational programs and initiatives in the barangay, including scholarships, school supplies distribution, and learning center management.",
+    description: "Responsible for educational programs.",
     budget: 250000,
     themeColor: "blue",
     progressColor: "bg-blue-500",
@@ -142,8 +142,7 @@ const committeeInfoMap = {
     name: "Environment",
     path: "/environment",
     person: "Wilfranz B. Correa",
-    description:
-      "Responsible for environmental conservation, waste management, tree planting activities, and promoting sustainable practices in the barangay.",
+    description: "Responsible for environmental conservation.",
     budget: 200000,
     themeColor: "green",
     progressColor: "bg-green-500",
@@ -155,8 +154,7 @@ const committeeInfoMap = {
     name: "Finance",
     path: "/finance",
     person: "Emma M. Jadie",
-    description:
-      "Responsible for budget management, financial planning, and ensuring transparency in barangay finances.",
+    description: "Responsible for budget management.",
     budget: 300000,
     themeColor: "amber",
     progressColor: "bg-amber-500",
@@ -168,8 +166,7 @@ const committeeInfoMap = {
     name: "Health",
     path: "/health",
     person: "Edna J. Padre",
-    description:
-      "Responsible for health initiatives, medical missions, and healthcare access for barangay residents.",
+    description: "Responsible for health initiatives.",
     budget: 280000,
     themeColor: "red",
     progressColor: "bg-red-500",
@@ -181,8 +178,7 @@ const committeeInfoMap = {
     name: "Peace & Order",
     path: "/peace-order",
     person: "Francis Alejo",
-    description:
-      "Responsible for maintaining peace and order, conflict resolution, and community safety initiatives.",
+    description: "Responsible for maintaining peace and order.",
     budget: 180000,
     themeColor: "purple",
     progressColor: "bg-purple-500",
@@ -194,8 +190,7 @@ const committeeInfoMap = {
     name: "Public Works",
     path: "/public-works",
     person: "Roderick A. Madronio",
-    description:
-      "Responsible for infrastructure projects, road maintenance, and public facility improvements.",
+    description: "Responsible for infrastructure projects.",
     budget: 350000,
     themeColor: "indigo",
     progressColor: "bg-indigo-500",
@@ -207,8 +202,7 @@ const committeeInfoMap = {
     name: "Women & Family",
     path: "/women",
     person: "Emma M. Jadie",
-    description:
-      "Responsible for women's rights, gender equality initiatives, and women's livelihood programs.",
+    description: "Responsible for women's rights and family programs.",
     budget: 220000,
     themeColor: "pink",
     progressColor: "bg-pink-500",
@@ -217,243 +211,17 @@ const committeeInfoMap = {
   },
 };
 
-// Get all committees
-const allCommittees = Object.values(committeeInfoMap);
-
-// Sample project data
-const allProjects: Project[] = [
-  // Education Committee Projects
-  {
-    id: 1,
-    name: "School Supply Drive",
-    description: "Distribute school supplies to underprivileged children",
-    committee: "Education",
-    committeeId: 1,
-    budget: 15000,
-    documentTitle: "School Supply Drive Proposal.pdf",
-    documentUrl: "/documents/school-supply-drive.pdf",
-    dueDate: new Date(2025, 3, 15),
-    dateProposed: new Date(2025, 2, 1),
-    status: "Approved",
-    rejectionReason: null,
-    votes: [
-      {
-        committeeId: 1,
-        approved: true,
-        comment: "Fully support this initiative.",
-      },
-      {
-        committeeId: 3,
-        approved: true,
-        comment: "Budget is reasonable.",
-      },
-      {
-        committeeId: 4,
-        approved: true,
-        comment: "Good for children's well-being.",
-      },
-      {
-        committeeId: 7,
-        approved: true,
-        comment: "Supports family development.",
-      },
-      {
-        committeeId: 2,
-        approved: false,
-        comment: "Concerned about waste from supplies.",
-      },
-      { committeeId: 5, approved: null, comment: null },
-      { committeeId: 6, approved: null, comment: null },
-    ],
-    implementation: {
-      startDate: new Date(2025, 3, 5),
-      endDate: new Date(2025, 3, 15),
-      status: "In Progress",
-      completion: 65,
-    },
-  },
-  {
-    id: 2,
-    name: "Reading Center Renovation",
-    description:
-      "Renovate the community reading center with new books, shelves, tables, chairs, and educational materials.",
-    committee: "Education",
-    committeeId: 1,
-    budget: 50000,
-    documentTitle: "Reading Center Renovation Proposal.pdf",
-    documentUrl: "/documents/reading-center.pdf",
-    dueDate: new Date(2025, 3, 10),
-    dateProposed: new Date(2025, 2, 12),
-    status: "Pending Approval",
-    rejectionReason: null,
-    votes: [
-      {
-        committeeId: 1,
-        approved: true,
-        comment: "Essential for community learning.",
-      },
-      {
-        committeeId: 3,
-        approved: false,
-        comment: "Budget concerns - requesting detailed breakdown.",
-      },
-      {
-        committeeId: 6,
-        approved: false,
-        comment: "Need structural assessment first.",
-      },
-      {
-        committeeId: 2,
-        approved: true,
-        comment: "Supports environmental education.",
-      },
-      { committeeId: 4, approved: null, comment: null },
-      { committeeId: 5, approved: null, comment: null },
-      { committeeId: 7, approved: null, comment: null },
-    ],
-    implementation: null,
-  },
-
-  // Environment Committee Projects
-  {
-    id: 3,
-    name: "Tree Planting Activity",
-    description:
-      "Plant 500 tree seedlings in barangay areas to increase green cover and combat pollution.",
-    committee: "Environment",
-    committeeId: 2,
-    budget: 12000,
-    documentTitle: "Tree Planting Proposal.pdf",
-    documentUrl: "/documents/tree-planting.pdf",
-    dueDate: new Date(2025, 5, 5),
-    dateProposed: new Date(2025, 2, 5),
-    status: "Approved",
-    rejectionReason: null,
-    votes: [
-      {
-        committeeId: 2,
-        approved: true,
-        comment: "Core to our environmental mission.",
-      },
-      {
-        committeeId: 5,
-        approved: true,
-        comment: "Supports community engagement.",
-      },
-      {
-        committeeId: 6,
-        approved: true,
-        comment: "Will help with erosion control.",
-      },
-      {
-        committeeId: 7,
-        approved: true,
-        comment: "Good family activity.",
-      },
-      {
-        committeeId: 1,
-        approved: true,
-        comment: "Educational opportunities for students.",
-      },
-      {
-        committeeId: 3,
-        approved: true,
-        comment: "Budget is appropriate.",
-      },
-      {
-        committeeId: 4,
-        approved: true,
-        comment: "Health benefits from better air quality.",
-      },
-    ],
-    implementation: {
-      startDate: new Date(2025, 2, 18),
-      endDate: new Date(2025, 5, 1),
-      status: "In Progress",
-      completion: 45,
-    },
-  },
-
-  // Finance Committee Projects
-  {
-    id: 4,
-    name: "Budget Transparency Portal",
-    description: "Create an online portal for barangay budget transparency",
-    committee: "Finance",
-    committeeId: 3,
-    budget: 5000,
-    documentTitle: "Budget Portal Proposal.pdf",
-    documentUrl: "/documents/budget-portal.pdf",
-    dueDate: new Date(2025, 6, 30),
-    dateProposed: new Date(2025, 2, 10),
-    status: "Pending Approval",
-    rejectionReason: null,
-    votes: [
-      {
-        committeeId: 3,
-        approved: true,
-        comment: "Essential for transparency.",
-      },
-      {
-        committeeId: 5,
-        approved: true,
-        comment: "Good governance initiative.",
-      },
-      {
-        committeeId: 1,
-        approved: false,
-        comment: "Need to consider digital literacy issues.",
-      },
-      { committeeId: 2, approved: null, comment: null },
-      { committeeId: 4, approved: null, comment: null },
-      { committeeId: 6, approved: null, comment: null },
-      { committeeId: 7, approved: null, comment: null },
-    ],
-    implementation: null,
-  },
-
-  // Health Committee Projects
-  {
-    id: 5,
-    name: "Community Health Screening",
-    description: "Conduct free health screenings for common conditions.",
-    committee: "Health",
-    committeeId: 4,
-    budget: 25000,
-    documentTitle: "Health Screening Proposal.pdf",
-    documentUrl: "/documents/health-screening.pdf",
-    dueDate: new Date(2025, 4, 20),
-    dateProposed: new Date(2025, 2, 15),
-    status: "Pending Approval",
-    rejectionReason: null,
-    votes: [
-      {
-        committeeId: 4,
-        approved: true,
-        comment: "Essential preventive health initiative.",
-      },
-      {
-        committeeId: 3,
-        approved: true,
-        comment: "Budget is acceptable.",
-      },
-      {
-        committeeId: 7,
-        approved: true,
-        comment: "Important for family health.",
-      },
-      {
-        committeeId: 1,
-        approved: true,
-        comment: "Educational opportunity on health topics.",
-      },
-      { committeeId: 2, approved: null, comment: null },
-      { committeeId: 5, approved: null, comment: null },
-      { committeeId: 6, approved: null, comment: null },
-    ],
-    implementation: null,
-  },
-];
+// Role to committee mapping
+const roleToCommittee = {
+  Admin: { name: "Captain", id: 0 },
+  Education: { name: "Education", id: 1 },
+  Environment: { name: "Environment", id: 2 },
+  Finance: { name: "Finance", id: 3 },
+  HealthServices: { name: "Health", id: 4 },
+  PeaceOrder: { name: "Peace & Order", id: 5 },
+  PublicWorks: { name: "Public Works", id: 6 },
+  Woomen: { name: "Women & Family", id: 7 }, // Typo in schema: "Woomen"
+};
 
 export default function CommitteeProjectProposalsTemplate({
   committee,
@@ -472,114 +240,142 @@ export default function CommitteeProjectProposalsTemplate({
   const [searchTerm, setSearchTerm] = useState("");
   const [showProjectDetails, setShowProjectDetails] = useState(false);
   const [showVoteDialog, setShowVoteDialog] = useState(false);
-  // Remove the old "Create Project" dialog state since we use the UploadProjectModal now
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [voteStatus, setVoteStatus] = useState<boolean | null>(null);
   const [voteComment, setVoteComment] = useState("");
   const [showPriorityMatrix, setShowPriorityMatrix] = useState(false);
-  const [projects, setProjects] = useState<Project[]>(allProjects);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Form states for new project proposal have been removed since UploadProjectModal handles submission
+  // Fetch projects on mount
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch("/api/project-proposal/fetch-proposal");
+        if (!res.ok) throw new Error("Failed to fetch projects");
+        const rawProjects = await res.json();
 
+        // Map API response to Project type
+        const mappedProjects: Project[] = rawProjects.map((p: any) => {
+          const committee =
+            roleToCommittee[p.postedBy.role as keyof typeof roleToCommittee] || {
+              name: "Unknown",
+              id: -1,
+            };
+          const approvalCount = p.votes.filter((v: any) => v.vote).length;
+          const rejectionCount = p.votes.filter((v: any) => !v.vote).length;
+          const status =
+            approvalCount >= 4 ? "Approved" :
+            rejectionCount >= 4 ? "Rejected" :
+            "Pending Approval";
+          const rejectionReason = p.votes.find((v: any) => !v.vote)?.comment || null;
+
+          return {
+            id: p.id,
+            name: p.title,
+            description: p.description,
+            committee: committee.name,
+            committeeId: committee.id,
+            budget: p.budget,
+            documentTitle: p.fileUrl.split("/").pop() || "Document",
+            documentUrl: p.fileUrl,
+            dueDate: new Date(p.proposedDate), // Placeholder; adjust if dueDate added
+            dateProposed: new Date(p.proposedDate),
+            status,
+            rejectionReason,
+            votes: p.votes.map((v: any) => ({
+              id: v.id,
+              userId: v.userId,
+              proposalId: v.proposalId,
+              vote: v.vote,
+              votedAt: new Date(v.votedAt),
+              user: { id: v.user.id, name: v.user.name, role: v.user.role },
+            })),
+            implementation: null, // Add if schema extends
+            postedBy: {
+              id: p.postedBy.id,
+              name: p.postedBy.name,
+              role: p.postedBy.role,
+            },
+          };
+        });
+
+        setProjects(mappedProjects);
+      } catch (err) {
+        setError("Failed to load projects. Please try again later.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  // Sync initialTab
   useEffect(() => {
     if (initialTab && initialTab !== "all") {
       setActiveTab(initialTab);
     }
   }, [initialTab]);
 
-  // Get committee info
-  const committeeInfo =
-    committeeInfoMap[committee as keyof typeof committeeInfoMap];
-
-  // For admin, show all projects, for committees, show all projects
+  const committeeInfo = committeeInfoMap[committee as keyof typeof committeeInfoMap];
   const projectProposals = isAdmin ? projects : projects.filter(() => true);
 
-  // Modified filtering logic
-  const filteredProjects = projectProposals.filter((project) => {
-    if (searchTerm && !project.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !project.description.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-    if (activeTab === "to-vote" && !isAdmin) {
-      const committeeVote = project.votes.find(
-        (vote) => vote.committeeId === committeeInfo.id
-      );
-      return committeeVote && committeeVote.approved === null;
-    } else if (
-      activeTab !== "all" &&
-      activeTab !== "to-vote" &&
-      project.status.toLowerCase() !== activeTab.toLowerCase()
-    ) {
-      return false;
-    }
-    return true;
-  });
+  // Memoize filtered projects
+  const filteredProjects = useMemo(() => {
+    return projectProposals.filter((project) => {
+      const matchesSearch =
+        !searchTerm ||
+        project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.description.toLowerCase().includes(searchTerm.toLowerCase());
+
+      if (!matchesSearch) return false;
+
+      if (activeTab === "to-vote" && !isAdmin) {
+        const committeeVote = project.votes.find(
+          (vote) => vote.user.role === committeeInfo.name.replace(" & ", "")
+        );
+        return !committeeVote; // Show if committee hasn't voted
+      }
+
+      if (activeTab === "all" || activeTab === "to-vote") return true;
+      return project.status.toLowerCase() === activeTab.toLowerCase();
+    });
+  }, [projectProposals, searchTerm, activeTab, isAdmin, committeeInfo.name]);
 
   // Statistics
   const totalProjects = projectProposals.length;
-  const approvedProjects = projectProposals.filter(
-    (p) => p.status === "Approved"
-  ).length;
-  const pendingProjects = projectProposals.filter(
-    (p) => p.status === "Pending Approval"
-  ).length;
-  const rejectedProjects = projectProposals.filter(
-    (p) => p.status === "Rejected"
-  ).length;
-
-  const toVoteProjects =
-    !isAdmin
-      ? projectProposals.filter((project) => {
-          const committeeVote = project.votes.find(
-            (vote) => vote.committeeId === committeeInfo.id
-          );
-          return committeeVote && committeeVote.approved === null;
-        }).length
-      : 0;
+  const approvedProjects = projectProposals.filter((p) => p.status === "Approved").length;
+  const pendingProjects = projectProposals.filter((p) => p.status === "Pending Approval").length;
+  const rejectedProjects = projectProposals.filter((p) => p.status === "Rejected").length;
+  const toVoteProjects = !isAdmin
+    ? projectProposals.filter((project) => !project.votes.some((vote) => vote.user.role === committeeInfo.name.replace(" & ", ""))).length
+    : 0;
 
   const determinePriority = (project: Project) => {
     if (project.status === "Approved") {
-      return {
-        level: "Approved",
-        badge: "bg-green-100 border-green-200 text-green-800",
-      };
+      return { level: "Approved", badge: "bg-green-100 border-green-200 text-green-800" };
     }
     if (project.status === "Rejected") {
-      return {
-        level: "Rejected",
-        badge: "bg-red-100 border-red-200 text-red-800",
-      };
+      return { level: "Rejected", badge: "bg-red-100 border-red-200 text-red-800" };
     }
-    const approvalCount = project.votes.filter(
-      (vote) => vote.approved === true
-    ).length;
+    const approvalCount = project.votes.filter((vote) => vote.vote).length;
     const now = new Date();
-    const daysUntilDue = Math.ceil(
-      (project.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const daysUntilDue = Math.ceil((project.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     if (approvalCount >= 4 && daysUntilDue <= 30) {
-      return {
-        level: "Urgent & Important",
-        badge: "bg-red-100 border-red-200 text-red-800",
-      };
+      return { level: "Urgent & Important", badge: "bg-red-100 border-red-200 text-red-800" };
     }
     if (approvalCount < 4 && daysUntilDue <= 30) {
-      return {
-        level: "Urgent but Not Important",
-        badge: "bg-yellow-100 border-yellow-200 text-yellow-800",
-      };
+      return { level: "Urgent but Not Important", badge: "bg-yellow-100 border-yellow-200 text-yellow-800" };
     }
     if (approvalCount >= 4 && daysUntilDue > 30) {
-      return {
-        level: "Important but Not Urgent",
-        badge: "bg-blue-100 border-blue-200 text-blue-800",
-      };
+      return { level: "Important but Not Urgent", badge: "bg-blue-100 border-blue-200 text-blue-800" };
     }
-    return {
-      level: "Neither Urgent nor Important",
-      badge: "bg-gray-100 border-gray-200 text-gray-800",
-    };
+    return { level: "Neither Urgent nor Important", badge: "bg-gray-100 border-gray-200 text-gray-800" };
   };
 
   const openProjectDetails = (project: Project) => {
@@ -589,91 +385,65 @@ export default function CommitteeProjectProposalsTemplate({
 
   const openVoteDialog = (project: Project) => {
     setSelectedProject(project);
-    const committeeVote = project.votes.find(
-      (vote) => vote.committeeId === committeeInfo.id
-    );
-    if (committeeVote) {
-      setVoteStatus(committeeVote.approved);
-      setVoteComment(committeeVote.comment || "");
-    } else {
-      setVoteStatus(null);
-      setVoteComment("");
-    }
+    const committeeVote = project.votes.find((vote) => vote.user.role === committeeInfo.name.replace(" & ", ""));
+    setVoteStatus(committeeVote ? committeeVote.vote : null);
+    setVoteComment(""); // No comment field in Vote model yet
     setShowVoteDialog(true);
   };
 
-  const submitVote = () => {
+  const submitVote = async () => {
     if (!selectedProject) return;
-    const updatedProjects = projects.map((project) => {
-      if (project.id === selectedProject.id) {
-        const updatedVotes = project.votes.map((vote) => {
-          if (vote.committeeId === committeeInfo.id) {
-            return { ...vote, approved: voteStatus, comment: voteComment };
-          }
-          return vote;
-        });
-        let updatedStatus = project.status;
-        const approvalCount = updatedVotes.filter(
-          (vote) => vote.approved === true
-        ).length;
-        const rejectionCount = updatedVotes.filter(
-          (vote) => vote.approved === false
-        ).length;
-        if (approvalCount >= 4 && approvalCount + rejectionCount === 7) {
-          updatedStatus = "Approved";
-        }
-        if (rejectionCount >= 4 && approvalCount + rejectionCount === 7) {
-          updatedStatus = "Rejected";
-        }
-        return { ...project, votes: updatedVotes, status: updatedStatus };
-      }
-      return project;
-    });
-    setProjects(updatedProjects);
-    setShowVoteDialog(false);
-  };
+    try {
+      const response = await fetch("/api/project-proposals/vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          proposalId: selectedProject.id,
+          vote: voteStatus,
+          userId: "current-user-id", // Replace with actual user ID from auth
+        }),
+      });
+      if (!response.ok) throw new Error("Failed to submit vote");
 
-  // This function is no longer needed because the UploadProjectModal handles creation
-  // const handleCreateProject = () => { ... }
+      const newVote = await response.json();
+      const updatedProjects = projects.map((project) =>
+        project.id === selectedProject.id
+          ? {
+              ...project,
+              votes: [...project.votes, newVote],
+              status: project.votes.length + 1 >= 7
+                ? (newVote.vote && project.votes.filter(v => v.vote).length + 1 >= 4 ? "Approved" : "Rejected")
+                : "Pending Approval",
+            }
+          : project
+      );
+      setProjects(updatedProjects);
+      setShowVoteDialog(false);
+    } catch (error) {
+      console.error("Vote submission failed:", error);
+      alert("Failed to submit vote.");
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "Approved":
-        return "bg-green-100 border-green-200 text-green-800";
-      case "Pending Approval":
-        return "bg-blue-100 border-blue-200 text-blue-800";
-      case "Rejected":
-        return "bg-red-100 border-red-200 text-red-800";
-      default:
-        return "bg-gray-100 border-gray-200 text-gray-800";
+      case "Approved": return "bg-green-100 border-green-200 text-green-800";
+      case "Pending Approval": return "bg-blue-100 border-blue-200 text-blue-800";
+      case "Rejected": return "bg-red-100 border-red-200 text-red-800";
+      default: return "bg-gray-100 border-gray-200 text-gray-800";
     }
   };
 
   const getVoteCountBadge = (project: Project) => {
-    const approvalCount = project.votes.filter(
-      (vote) => vote.approved === true
-    ).length;
-    const rejectionCount = project.votes.filter(
-      (vote) => vote.approved === false
-    ).length;
-    const pendingCount = project.votes.filter(
-      (vote) => vote.approved === null
-    ).length;
+    const approvalCount = project.votes.filter((vote) => vote.vote).length;
+    const rejectionCount = project.votes.filter((vote) => !vote.vote).length;
+    const pendingCount = 7 - (approvalCount + rejectionCount); // Assuming 7 committees
     return (
       <div className="flex gap-1">
-        <span className="inline-flex items-center text-green-600 text-xs">
-          <ThumbsUp className="h-3 w-3 mr-1" />
-          {approvalCount}
-        </span>
-        <span className="inline-flex items-center text-red-600 text-xs">
-          <ThumbsDown className="h-3 w-3 mr-1" />
-          {rejectionCount}
-        </span>
+        <span className="inline-flex items-center text-green-600 text-xs"><ThumbsUp className="h-3 w-3 mr-1" />{approvalCount}</span>
+        <span className="inline-flex items-center text-red-600 text-xs"><ThumbsDown className="h-3 w-3 mr-1" />{rejectionCount}</span>
         {pendingCount > 0 && (
-          <span className="inline-flex items-center text-gray-500 text-xs">
-            <Clock className="h-3 w-3 mr-1" />
-            {pendingCount}
-          </span>
+          <span className="inline-flex items-center text-gray-500 text-xs"><Clock className="h-3 w-3 mr-1" />{pendingCount}</span>
         )}
       </div>
     );
@@ -681,15 +451,18 @@ export default function CommitteeProjectProposalsTemplate({
 
   const hasVoted = (project: Project) => {
     if (isAdmin) return true;
-    const committeeVote = project.votes.find(
-      (vote) => vote.committeeId === committeeInfo.id
-    );
-    return committeeVote && committeeVote.approved !== null;
+    return project.votes.some((vote) => vote.user.role === committeeInfo.name.replace(" & ", ""));
   };
 
-  const getProgressClass = () => {
-    return committeeInfo.progressColor || "bg-blue-500";
-  };
+  const getProgressClass = () => committeeInfo.progressColor || "bg-blue-500";
+
+  if (loading) {
+    return <div>Loading projects...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-600">{error}</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -698,10 +471,7 @@ export default function CommitteeProjectProposalsTemplate({
           {isAdmin ? "All" : committeeInfo.name} Committee Project Proposals
         </h1>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setShowPriorityMatrix(true)}
-          >
+          <Button variant="outline" onClick={() => setShowPriorityMatrix(true)}>
             <AlertTriangle className="h-4 w-4 mr-1" />
             Priority Matrix
           </Button>
@@ -731,9 +501,7 @@ export default function CommitteeProjectProposalsTemplate({
           <CardContent className="p-4">
             <div className="flex flex-col">
               <span className="text-sm text-gray-500">Approved</span>
-              <span className="text-2xl font-bold text-green-600">
-                {approvedProjects}
-              </span>
+              <span className="text-2xl font-bold text-green-600">{approvedProjects}</span>
             </div>
           </CardContent>
         </Card>
@@ -741,9 +509,7 @@ export default function CommitteeProjectProposalsTemplate({
           <CardContent className="p-4">
             <div className="flex flex-col">
               <span className="text-sm text-gray-500">Pending</span>
-              <span className="text-2xl font-bold text-blue-600">
-                {pendingProjects}
-              </span>
+              <span className="text-2xl font-bold text-blue-600">{pendingProjects}</span>
             </div>
           </CardContent>
         </Card>
@@ -752,9 +518,7 @@ export default function CommitteeProjectProposalsTemplate({
             <CardContent className="p-4">
               <div className="flex flex-col">
                 <span className="text-sm text-gray-500">Rejected</span>
-                <span className="text-2xl font-bold text-red-600">
-                  {rejectedProjects}
-                </span>
+                <span className="text-2xl font-bold text-red-600">{rejectedProjects}</span>
               </div>
             </CardContent>
           </Card>
@@ -763,9 +527,7 @@ export default function CommitteeProjectProposalsTemplate({
             <CardContent className="p-4">
               <div className="flex flex-col">
                 <span className="text-sm text-gray-500">Needs Your Vote</span>
-                <span className="text-2xl font-bold text-yellow-600">
-                  {toVoteProjects}
-                </span>
+                <span className="text-2xl font-bold text-yellow-600">{toVoteProjects}</span>
               </div>
             </CardContent>
           </Card>
@@ -794,16 +556,6 @@ export default function CommitteeProjectProposalsTemplate({
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              {!isAdmin && (
-                <Button
-                  variant={showProjectDetails ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {}}
-                  className="whitespace-nowrap"
-                >
-                  {showProjectDetails ? "All Proposals" : "My Proposals"}
-                </Button>
-              )}
             </div>
           </div>
         </CardHeader>
@@ -811,24 +563,14 @@ export default function CommitteeProjectProposalsTemplate({
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
           <div className="px-6">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="all">
-                All ({projectProposals.length})
-              </TabsTrigger>
+              <TabsTrigger value="all">All ({projectProposals.length})</TabsTrigger>
               {!isAdmin && (
-                <TabsTrigger value="to-vote">
-                  To Vote ({toVoteProjects})
-                </TabsTrigger>
+                <TabsTrigger value="to-vote">To Vote ({toVoteProjects})</TabsTrigger>
               )}
-              <TabsTrigger value="approved">
-                Approved ({approvedProjects})
-              </TabsTrigger>
-              <TabsTrigger value="pending approval">
-                Pending ({pendingProjects})
-              </TabsTrigger>
+              <TabsTrigger value="approved">Approved ({approvedProjects})</TabsTrigger>
+              <TabsTrigger value="pending approval">Pending ({pendingProjects})</TabsTrigger>
               {isAdmin && (
-                <TabsTrigger value="rejected">
-                  Rejected ({rejectedProjects})
-                </TabsTrigger>
+                <TabsTrigger value="rejected">Rejected ({rejectedProjects})</TabsTrigger>
               )}
             </TabsList>
           </div>
@@ -853,15 +595,10 @@ export default function CommitteeProjectProposalsTemplate({
                       filteredProjects.map((project) => {
                         const priority = determinePriority(project);
                         return (
-                          <tr
-                            key={project.id}
-                            className="border-t hover:bg-gray-50"
-                          >
+                          <tr key={project.id} className="border-t hover:bg-gray-50">
                             <td className="p-2">
                               <div>
-                                <div className="font-medium">
-                                  {project.name}
-                                </div>
+                                <div className="font-medium">{project.name}</div>
                                 <div className="text-sm text-gray-500 truncate max-w-xs">
                                   {project.description.length > 40
                                     ? project.description.substring(0, 40) + "..."
@@ -876,30 +613,15 @@ export default function CommitteeProjectProposalsTemplate({
                                 day: "numeric",
                               })}
                               <div className="text-xs text-gray-500">
-                                {Math.ceil(
-                                  (project.dueDate.getTime() -
-                                    new Date().getTime()) /
-                                    (1000 * 60 * 60 * 24)
-                                )}{" "}
-                                days left
+                                {Math.ceil((project.dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days left
                               </div>
                             </td>
                             <td className="p-2">
-                              <Badge className={priority.badge}>
-                                {priority.level}
-                              </Badge>
+                              <Badge className={priority.badge}>{priority.level}</Badge>
                             </td>
                             <td className="p-2">{getVoteCountBadge(project)}</td>
                             <td className="p-2">
-                              <Badge className={getStatusBadge(project.status)}>
-                                {project.status}
-                              </Badge>
-                              {project.implementation && (
-                                <div className="text-xs text-gray-500 mt-1">
-                                  {project.implementation.status} (
-                                  {project.implementation.completion}%)
-                                </div>
-                              )}
+                              <Badge className={getStatusBadge(project.status)}>{project.status}</Badge>
                             </td>
                             <td className="p-2">
                               <div className="flex justify-center gap-2">
@@ -910,9 +632,7 @@ export default function CommitteeProjectProposalsTemplate({
                                   onClick={() => openProjectDetails(project)}
                                 >
                                   <FileText className="h-4 w-4" />
-                                  <span className="hidden sm:inline">
-                                    Details
-                                  </span>
+                                  <span className="hidden sm:inline">Details</span>
                                 </Button>
                                 {!isAdmin && !hasVoted(project) && (
                                   <Button
@@ -922,42 +642,31 @@ export default function CommitteeProjectProposalsTemplate({
                                     onClick={() => openVoteDialog(project)}
                                   >
                                     <ThumbsUp className="h-4 w-4" />
-                                    <span className="hidden sm:inline">
-                                      Vote
-                                    </span>
+                                    <span className="hidden sm:inline">Vote</span>
                                   </Button>
                                 )}
-                                {isAdmin &&
-                                  project.status === "Pending Approval" && (
-                                    <div className="flex gap-1">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-                                        onClick={() => {
-                                          if (onApprove) onApprove(project);
-                                        }}
-                                      >
-                                        <CheckCircle className="h-4 w-4" />
-                                        <span className="hidden sm:inline">
-                                          Approve
-                                        </span>
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-                                        onClick={() => {
-                                          if (onReject) onReject(project);
-                                        }}
-                                      >
-                                        <XCircle className="h-4 w-4" />
-                                        <span className="hidden sm:inline">
-                                          Reject
-                                        </span>
-                                      </Button>
-                                    </div>
-                                  )}
+                                {isAdmin && project.status === "Pending Approval" && (
+                                  <div className="flex gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                                      onClick={() => onApprove && onApprove(project)}
+                                    >
+                                      <CheckCircle className="h-4 w-4" />
+                                      <span className="hidden sm:inline">Approve</span>
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+                                      onClick={() => onReject && onReject(project)}
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                      <span className="hidden sm:inline">Reject</span>
+                                    </Button>
+                                  </div>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -965,10 +674,7 @@ export default function CommitteeProjectProposalsTemplate({
                       })
                     ) : (
                       <tr>
-                        <td
-                          colSpan={7}
-                          className="p-4 text-center text-gray-500"
-                        >
+                        <td colSpan={7} className="p-4 text-center text-gray-500">
                           No projects found matching your criteria
                         </td>
                       </tr>
@@ -1000,15 +706,10 @@ export default function CommitteeProjectProposalsTemplate({
                         filteredProjects.map((project) => {
                           const priority = determinePriority(project);
                           return (
-                            <tr
-                              key={project.id}
-                              className="border-t hover:bg-gray-50"
-                            >
+                            <tr key={project.id} className="border-t hover:bg-gray-50">
                               <td className="p-2">
                                 <div>
-                                  <div className="font-medium">
-                                    {project.name}
-                                  </div>
+                                  <div className="font-medium">{project.name}</div>
                                   <div className="text-sm text-gray-500 truncate max-w-xs">
                                     {project.description.length > 40
                                       ? project.description.substring(0, 40) + "..."
@@ -1023,26 +724,15 @@ export default function CommitteeProjectProposalsTemplate({
                                   day: "numeric",
                                 })}
                                 <div className="text-xs text-gray-500">
-                                  {Math.ceil(
-                                    (project.dueDate.getTime() -
-                                      new Date().getTime()) /
-                                      (1000 * 60 * 60 * 24)
-                                  )}{" "}
-                                  days left
+                                  {Math.ceil((project.dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days left
                                 </div>
                               </td>
                               <td className="p-2">
-                                <Badge className={priority.badge}>
-                                  {priority.level}
-                                </Badge>
+                                <Badge className={priority.badge}>{priority.level}</Badge>
                               </td>
+                              <td className="p-2">{getVoteCountBadge(project)}</td>
                               <td className="p-2">
-                                {getVoteCountBadge(project)}
-                              </td>
-                              <td className="p-2">
-                                <Badge className={getStatusBadge(project.status)}>
-                                  {project.status}
-                                </Badge>
+                                <Badge className={getStatusBadge(project.status)}>{project.status}</Badge>
                               </td>
                               <td className="p-2">
                                 <div className="flex justify-center gap-2">
@@ -1053,9 +743,7 @@ export default function CommitteeProjectProposalsTemplate({
                                     onClick={() => openProjectDetails(project)}
                                   >
                                     <FileText className="h-4 w-4" />
-                                    <span className="hidden sm:inline">
-                                      Details
-                                    </span>
+                                    <span className="hidden sm:inline">Details</span>
                                   </Button>
                                   <Button
                                     size="sm"
@@ -1064,9 +752,7 @@ export default function CommitteeProjectProposalsTemplate({
                                     onClick={() => openVoteDialog(project)}
                                   >
                                     <ThumbsUp className="h-4 w-4" />
-                                    <span className="hidden sm:inline">
-                                      Vote
-                                    </span>
+                                    <span className="hidden sm:inline">Vote</span>
                                   </Button>
                                 </div>
                               </td>
@@ -1075,10 +761,7 @@ export default function CommitteeProjectProposalsTemplate({
                         })
                       ) : (
                         <tr>
-                          <td
-                            colSpan={7}
-                            className="p-4 text-center text-gray-500"
-                          >
+                          <td colSpan={7} className="p-4 text-center text-gray-500">
                             No projects found requiring your vote
                           </td>
                         </tr>
@@ -1107,15 +790,10 @@ export default function CommitteeProjectProposalsTemplate({
                   <tbody>
                     {filteredProjects.length > 0 ? (
                       filteredProjects.map((project) => (
-                        <tr
-                          key={project.id}
-                          className="border-t hover:bg-gray-50"
-                        >
+                        <tr key={project.id} className="border-t hover:bg-gray-50">
                           <td className="p-2">
                             <div>
-                              <div className="font-medium">
-                                {project.name}
-                              </div>
+                              <div className="font-medium">{project.name}</div>
                               <div className="text-sm text-gray-500 truncate max-w-xs">
                                 {project.description.length > 40
                                   ? project.description.substring(0, 40) + "..."
@@ -1130,30 +808,9 @@ export default function CommitteeProjectProposalsTemplate({
                               day: "numeric",
                             })}
                           </td>
+                          <td className="p-2">{getVoteCountBadge(project)}</td>
                           <td className="p-2">
-                            {getVoteCountBadge(project)}
-                          </td>
-                          <td className="p-2">
-                            {project.implementation ? (
-                              <div>
-                                <div className="flex justify-between items-center text-xs mb-1">
-                                  <span>
-                                    {project.implementation.status}
-                                  </span>
-                                  <span>
-                                    {project.implementation.completion}%
-                                  </span>
-                                </div>
-                                <Progress
-                                  value={project.implementation.completion}
-                                  className={getProgressClass()}
-                                />
-                              </div>
-                            ) : (
-                              <span className="text-sm text-gray-500">
-                                Not started
-                              </span>
-                            )}
+                            <span className="text-sm text-gray-500">Not started</span>
                           </td>
                           <td className="p-2">
                             <Button
@@ -1163,19 +820,14 @@ export default function CommitteeProjectProposalsTemplate({
                               onClick={() => openProjectDetails(project)}
                             >
                               <FileText className="h-4 w-4" />
-                              <span className="hidden sm:inline">
-                                Details
-                              </span>
+                              <span className="hidden sm:inline">Details</span>
                             </Button>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td
-                          colSpan={6}
-                          className="p-4 text-center text-gray-500"
-                        >
+                        <td colSpan={6} className="p-4 text-center text-gray-500">
                           No approved projects found
                         </td>
                       </tr>
@@ -1205,15 +857,10 @@ export default function CommitteeProjectProposalsTemplate({
                       filteredProjects.map((project) => {
                         const priority = determinePriority(project);
                         return (
-                          <tr
-                            key={project.id}
-                            className="border-t hover:bg-gray-50"
-                          >
+                          <tr key={project.id} className="border-t hover:bg-gray-50">
                             <td className="p-2">
                               <div>
-                                <div className="font-medium">
-                                  {project.name}
-                                </div>
+                                <div className="font-medium">{project.name}</div>
                                 <div className="text-sm text-gray-500 truncate max-w-xs">
                                   {project.description.length > 40
                                     ? project.description.substring(0, 40) + "..."
@@ -1228,22 +875,13 @@ export default function CommitteeProjectProposalsTemplate({
                                 day: "numeric",
                               })}
                               <div className="text-xs text-gray-500">
-                                {Math.ceil(
-                                  (project.dueDate.getTime() -
-                                    new Date().getTime()) /
-                                    (1000 * 60 * 60 * 24)
-                                )}{" "}
-                                days left
+                                {Math.ceil((project.dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days left
                               </div>
                             </td>
                             <td className="p-2">
-                              <Badge className={priority.badge}>
-                                {priority.level}
-                              </Badge>
+                              <Badge className={priority.badge}>{priority.level}</Badge>
                             </td>
-                            <td className="p-2">
-                              {getVoteCountBadge(project)}
-                            </td>
+                            <td className="p-2">{getVoteCountBadge(project)}</td>
                             <td className="p-2">
                               <div className="flex justify-center gap-2">
                                 <Button
@@ -1253,9 +891,7 @@ export default function CommitteeProjectProposalsTemplate({
                                   onClick={() => openProjectDetails(project)}
                                 >
                                   <FileText className="h-4 w-4" />
-                                  <span className="hidden sm:inline">
-                                    Details
-                                  </span>
+                                  <span className="hidden sm:inline">Details</span>
                                 </Button>
                                 {!isAdmin && !hasVoted(project) && (
                                   <Button
@@ -1265,9 +901,7 @@ export default function CommitteeProjectProposalsTemplate({
                                     onClick={() => openVoteDialog(project)}
                                   >
                                     <ThumbsUp className="h-4 w-4" />
-                                    <span className="hidden sm:inline">
-                                      Vote
-                                    </span>
+                                    <span className="hidden sm:inline">Vote</span>
                                   </Button>
                                 )}
                                 {isAdmin && (
@@ -1277,9 +911,7 @@ export default function CommitteeProjectProposalsTemplate({
                                     className="flex items-center gap-1"
                                   >
                                     <Pencil className="h-4 w-4" />
-                                    <span className="hidden sm:inline">
-                                      Edit
-                                    </span>
+                                    <span className="hidden sm:inline">Edit</span>
                                   </Button>
                                 )}
                               </div>
@@ -1289,10 +921,7 @@ export default function CommitteeProjectProposalsTemplate({
                       })
                     ) : (
                       <tr>
-                        <td
-                          colSpan={6}
-                          className="p-4 text-center text-gray-500"
-                        >
+                        <td colSpan={6} className="p-4 text-center text-gray-500">
                           No pending projects found
                         </td>
                       </tr>
@@ -1321,15 +950,10 @@ export default function CommitteeProjectProposalsTemplate({
                     <tbody>
                       {filteredProjects.length > 0 ? (
                         filteredProjects.map((project) => (
-                          <tr
-                            key={project.id}
-                            className="border-t hover:bg-gray-50"
-                          >
+                          <tr key={project.id} className="border-t hover:bg-gray-50">
                             <td className="p-2">
                               <div>
-                                <div className="font-medium">
-                                  {project.name}
-                                </div>
+                                <div className="font-medium">{project.name}</div>
                                 <div className="text-sm text-gray-500 truncate max-w-xs">
                                   {project.description.length > 40
                                     ? project.description.substring(0, 40) + "..."
@@ -1344,9 +968,7 @@ export default function CommitteeProjectProposalsTemplate({
                                 day: "numeric",
                               })}
                             </td>
-                            <td className="p-2">
-                              {getVoteCountBadge(project)}
-                            </td>
+                            <td className="p-2">{getVoteCountBadge(project)}</td>
                             <td className="p-2 text-sm text-gray-700">
                               {project.rejectionReason || "No reason provided"}
                             </td>
@@ -1358,19 +980,14 @@ export default function CommitteeProjectProposalsTemplate({
                                 onClick={() => openProjectDetails(project)}
                               >
                                 <FileText className="h-4 w-4" />
-                                <span className="hidden sm:inline">
-                                  Details
-                                </span>
+                                <span className="hidden sm:inline">Details</span>
                               </Button>
                             </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td
-                            colSpan={6}
-                            className="p-4 text-center text-gray-500"
-                          >
+                          <td colSpan={6} className="p-4 text-center text-gray-500">
                             No rejected projects found
                           </td>
                         </tr>
@@ -1390,34 +1007,23 @@ export default function CommitteeProjectProposalsTemplate({
           <DialogHeader>
             <DialogTitle>Project Details</DialogTitle>
             <DialogDescription>
-              {selectedProject &&
-                `Detailed information for "${selectedProject.name}"`}
+              {selectedProject && `Detailed information for "${selectedProject.name}"`}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             {selectedProject && (
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    Project Details
-                  </h3>
+                  <h3 className="text-sm font-medium text-gray-500">Project Details</h3>
                   <p className="font-medium">{selectedProject.name}</p>
-                  <p className="text-sm text-gray-700">
-                    {selectedProject.description}
-                  </p>
+                  <p className="text-sm text-gray-700">{selectedProject.description}</p>
                   <div className="text-sm mt-2">
-                    <span className="text-gray-500">
-                      Proposed by:{" "}
-                    </span>
-                    <span className="font-medium">
-                      {selectedProject.committee} Committee
-                    </span>
+                    <span className="text-gray-500">Proposed by: </span>
+                    <span className="font-medium">{selectedProject.postedBy.name} ({selectedProject.committee})</span>
                   </div>
                   <div className="mt-1 text-sm">
                     <span className="text-gray-500">Budget: </span>
-                    <span className="font-medium">
-                      ₱{selectedProject.budget.toLocaleString()}
-                    </span>
+                    <span className="font-medium">₱{selectedProject.budget.toLocaleString()}</span>
                   </div>
                   <div className="text-sm">
                     <span className="text-gray-500">Due Date: </span>
@@ -1430,22 +1036,16 @@ export default function CommitteeProjectProposalsTemplate({
                     </span>
                   </div>
                   <div className="text-sm">
-                    <span className="text-gray-500">
-                      Proposed Date:{" "}
-                    </span>
+                    <span className="text-gray-500">Proposed Date: </span>
                     <span className="font-medium">
-                      {selectedProject.dateProposed.toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
-                        }
-                      )}
+                      {selectedProject.dateProposed.toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
                     </span>
                   </div>
                 </div>
-                {/* Additional project details... */}
               </div>
             )}
           </div>
@@ -1454,10 +1054,13 @@ export default function CommitteeProjectProposalsTemplate({
               Close
             </Button>
             {!isAdmin && selectedProject && !hasVoted(selectedProject) && (
-              <Button variant="default" onClick={() => {
-                setShowProjectDetails(false);
-                openVoteDialog(selectedProject);
-              }}>
+              <Button
+                variant="default"
+                onClick={() => {
+                  setShowProjectDetails(false);
+                  openVoteDialog(selectedProject);
+                }}
+              >
                 Vote Now
               </Button>
             )}
@@ -1497,8 +1100,7 @@ export default function CommitteeProjectProposalsTemplate({
           <DialogHeader>
             <DialogTitle>Vote on Project Proposal</DialogTitle>
             <DialogDescription>
-              {selectedProject &&
-                `Cast your committee's vote for "${selectedProject.name}"`}
+              {selectedProject && `Cast your committee's vote for "${selectedProject.name}"`}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
@@ -1506,19 +1108,11 @@ export default function CommitteeProjectProposalsTemplate({
               <>
                 <div className="border rounded-lg p-4 bg-gray-50">
                   <h3 className="font-medium">{selectedProject.name}</h3>
-                  <p className="text-sm text-gray-700 mt-1">
-                    {selectedProject.description}
-                  </p>
+                  <p className="text-sm text-gray-700 mt-1">{selectedProject.description}</p>
                   <div className="mt-2 text-xs text-gray-500">
-                    <div>
-                      Proposed by: {selectedProject.committee} Committee
-                    </div>
-                    <div>
-                      Budget: ₱{selectedProject.budget.toLocaleString()}
-                    </div>
-                    <div>
-                      Due Date: {selectedProject.dueDate.toLocaleDateString()}
-                    </div>
+                    <div>Proposed by: {selectedProject.committee} Committee</div>
+                    <div>Budget: ₱{selectedProject.budget.toLocaleString()}</div>
+                    <div>Due Date: {selectedProject.dueDate.toLocaleDateString()}</div>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -1526,8 +1120,7 @@ export default function CommitteeProjectProposalsTemplate({
                   <div className="flex gap-3">
                     <Button
                       variant={voteStatus === true ? "default" : "outline"}
-                      className={`flex-1 ${voteStatus === true ? "bg-green-600 hover:bg-green-700" : ""
-                        }`}
+                      className={`flex-1 ${voteStatus === true ? "bg-green-600 hover:bg-green-700" : ""}`}
                       onClick={() => setVoteStatus(true)}
                     >
                       <ThumbsUp className="h-4 w-4 mr-2" />
@@ -1535,8 +1128,7 @@ export default function CommitteeProjectProposalsTemplate({
                     </Button>
                     <Button
                       variant={voteStatus === false ? "default" : "outline"}
-                      className={`flex-1 ${voteStatus === false ? "bg-red-600 hover:bg-red-700" : ""
-                        }`}
+                      className={`flex-1 ${voteStatus === false ? "bg-red-600 hover:bg-red-700" : ""}`}
                       onClick={() => setVoteStatus(false)}
                     >
                       <ThumbsDown className="h-4 w-4 mr-2" />
@@ -1584,53 +1176,27 @@ export default function CommitteeProjectProposalsTemplate({
           <div className="py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 border rounded-lg bg-red-50">
-                <h3 className="font-bold text-red-800 mb-2">
-                  Urgent & Important
-                </h3>
+                <h3 className="font-bold text-red-800 mb-2">Urgent & Important</h3>
                 <p className="text-sm">
-                  Projects with at least 4 committee approvals and due date
-                  within 30 days.
-                </p>
-                <p className="text-sm mt-2">
-                  These projects require immediate attention and have broad
-                  support.
+                  Projects with at least 4 approvals and due within 30 days.
                 </p>
               </div>
               <div className="p-4 border rounded-lg bg-yellow-50">
-                <h3 className="font-bold text-yellow-800 mb-2">
-                  Urgent but Not Important
-                </h3>
+                <h3 className="font-bold text-yellow-800 mb-2">Urgent but Not Important</h3>
                 <p className="text-sm">
-                  Projects with fewer than 4 committee approvals but due date
-                  within 30 days.
-                </p>
-                <p className="text-sm mt-2">
-                  These projects have deadlines approaching but lack broad
-                  committee support.
+                  Projects with fewer than 4 approvals but due within 30 days.
                 </p>
               </div>
               <div className="p-4 border rounded-lg bg-blue-50">
-                <h3 className="font-bold text-blue-800 mb-2">
-                  Important but Not Urgent
-                </h3>
+                <h3 className="font-bold text-blue-800 mb-2">Important but Not Urgent</h3>
                 <p className="text-sm">
-                  Projects with at least 4 committee approvals but due date beyond
-                  30 days.
-                </p>
-                <p className="text-sm mt-2">
-                  These projects have strong committee support but longer
-                  implementation timelines.
+                  Projects with at least 4 approvals but due beyond 30 days.
                 </p>
               </div>
               <div className="p-4 border rounded-lg bg-gray-50">
                 <h3 className="font-bold text-gray-800 mb-2">Not Urgent</h3>
                 <p className="text-sm">
-                  Projects with fewer than 4 committee approvals and due date
-                  beyond 30 days.
-                </p>
-                <p className="text-sm mt-2">
-                  These projects require further committee review and have
-                  flexible timelines.
+                  Projects with fewer than 4 approvals and due beyond 30 days.
                 </p>
               </div>
             </div>
@@ -1638,21 +1204,17 @@ export default function CommitteeProjectProposalsTemplate({
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Note on Approvals</AlertTitle>
               <AlertDescription>
-                Projects require a minimum of 4 committee approvals to move
-                forward to implementation. Once a project receives votes from
-                all 7 committees, its final status is determined.
+                Projects require a minimum of 4 approvals to move forward.
               </AlertDescription>
             </Alert>
           </div>
           <DialogFooter>
-            <Button onClick={() => setShowPriorityMatrix(false)}>
-              Close
-            </Button>
+            <Button onClick={() => setShowPriorityMatrix(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Upload Project Modal - replacing the Create Project Dialog */}
+      {/* Upload Project Modal */}
       {showCreateProject && (
         <UploadProjectModal onClose={() => setShowCreateProject(false)} />
       )}
