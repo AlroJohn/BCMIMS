@@ -29,25 +29,25 @@ export default function UploadProjectModal({ onClose }: UploadProjectModalProps)
   // Import the SMS service
 
 
-// Function to send SMS notification
-const sendSmsNotification = async (proposalData: any) => {
-  try {
-    // Use the SMS service to send notification
-    const result = await SmsService.sendProjectProposalNotification({
-      title: proposalData.title,
-      budget: proposalData.budget,
-      proposedDate: proposalData.proposedDate
-    });
-    
-    if (result.success) {
-      console.log('SMS notification sent successfully');
-    } else {
-      console.error('Failed to send SMS notification:', result.message);
+  // Function to send SMS notification
+  const sendSmsNotification = async (proposalData: any) => {
+    try {
+      // Use the SMS service to send notification
+      const result = await SmsService.sendProjectProposalNotification({
+        title: proposalData.title,
+        budget: proposalData.budget,
+        proposedDate: proposalData.proposedDate
+      });
+
+      if (result.success) {
+        console.log('SMS notification sent successfully');
+      } else {
+        console.error('Failed to send SMS notification:', result.message);
+      }
+    } catch (error) {
+      console.error('Error sending SMS notification:', error);
     }
-  } catch (error) {
-    console.error('Error sending SMS notification:', error);
-  }
-};
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,14 +91,14 @@ const sendSmsNotification = async (proposalData: any) => {
 
       if (res.ok) {
         const data = await res.json();
-        
+
         // Send SMS notification with proposal data
         await sendSmsNotification({
           title: titleRef.current.value,
           budget: budgetRef.current.value,
           proposedDate: selectedDate.toISOString()
         });
-        
+
         toast.success("Project proposal submitted successfully!");
         onClose();
       } else {
