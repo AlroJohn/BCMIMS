@@ -1,22 +1,20 @@
-import { Prisma, PrismaClient, UserRole } from '@prisma/client'
+import { Prisma, PrismaClient, UserRole, ApprovedStatus, VoteStatus } from '@prisma/client'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
 import { faker } from '@faker-js/faker'
 
 const prisma = new PrismaClient()
 
-// Initialize Supabase client for Auth using service role key
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY // Need service role key to create users
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing required environment variables: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+  console.error('Missing required environment variables')
   process.exit(1)
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-// Utility function to insert data in batches
 async function batchInsert<T>(
   data: T[],
   batchSize: number,
@@ -32,34 +30,18 @@ async function deleteAllSupabaseUsers() {
   console.log('Deleting existing Supabase authentication users...')
   let hasMore = true
   while (hasMore) {
-    // List users from Supabase Auth with pagination
     const { data, error } = await supabase.auth.admin.listUsers({ perPage: 100 })
-    if (error) {
-      console.error('Error fetching Supabase users:', error)
-      return
-    }
+    if (error) throw error
 
-    // Log the complete fetched data for debugging
-    console.log('Fetched users data:', data)
-
-    // Extract the array of users from the returned data
     const users = data.users
-
     if (!users || users.length === 0) {
-      console.log('No more users to delete.')
       hasMore = false
       break
     }
 
     await Promise.all(
       users.map(async (user) => {
-        console.log(`Attempting to delete user: ${user.email} (ID: ${user.id})`)
-        const { data: deleteData, error: deleteError } = await supabase.auth.admin.deleteUser(user.id)
-        if (deleteError) {
-          console.error(`Error deleting user ${user.email}:`, deleteError)
-        } else {
-          console.log(`Successfully deleted user ${user.email}`, deleteData)
-        }
+        await supabase.auth.admin.deleteUser(user.id)
       })
     )
   }
@@ -68,17 +50,16 @@ async function deleteAllSupabaseUsers() {
 async function main() {
   console.log('Starting database seeding...')
 
-  // **Step 1: Delete existing authentication data in Supabase**
+  // Clean up
   await deleteAllSupabaseUsers()
-
-  // **Step 2: Cleaning existing data in Prisma**
-  console.log('Cleaning existing database records...')
+  await prisma.approvedBy.deleteMany()
+  await prisma.vote.deleteMany()
   await prisma.projectProposal.deleteMany()
+  await prisma.budgetOverview.deleteMany()
   await prisma.notification.deleteMany()
   await prisma.user.deleteMany()
 
-  // **Step 3: Creating Custom Users in Supabase Auth and Prisma**
-  console.log('Creating custom users...')
+  // Create Users
   const customUsersData = [
     { name: 'Admin User', email: 'admin@example.com', password: 'test', phone: '+639630305154', role: UserRole.Admin },
     { name: 'Education User', email: 'education@example.com', password: 'test', phone: faker.phone.number({ style: 'international' }), role: UserRole.Education },
@@ -90,27 +71,19 @@ async function main() {
     { name: 'Women User', email: 'women@example.com', password: 'test', phone: faker.phone.number({ style: 'international' }), role: UserRole.Women },
   ]
 
-  // For each custom user, create a Supabase Auth user and then create a Prisma user record using the same ID
-  const customUsers = await Promise.all(
+  const users = await Promise.all(
     customUsersData.map(async (user) => {
-      // Create user in Supabase Auth and capture the user id
       const { data, error } = await supabase.auth.admin.createUser({
         email: user.email,
         password: user.password,
-        email_confirm: true, // Mark email as confirmed
+        email_confirm: true,
       })
-      if (error || !data?.user) {
-        console.error(`Error creating Supabase auth user for ${user.email}:`, error)
-        throw error
-      }
-      const supabaseUserId = data.user.id
-      console.log(`Created Supabase auth user for ${user.email} with ID: ${supabaseUserId}`)
+      if (error || !data?.user) throw error
 
-      // Hash password for Prisma DB and create user record with matching id
       const hashedPassword = await bcrypt.hash(user.password, 10)
       return prisma.user.create({
         data: {
-          id: supabaseUserId, // Use the same UID from Supabase Auth as the ID in the user table
+          id: data.user.id,
           name: user.name,
           email: user.email,
           password: hashedPassword,
@@ -120,9 +93,89 @@ async function main() {
       })
     })
   )
-  console.log(`Created ${customUsers.length} custom users in Prisma DB`)
+
+  // Create BudgetOverviews
+  const budgetOverviews = await prisma.budgetOverview.createMany({
+    data: Object.values(UserRole).map(role => ({
+      totalBudget: faker.number.float({ min: 10000, max: 1000000, fractionDigits: 2 }),
+      allocatedBudget: 0,
+      remainingBudget: faker.number.float({ min: 10000, max: 1000000, fractionDigits: 2 }),
+      month: faker.date.recent(),
+      committeeRole: role,
+    })),
+  })
+
+  // Create ProjectProposals
+  const budgetOverviewList = await prisma.budgetOverview.findMany()
+  const projectProposals = await prisma.projectProposal.createMany({
+    data: Array.from({ length: 20 }, () => {
+      const user = faker.helpers.arrayElement(users)
+      const budget = faker.helpers.arrayElement(budgetOverviewList)
+      return {
+        title: faker.lorem.sentence(),
+        description: faker.lorem.paragraph(),
+        proposedDate: faker.date.recent(),
+        fileUrl: faker.internet.url(),
+        postedById: user.id,
+        budget: faker.number.float({ min: 1000, max: 500000, fractionDigits: 2 }),
+        committee: user.role,
+        budgetOverviewId: faker.helpers.maybe(() => budget.id, { probability: 0.7 }),
+      }
+    }),
+  })
+
+  // Create Notifications
+  const notifications = await prisma.notification.createMany({
+    data: Array.from({ length: 30 }, () => ({
+      phone: faker.phone.number({ style: 'international' }),
+      message: faker.lorem.sentence(),
+      status: faker.helpers.arrayElement(['Pending', 'Sent', 'Failed']),
+      bookingNumber: faker.helpers.maybe(() => faker.string.uuid(), { probability: 0.5 }),
+    })),
+  })
+
+  // Create Votes
+  const proposals = await prisma.projectProposal.findMany()
+  const votes = await batchInsert(
+    Array.from({ length: 50 }, () => {
+      const proposal = faker.helpers.arrayElement(proposals)
+      return {
+        userId: faker.helpers.arrayElement(users).id,
+        proposalId: proposal.id,
+        vote: faker.helpers.enumValue(VoteStatus),
+        comment: faker.lorem.sentence(),
+      }
+    }),
+    10,
+    async (batch) => {
+      await prisma.vote.createMany({ data: batch, skipDuplicates: true })
+    }
+  )
+
+  // Create ApprovedBy
+  const approvedBy = await batchInsert(
+    Array.from({ length: 30 }, () => {
+      const proposal = faker.helpers.arrayElement(proposals)
+      return {
+        userId: faker.helpers.arrayElement(users).id,
+        proposalId: proposal.id,
+        status: faker.helpers.enumValue(ApprovedStatus),
+        comment: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.5 }),
+      }
+    }),
+    10,
+    async (batch) => {
+      await prisma.approvedBy.createMany({ data: batch, skipDuplicates: true })
+    }
+  )
 
   console.log('Seeding complete!')
+  console.log(`Created ${users.length} users`)
+  console.log(`Created ${budgetOverviews.count} budget overviews`)
+  console.log(`Created ${projectProposals.count} project proposals`)
+  console.log(`Created ${notifications.count} notifications`)
+  console.log(`Created 50 votes`)
+  console.log(`Created 30 approvedBy records`)
 }
 
 main()

@@ -1,14 +1,11 @@
 // app/api/project-proposal/route.ts
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase-client";
+import { UserRole } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 
 export const runtime = "nodejs";
-
-// Initialize the Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(request: Request) {
   try {
@@ -19,8 +16,10 @@ export async function POST(request: Request) {
     const postedById = formData.get("postedById") as string;
     const proposedDateStr = formData.get("proposedDate") as string;
     const budgetStr = formData.get("budget") as string;
+    const committee = formData.get("committee") as string; // Get committee from form data
     const file = formData.get("file") as File;
 
+    // Validate required fields
     if (!file) {
       return NextResponse.json(
         { message: "File is required" },
@@ -38,6 +37,13 @@ export async function POST(request: Request) {
     if (!budgetStr) {
       return NextResponse.json(
         { message: "Budget is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!committee) {
+      return NextResponse.json(
+        { message: "Committee is required" },
         { status: 400 }
       );
     }
@@ -95,10 +101,23 @@ export async function POST(request: Request) {
         description,
         fileUrl: publicUrl,
         postedById,
-        proposedDate, // required field
-        budget,       // new budget field
+        proposedDate,
+        budget,
+        createdAt: new Date(),
+        committee: committee as UserRole, // Now using the committee value from the form
       },
     });
+
+    // Extract committee from form data for revalidation paths
+    const committeeValue = committee as UserRole;
+    const committeePath = `/committee/${committeeValue.toLowerCase().replace(/_/g, '-').replace('_committee', '')}`;
+
+    // Revalidate the paths to update UI
+    revalidatePath(committeePath);
+    revalidatePath(`${committeePath}/project-proposals`);
+    revalidatePath(`${committeePath}/project-proposals?status=pending`);
+    revalidatePath(`${committeePath}/project-proposals?status=approved`);
+    revalidatePath(`${committeePath}/project-proposals?status=rejected`);
 
     return NextResponse.json(proposal);
   } catch (error: any) {
@@ -121,6 +140,7 @@ export async function PUT(request: Request) {
     const postedById = formData.get("postedById") as string;
     const proposedDateStr = formData.get("proposedDate") as string;
     const budgetStr = formData.get("budget") as string;
+    const committee = formData.get("committee") as string;
     const file = formData.get("file") as File | null;
 
     if (!id) {
@@ -163,6 +183,13 @@ export async function PUT(request: Request) {
       );
     }
 
+    if (!committee) {
+      return NextResponse.json(
+        { message: "Committee is required" },
+        { status: 400 }
+      );
+    }
+
     // Convert the proposedDate string to a Date object
     const proposedDate = new Date(proposedDateStr);
     if (isNaN(proposedDate.getTime())) {
@@ -187,6 +214,7 @@ export async function PUT(request: Request) {
       description,
       proposedDate,
       budget,
+      committee,
     };
 
     // If a file was provided, handle the file upload
@@ -228,6 +256,18 @@ export async function PUT(request: Request) {
       where: { id },
       data: updateData,
     });
+
+    // Extract committee from form data for revalidation paths
+    const committeeValue = committee as UserRole;
+    const committeePath = `/committee/${committeeValue.toLowerCase().replace(/_/g, '-').replace('_committee', '')}`;
+
+    // Revalidate the paths to update UI
+    revalidatePath(committeePath);
+    revalidatePath(`${committeePath}/project-proposals`);
+    revalidatePath(`${committeePath}/project-proposals?status=pending`);
+    revalidatePath(`${committeePath}/project-proposals?status=approved`);
+    revalidatePath(`${committeePath}/project-proposals?status=rejected`);
+    revalidatePath(`${committeePath}/project-proposals/${id}`);
 
     return NextResponse.json({
       message: "Project proposal updated successfully",

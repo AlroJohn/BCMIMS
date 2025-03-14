@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   AudioWaveform,
   Bell,
@@ -10,10 +10,10 @@ import {
   GalleryVerticalEnd,
   Map,
   PieChart,
-  FileText,  // Added for Project Proposal
-  Users,     // Added for Manage User
+  FileText, // Added for Project Proposal
+  Users, // Added for Manage User
   LayoutDashboard, // Added for Committee Dashboards
-} from "lucide-react"
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -21,11 +21,11 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import { NavMain } from "./nav-main"
-import { NavProjects } from "./nav-projects"
-import { NavUser } from "./nav-user"
-import { TeamSwitcher } from "./team-switcher"
+} from "@/components/ui/sidebar";
+import { NavMain } from "./nav-main";
+import { NavProjects } from "./nav-projects";
+import { NavUser } from "./nav-user";
+import { TeamSwitcher } from "./team-switcher";
 
 // This is sample data.
 const data = {
@@ -37,9 +37,9 @@ const data = {
   teams: [
     {
       name: "BCMIMS",
-      logo: '/images/logo.png',
+      logo: "/images/logo.png",
       plan: "Name of user",
-    }
+    },
   ],
   navMain: [
     {
@@ -97,7 +97,7 @@ const data = {
       ],
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -113,5 +113,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarFooter> */}
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

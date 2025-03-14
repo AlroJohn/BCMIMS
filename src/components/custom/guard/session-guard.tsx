@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/auth-provider";
 import GuradLoader from "../loader/loading-guard";
 import CommitteeLayoutTemplate from "../dashboard/committee-layout-template";
+import { Loader2 } from "lucide-react";
 
 interface SessionGuardProps {
   children: React.ReactNode;
@@ -116,16 +117,7 @@ export default function SessionGuard({
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 w-full fixed inset-0 top-0 left-0 z-[2000] bg-muted">
         <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
-          <h1 className="mb-4 text-2xl font-bold text-gray-800">Access Restricted</h1>
-          <p className="mb-6 text-gray-600">
-            You need to be logged in with proper permissions to access this page.
-          </p>
-          <button
-            onClick={() => router.push("/auth")}
-            className="w-full px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
-          >
-            Go to Login
-          </button>
+          <Loader2 size={47} className="text-black"/>
         </div>
       </div>
     );

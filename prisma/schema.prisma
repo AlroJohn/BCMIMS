@@ -33,18 +33,35 @@ model Notification {
 }
 
 model ProjectProposal {
-  id           String                   @id @default(uuid())
-  title        String
-  description  String
-  proposedDate DateTime                 @default(now())
-  fileUrl      String
-  postedById   String
-  budget       Float                    // new budget field
-  postedBy     User                     @relation(fields: [postedById], references: [id], onDelete: Cascade)
-  approvedBy   ApprovedBy[]             // Relation to approvals
-  votes        Vote[]
+  id               String         @id @default(uuid())
+  title            String
+  description      String
+  proposedDate     DateTime       @default(now())
+  fileUrl          String
+  postedById       String
+  budget           Float
+  committee        UserRole       // Add committee field to match role of poster
+  budgetOverviewId String?        // Make optional since proposals start unassigned
+  postedBy         User           @relation(fields: [postedById], references: [id], onDelete: Cascade)
+  budgetOverview   BudgetOverview? @relation(fields: [budgetOverviewId], references: [id])
+  approvedBy       ApprovedBy[]
+  votes            Vote[]
+  createdAt        DateTime?      @default(now())
+
+  @@map("projectProposals")
+}
+
+model BudgetOverview {
+  id                String    @id @default(uuid())
+  totalBudget       Float
+  allocatedBudget   Float     // Fixed capitalization for consistency
+  remainingBudget   Float     // Fixed capitalization for consistency
+  month             DateTime
+  committeeRole     UserRole  // Associate budget with specific committee/department
+  createdAt         DateTime? @default(now())
   
-  @@map("projectProposals ")
+  // You could also track which proposals are funded from this budget
+  proposals         ProjectProposal[]
 }
 
 model Vote {
@@ -69,6 +86,8 @@ model ApprovedBy {
   proposalId  String            // ID of the project proposal being approved
   approvedBy  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   proposal    ProjectProposal   @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  createdAt         DateTime?            @default(now())
+
   @@unique([userId, proposalId], name: "userId_proposalId")
   @@map("approved_by")
 }

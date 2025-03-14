@@ -1,14 +1,14 @@
-'use client'
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { ChevronRight, type LucideIcon } from "lucide-react"
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
+import { ChevronRight, type LucideIcon } from "lucide-react";
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -18,59 +18,58 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 export function NavMain({
   items,
 }: {
   items: {
-    title: string
-    url: string
-    icon?: LucideIcon
-    isActive?: boolean
+    title: string;
+    url: string;
+    icon?: LucideIcon;
+    isActive?: boolean;
     items?: {
-      title: string
-      url: string
-    }[]
-  }[]
+      title: string;
+      url: string;
+      isActive?: boolean;
+    }[];
+  }[];
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  // Check if the current path matches or is a child of the given URL
-  const isActiveRoute = (url: string) => {
-    // Exact match
-    if (pathname === url) return true;
-    
-    // Check if it's a child route (e.g., /admin matches /admin/bookings)
-    if (url !== '#' && pathname.startsWith(url + '/')) return true;
-    
-    return false;
-  };
+  // Extract status query param (pending, approved, rejected)
+  const status = searchParams.get("status");
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => (
+        {items.map((item) =>
           item.items ? (
             // Collapsible menu item with submenu
             <Collapsible
               key={item.title}
               asChild
               defaultOpen={
-                item.isActive || 
-                item.items.some(subItem => isActiveRoute(subItem.url))
+                item.isActive ||
+                item.items.some(
+                  (subItem) =>
+                    subItem.isActive || pathname.startsWith(subItem.url)
+                )
               }
               className="group/collapsible"
             >
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
-                  <SidebarMenuButton 
+                  <SidebarMenuButton
                     tooltip={item.title}
                     className={
-                      item.items.some(subItem => isActiveRoute(subItem.url)) 
-                      ? "" 
-                      : ""
+                      item.url.includes("project-proposals")
+                        ? "" // Do NOT gray out project-proposals
+                        : pathname.startsWith(item.url)
+                        ? "text-accent-foreground bg-gray-500/20 dark:bg-muted"
+                        : ""
                     }
                   >
                     {item.icon && <item.icon />}
@@ -80,18 +79,37 @@ export function NavMain({
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    {item.items?.map((subItem) => (
-                      <SidebarMenuSubItem key={subItem.title}>
-                        <SidebarMenuSubButton 
-                          asChild 
-                          className={isActiveRoute(subItem.url) ? "text-accent-foreground bg-gray-500/20 dark:bg-muted" : ""}
-                        >
-                          <Link href={subItem.url}>
-                            <span>{subItem.title}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
+                    {item.items?.map((subItem) => {
+                      // Highlight "All Proposals" when no status is set
+                      const isAllProposals =
+                        subItem.url.endsWith("project-proposals") && !status;
+
+                      return (
+                        <SidebarMenuSubItem key={subItem.title}>
+                          <SidebarMenuSubButton
+                            asChild
+                            className={
+                              isAllProposals
+                                ? "text-accent-foreground bg-gray-500/20 dark:bg-muted"
+                                : subItem.url.includes("status=pending") &&
+                                  status === "pending"
+                                ? "text-accent-foreground bg-gray-500/20 dark:bg-muted"
+                                : subItem.url.includes("status=approved") &&
+                                  status === "approved"
+                                ? "text-accent-foreground bg-gray-500/20 dark:bg-muted"
+                                : subItem.url.includes("status=rejected") &&
+                                  status === "rejected"
+                                ? "text-accent-foreground bg-gray-500/20 dark:bg-muted"
+                                : ""
+                            }
+                          >
+                            <Link href={subItem.url}>
+                              <span>{subItem.title}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      );
+                    })}
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </SidebarMenuItem>
@@ -99,10 +117,17 @@ export function NavMain({
           ) : (
             // Non-collapsible menu item (single route)
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton 
-                asChild 
+              <SidebarMenuButton
+                asChild
                 tooltip={item.title}
-                className={isActiveRoute(item.url) ? "text-accent-foreground bg-gray-500/20 dark:bg-muted" : ""}
+                className={
+                  item.url.includes("project-proposals") ||
+                  item.url.includes("dashboard")
+                    ? "" // Prevent graying out project-proposals and dashboard
+                    : pathname.startsWith(item.url)
+                    ? "text-accent-foreground bg-gray-500/20 dark:bg-muted"
+                    : ""
+                }
               >
                 <Link href={item.url}>
                   {item.icon && <item.icon />}
@@ -111,8 +136,8 @@ export function NavMain({
               </SidebarMenuButton>
             </SidebarMenuItem>
           )
-        ))}
+        )}
       </SidebarMenu>
     </SidebarGroup>
-  )
+  );
 }

@@ -6,7 +6,7 @@ import SessionGuard from "@/components/custom/guard/session-guard";
 export default function FinancePage() {
   return (
     <SessionGuard requiredRoles={["Finance"]}>
-      <CommitteeDashboard committee="FINANCE_COMMITTEE" />
+      <CommitteeDashboard />
     </SessionGuard>
   )
 }

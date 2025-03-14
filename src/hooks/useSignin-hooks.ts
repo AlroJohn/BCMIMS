@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { loginUser } from "@/actions/signin-action";
+
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { loginUser } from "@/app/actions/signin-action";
 
 // Define expected role types
 type UserRole = "SUPERADMIN" | "STAFF" | "CLIENT";
@@ -42,7 +43,6 @@ export const useLogin = () => {
   const [success, setSuccess] = useState(false);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const router = useRouter();
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };

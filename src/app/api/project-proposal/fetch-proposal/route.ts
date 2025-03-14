@@ -1,5 +1,3 @@
-// app/api/project-proposal/fetch-proposal/route.ts
-
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
@@ -19,7 +17,7 @@ export async function GET() {
         },
         approvedBy: {
           include: {
-            approvedBy: { 
+            approvedBy: {
               select: { id: true, name: true, role: true },
             },
           },
@@ -27,52 +25,50 @@ export async function GET() {
       },
     });
 
-    // Format the data to ensure all required information is present
-    const formattedProposals = proposals.map(proposal => {
-      // Compute overall status from approvedBy records:
-      const approvalStatuses = proposal.approvedBy.map(approval => approval.status);
-      let status = "Pending"; // changed default from "Pending Approval" to "Pending"
-      if (approvalStatuses.includes("Rejected")) {
-        status = "Rejected";
-      } else if (approvalStatuses.includes("Approved")) {
-        status = "Approved";
+    const formattedProposals = proposals.map((proposal) => {
+      // Compute status primarily from Vote table
+      let status = "Pending";
+      if (proposal.votes.length > 0) {
+        const approvedVotes = proposal.votes.filter((v) => v.vote === "Approved").length;
+        const rejectedVotes = proposal.votes.filter((v) => v.vote === "Rejected").length;
+        const totalVotes = proposal.votes.length;
+
+        if (approvedVotes > rejectedVotes && approvedVotes > totalVotes / 2) {
+          status = "Approved";
+        } else if (rejectedVotes > approvedVotes && rejectedVotes > totalVotes / 2) {
+          status = "Rejected";
+        }
+      } else if (proposal.approvedBy.length > 0) {
+        // Fallback to ApprovedBy if no votes
+        const latestApproval = proposal.approvedBy.sort(
+          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        )[0];
+        status = latestApproval.status;
       }
 
       return {
         ...proposal,
-        status, // add the computed status here
-        postedBy: proposal.postedBy || {
-          id: "unknown",
-          name: "Unknown User",
-          role: "Unknown",
-        },
-        votes: proposal.votes.map(vote => ({
+        status, // Include computed status
+        postedBy: proposal.postedBy || { id: "unknown", name: "Unknown User", role: "Unknown" },
+        votes: proposal.votes.map((vote) => ({
           ...vote,
-          user: vote.user || {
-            id: "unknown",
-            name: "Unknown User",
-            role: "Unknown",
-          },
+          user: vote.user || { id: "unknown", name: "Unknown User", role: "Unknown" },
           votedAt: vote.votedAt.toISOString(),
         })),
-        approvedBy: proposal.approvedBy.map(approval => ({
+        approvedBy: proposal.approvedBy.map((approval) => ({
           ...approval,
-          status: approval.status,
-          approvedBy: approval.approvedBy || {
-            id: "unknown",
-            name: "Unknown User",
-            role: "Unknown",
-          },
+          approvedBy: approval.approvedBy || { id: "unknown", name: "Unknown User", role: "Unknown" },
           updatedAt: approval.updatedAt.toISOString(),
+          createdAt: approval.createdAt?.toISOString(),
         })),
         proposedDate: proposal.proposedDate.toISOString(),
+        createdAt: proposal.createdAt?.toISOString(),
       };
     });
 
     return NextResponse.json(formattedProposals);
   } catch (error) {
-    console.error('Error fetching proposals:', error);
-    return NextResponse.json({ error: 'Failed to fetch proposals' }, { status: 500 });
+    console.error("Error fetching proposals:", error);
+    return NextResponse.json({ error: "Failed to fetch proposals" }, { status: 500 });
   }
 }
-

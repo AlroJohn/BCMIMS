@@ -1,28 +1,73 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bargraph } from "@/components/custom/dashboard/Bargraph";
-import { Piegraph } from "@/components/custom/dashboard/Piegraph";
+import { Bargraph } from "@/components/custom/dashboard/ui-components/Bargraph";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AlertCircle, Calendar, CheckCircle, Clock, Download, FileText, Filter, Search, XCircle } from "lucide-react";
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Download,
+  FileText,
+  Filter,
+  Search,
+  XCircle,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import SessionGuard from "@/components/custom/guard/session-guard";
 
 // Create simple Badge component since it's missing
-const Badge = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${className}`}>
+const Badge = ({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => (
+  <span
+    className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${className}`}
+  >
     {children}
   </span>
 );
 
 // Create simple Progress component since it's missing
-const Progress = ({ value = 0, className = "" }: { value?: number; className?: string }) => (
-  <div className={`h-2 w-full overflow-hidden rounded-full bg-gray-200 ${className}`}>
+const Progress = ({
+  value = 0,
+  className = "",
+}: {
+  value?: number;
+  className?: string;
+}) => (
+  <div
+    className={`h-2 w-full overflow-hidden rounded-full bg-gray-200 ${className}`}
+  >
     <div
       className="h-full bg-blue-500 transition-all"
       style={{ width: `${Math.min(Math.max(0, value), 100)}%` }}
@@ -37,7 +82,9 @@ export default function AdminDashboard() {
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [committeeApprovals, setCommitteeApprovals] = useState<{ [key: number]: boolean }>({});
+  const [committeeApprovals, setCommitteeApprovals] = useState<{
+    [key: number]: boolean;
+  }>({});
   const [rejectionReason, setRejectionReason] = useState("");
   const [viewFilter, setViewFilter] = useState("calendar"); // "calendar" or "list"
 
@@ -48,36 +95,68 @@ export default function AdminDashboard() {
     path: string;
     person: string; // Person in charge of the committee
   }> = [
-      { id: 1, name: "Education", path: "/committee/education", person: "Maria Santos" },
-      { id: 2, name: "Environment", path: "/committee/environment", person: "Juan Cruz" },
-      { id: 3, name: "Finance", path: "/committee/finance", person: "Pedro Reyes" },
-      { id: 4, name: "Health Services", path: "/committee/health-services", person: "Ana Garcia" },
-      { id: 5, name: "Peace Order", path: "/committee/peace-order", person: "Ramon Diaz" },
-      { id: 6, name: "Public Works", path: "/committee/public-works", person: "Elena Lim" },
-      { id: 7, name: "Women", path: "/committee/women", person: "Sofia Mendoza" },
-    ];
+    {
+      id: 1,
+      name: "Education",
+      path: "/committee/education",
+      person: "Maria Santos",
+    },
+    {
+      id: 2,
+      name: "Environment",
+      path: "/committee/environment",
+      person: "Juan Cruz",
+    },
+    {
+      id: 3,
+      name: "Finance",
+      path: "/committee/finance",
+      person: "Pedro Reyes",
+    },
+    {
+      id: 4,
+      name: "Health Services",
+      path: "/committee/health-services",
+      person: "Ana Garcia",
+    },
+    {
+      id: 5,
+      name: "Peace Order",
+      path: "/committee/peace-order",
+      person: "Ramon Diaz",
+    },
+    {
+      id: 6,
+      name: "Public Works",
+      path: "/committee/public-works",
+      person: "Elena Lim",
+    },
+    { id: 7, name: "Women", path: "/committee/women", person: "Sofia Mendoza" },
+  ];
 
   // Project proposals with committee approvals, due dates, and budget
-  const [projectProposals, setProjectProposals] = useState<Array<{
-    id: number;
-    name: string;
-    description: string;
-    committee: string;
-    budget: number;
-    documentTitle: string;
-    documentUrl: string;
-    dueDate: Date;
-    dateProposed: Date;
-    status: string;
-    rejectionReason?: string;
-    approvals: Array<{ committeeId: number; approved: boolean }>;
-    implementation: {
-      startDate: Date;
-      endDate: Date;
+  const [projectProposals, setProjectProposals] = useState<
+    Array<{
+      id: number;
+      name: string;
+      description: string;
+      committee: string;
+      budget: number;
+      documentTitle: string;
+      documentUrl: string;
+      dueDate: Date;
+      dateProposed: Date;
       status: string;
-      completion: number;
-    } | null;
-  }>>([
+      rejectionReason?: string;
+      approvals: Array<{ committeeId: number; approved: boolean }>;
+      implementation: {
+        startDate: Date;
+        endDate: Date;
+        status: string;
+        completion: number;
+      } | null;
+    }>
+  >([
     {
       id: 1,
       name: "School Supply Drive",
@@ -93,14 +172,14 @@ export default function AdminDashboard() {
         { committeeId: 1, approved: true },
         { committeeId: 3, approved: true },
         { committeeId: 4, approved: true },
-        { committeeId: 7, approved: true }
+        { committeeId: 7, approved: true },
       ],
       implementation: {
         startDate: new Date(2025, 3, 5), // April 5, 2025
         endDate: new Date(2025, 3, 15), // April 15, 2025
         status: "In Progress",
-        completion: 65
-      }
+        completion: 65,
+      },
     },
     {
       id: 2,
@@ -118,14 +197,14 @@ export default function AdminDashboard() {
         { committeeId: 5, approved: true },
         { committeeId: 6, approved: true },
         { committeeId: 7, approved: true },
-        { committeeId: 1, approved: true }
+        { committeeId: 1, approved: true },
       ],
       implementation: {
         startDate: new Date(2025, 2, 18), // March 18, 2025
         endDate: new Date(2025, 5, 1), // June 1, 2025
         status: "In Progress",
-        completion: 45
-      }
+        completion: 45,
+      },
     },
     {
       id: 3,
@@ -141,14 +220,14 @@ export default function AdminDashboard() {
       approvals: [
         { committeeId: 3, approved: true },
         { committeeId: 5, approved: true },
-        { committeeId: 1, approved: false }
+        { committeeId: 1, approved: false },
       ],
       implementation: {
         startDate: new Date(2025, 3, 1), // April 1, 2025
         endDate: new Date(2025, 6, 30), // July 30, 2025
         status: "In Progress",
-        completion: 80
-      }
+        completion: 80,
+      },
     },
     {
       id: 4,
@@ -165,14 +244,14 @@ export default function AdminDashboard() {
         { committeeId: 4, approved: true },
         { committeeId: 3, approved: true },
         { committeeId: 7, approved: true },
-        { committeeId: 1, approved: true }
+        { committeeId: 1, approved: true },
       ],
       implementation: {
         startDate: new Date(2025, 2, 22), // March 22, 2025
         endDate: new Date(2025, 2, 25), // March 25, 2025
         status: "Scheduled",
-        completion: 20
-      }
+        completion: 20,
+      },
     },
     {
       id: 5,
@@ -188,14 +267,14 @@ export default function AdminDashboard() {
       approvals: [
         { committeeId: 5, approved: true },
         { committeeId: 3, approved: true },
-        { committeeId: 6, approved: true }
+        { committeeId: 6, approved: true },
       ],
       implementation: {
         startDate: new Date(2025, 4, 1), // May 1, 2025
         endDate: new Date(2025, 8, 30), // September 30, 2025
         status: "In Progress",
-        completion: 50
-      }
+        completion: 50,
+      },
     },
     {
       id: 6,
@@ -211,14 +290,14 @@ export default function AdminDashboard() {
       approvals: [
         { committeeId: 6, approved: true },
         { committeeId: 3, approved: true },
-        { committeeId: 5, approved: true }
+        { committeeId: 5, approved: true },
       ],
       implementation: {
         startDate: new Date(2025, 2, 25), // March 25, 2025
         endDate: new Date(2025, 3, 20), // April 20, 2025
         status: "In Progress",
-        completion: 35
-      }
+        completion: 35,
+      },
     },
     {
       id: 7,
@@ -235,14 +314,14 @@ export default function AdminDashboard() {
         { committeeId: 7, approved: true },
         { committeeId: 3, approved: true },
         { committeeId: 1, approved: true },
-        { committeeId: 4, approved: true }
+        { committeeId: 4, approved: true },
       ],
       implementation: {
         startDate: new Date(2025, 2, 28), // March 28, 2025
         endDate: new Date(2025, 5, 15), // June 15, 2025
         status: "In Progress",
-        completion: 40
-      }
+        completion: 40,
+      },
     },
     {
       id: 8,
@@ -258,9 +337,9 @@ export default function AdminDashboard() {
       approvals: [
         { committeeId: 1, approved: true },
         { committeeId: 3, approved: false },
-        { committeeId: 6, approved: false }
+        { committeeId: 6, approved: false },
       ],
-      implementation: null
+      implementation: null,
     },
     {
       id: 9,
@@ -276,9 +355,9 @@ export default function AdminDashboard() {
       approvals: [
         { committeeId: 6, approved: true },
         { committeeId: 2, approved: true },
-        { committeeId: 3, approved: false }
+        { committeeId: 3, approved: false },
       ],
-      implementation: null
+      implementation: null,
     },
     {
       id: 10,
@@ -295,19 +374,20 @@ export default function AdminDashboard() {
         { committeeId: 6, approved: true },
         { committeeId: 3, approved: true },
         { committeeId: 5, approved: true },
-        { committeeId: 2, approved: true }
+        { committeeId: 2, approved: true },
       ],
       implementation: {
         startDate: new Date(2025, 2, 15), // March 15, 2025
         endDate: new Date(2025, 2, 28), // March 28, 2025
         status: "In Progress",
-        completion: 60
-      }
+        completion: 60,
+      },
     },
     {
       id: 11,
       name: "Community WiFi Project",
-      description: "Install public WiFi hotspots in strategic barangay locations",
+      description:
+        "Install public WiFi hotspots in strategic barangay locations",
       committee: "Public Works",
       budget: 90000,
       documentTitle: "Community WiFi Proposal.pdf",
@@ -317,9 +397,9 @@ export default function AdminDashboard() {
       status: "Pending Approval",
       approvals: [
         { committeeId: 6, approved: true },
-        { committeeId: 3, approved: false }
+        { committeeId: 3, approved: false },
       ],
-      implementation: null
+      implementation: null,
     },
     {
       id: 12,
@@ -335,43 +415,75 @@ export default function AdminDashboard() {
       approvals: [
         { committeeId: 4, approved: true },
         { committeeId: 3, approved: false },
-        { committeeId: 7, approved: true }
+        { committeeId: 7, approved: true },
       ],
-      implementation: null
-    }
+      implementation: null,
+    },
   ]);
 
   // Function to determine priority level based on approvals and due date
   const determinePriority = (project: any) => {
     const now = new Date();
-    const daysUntilDue = Math.ceil((project.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    const approvalCount = project.approvals.filter((a: { approved: boolean }) => a.approved).length;
+    const daysUntilDue = Math.ceil(
+      (project.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const approvalCount = project.approvals.filter(
+      (a: { approved: boolean }) => a.approved
+    ).length;
     const majorityApproval = approvalCount >= 4; // Majority means at least 4 out of 7 committees
     const nearDueDate = daysUntilDue <= 30; // Within 30 days is considered near
 
-    if (majorityApproval && nearDueDate) return { level: "Urgent & Important", color: "bg-red-100 text-red-800", badge: "bg-red-100 border-red-200 text-red-800" };
-    if (!majorityApproval && nearDueDate) return { level: "Urgent but Not Important", color: "bg-yellow-100 text-yellow-800", badge: "bg-yellow-100 border-yellow-200 text-yellow-800" };
-    if (majorityApproval && !nearDueDate) return { level: "Important but Not Urgent", color: "bg-blue-100 text-blue-800", badge: "bg-blue-100 border-blue-200 text-blue-800" };
-    return { level: "Not Urgent", color: "bg-gray-100 text-gray-800", badge: "bg-gray-100 border-gray-200 text-gray-800" };
+    if (majorityApproval && nearDueDate)
+      return {
+        level: "Urgent & Important",
+        color: "bg-red-100 text-red-800",
+        badge: "bg-red-100 border-red-200 text-red-800",
+      };
+    if (!majorityApproval && nearDueDate)
+      return {
+        level: "Urgent but Not Important",
+        color: "bg-yellow-100 text-yellow-800",
+        badge: "bg-yellow-100 border-yellow-200 text-yellow-800",
+      };
+    if (majorityApproval && !nearDueDate)
+      return {
+        level: "Important but Not Urgent",
+        color: "bg-blue-100 text-blue-800",
+        badge: "bg-blue-100 border-blue-200 text-blue-800",
+      };
+    return {
+      level: "Not Urgent",
+      color: "bg-gray-100 text-gray-800",
+      badge: "bg-gray-100 border-gray-200 text-gray-800",
+    };
   };
 
   // Add priority level to each project
-  const projectsWithPriority = projectProposals.map(project => ({
+  const projectsWithPriority = projectProposals.map((project) => ({
     ...project,
-    priority: determinePriority(project)
+    priority: determinePriority(project),
   }));
 
   // Filter for pending projects with search and committee filter
   const pendingProjects = projectsWithPriority
-    .filter(project => project.status === "Pending Approval")
-    .filter(project => project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchTerm.toLowerCase()))
-    .filter(project => filterCommittee === "all" || project.committee === filterCommittee);
+    .filter((project) => project.status === "Pending Approval")
+    .filter(
+      (project) =>
+        project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.description.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter(
+      (project) =>
+        filterCommittee === "all" || project.committee === filterCommittee
+    );
 
   // Create calendar activities from approved projects that have implementation dates
   const calendarActivities = projectProposals
-    .filter(project => project.status === "Approved" && project.implementation !== null)
-    .flatMap(project => {
+    .filter(
+      (project) =>
+        project.status === "Approved" && project.implementation !== null
+    )
+    .flatMap((project) => {
       // Create an activity for both start and end dates if they exist
       const activities: Array<{
         date: Date;
@@ -385,7 +497,7 @@ export default function AdminDashboard() {
           date: project.implementation.startDate,
           title: `Start: ${project.name}`,
           committee: project.committee,
-          project: project
+          project: project,
         });
       }
 
@@ -394,7 +506,7 @@ export default function AdminDashboard() {
           date: project.implementation.endDate,
           title: `Due: ${project.name}`,
           committee: project.committee,
-          project: project
+          project: project,
         });
       }
 
@@ -407,15 +519,22 @@ export default function AdminDashboard() {
   );
 
   // Dashboard statistics
-  const totalApprovedProjects = projectProposals.filter(p => p.status === "Approved").length;
-  const totalPendingProjects = projectProposals.filter(p => p.status === "Pending Approval").length;
-  const totalRejectedProjects = projectProposals.filter(p => p.status === "Rejected").length;
+  const totalApprovedProjects = projectProposals.filter(
+    (p) => p.status === "Approved"
+  ).length;
+  const totalPendingProjects = projectProposals.filter(
+    (p) => p.status === "Pending Approval"
+  ).length;
+  const totalRejectedProjects = projectProposals.filter(
+    (p) => p.status === "Rejected"
+  ).length;
   const totalBudget = projectProposals
-    .filter(p => p.status === "Approved")
+    .filter((p) => p.status === "Approved")
     .reduce((sum, project) => sum + project.budget, 0);
 
   const thisMonthActivities = calendarActivities.filter(
-    activity => activity.date.getMonth() === new Date().getMonth() &&
+    (activity) =>
+      activity.date.getMonth() === new Date().getMonth() &&
       activity.date.getFullYear() === new Date().getFullYear()
   ).length;
 
@@ -428,39 +547,54 @@ export default function AdminDashboard() {
 
   // Get all upcoming activities sorted by date
   const upcomingActivities = [...calendarActivities]
-    .filter(activity => activity.date >= new Date())
+    .filter((activity) => activity.date >= new Date())
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
   // Calculate distribution of projects by committee for pie chart
-  const committeeProjectCounts = committees.map(committee => {
-    const count = projectProposals.filter(project =>
-      project.committee === committee.name && project.status === "Approved"
+  const committeeProjectCounts = committees.map((committee) => {
+    const count = projectProposals.filter(
+      (project) =>
+        project.committee === committee.name && project.status === "Approved"
     ).length;
 
     return {
       name: committee.name,
-      value: count
+      value: count,
     };
   });
 
   // Calculate monthly budget allocation for bar graph
   const getMonthName = (monthIndex: number) => {
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     return months[monthIndex];
   };
 
   const monthlyBudgets = Array.from({ length: 12 }, (_, monthIndex) => {
     const monthlyTotal = projectProposals
-      .filter(project =>
-        project.status === "Approved" &&
-        project.implementation?.startDate.getMonth() === monthIndex &&
-        project.implementation?.startDate.getFullYear() === 2025
+      .filter(
+        (project) =>
+          project.status === "Approved" &&
+          project.implementation?.startDate.getMonth() === monthIndex &&
+          project.implementation?.startDate.getFullYear() === 2025
       )
       .reduce((sum, project) => sum + project.budget, 0);
 
     return {
       name: getMonthName(monthIndex),
-      value: monthlyTotal
+      value: monthlyTotal,
     };
   });
 
@@ -470,12 +604,14 @@ export default function AdminDashboard() {
 
     // Initialize committee approvals with current values
     const initialApprovals: { [key: number]: boolean } = {};
-    project.approvals.forEach((approval: { committeeId: number; approved: boolean }) => {
-      initialApprovals[approval.committeeId] = approval.approved;
-    });
+    project.approvals.forEach(
+      (approval: { committeeId: number; approved: boolean }) => {
+        initialApprovals[approval.committeeId] = approval.approved;
+      }
+    );
 
     // Add any missing committees
-    committees.forEach(committee => {
+    committees.forEach((committee) => {
       if (initialApprovals[committee.id] === undefined) {
         initialApprovals[committee.id] = false;
       }
@@ -496,31 +632,38 @@ export default function AdminDashboard() {
   const handleApprove = () => {
     if (!selectedProject) return;
 
-    const updatedProjects = projectProposals.map(project => {
+    const updatedProjects = projectProposals.map((project) => {
       if (project.id === selectedProject.id) {
         // Convert committee approvals object to array format
-        const newApprovals = Object.entries(committeeApprovals).map(([committeeId, approved]) => ({
-          committeeId: parseInt(committeeId),
-          approved
-        }));
+        const newApprovals = Object.entries(committeeApprovals).map(
+          ([committeeId, approved]) => ({
+            committeeId: parseInt(committeeId),
+            approved,
+          })
+        );
 
         // Check if majority approved (at least 4 committees)
-        const approvalCount = Object.values(committeeApprovals).filter(Boolean).length;
+        const approvalCount =
+          Object.values(committeeApprovals).filter(Boolean).length;
         const hasEnoughApprovals = approvalCount >= 4;
 
         // If approved, create implementation details using a ternary operator
-        const newImplementation = hasEnoughApprovals ? {
-          startDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000), // Start in a week
-          endDate: new Date(project.dueDate),
-          status: "Scheduled",
-          completion: 0
-        } : null;
+        const newImplementation = hasEnoughApprovals
+          ? {
+              startDate: new Date(
+                new Date().getTime() + 7 * 24 * 60 * 60 * 1000
+              ), // Start in a week
+              endDate: new Date(project.dueDate),
+              status: "Scheduled",
+              completion: 0,
+            }
+          : null;
 
         return {
           ...project,
           status: hasEnoughApprovals ? "Approved" : "Pending Approval",
           approvals: newApprovals,
-          implementation: hasEnoughApprovals ? newImplementation : null
+          implementation: hasEnoughApprovals ? newImplementation : null,
         };
       }
       return project;
@@ -534,12 +677,12 @@ export default function AdminDashboard() {
   const handleReject = () => {
     if (!selectedProject) return;
 
-    const updatedProjects = projectProposals.map(project => {
+    const updatedProjects = projectProposals.map((project) => {
       if (project.id === selectedProject.id) {
         return {
           ...project,
           status: "Rejected",
-          rejectionReason
+          rejectionReason,
         };
       }
       return project;
@@ -598,7 +741,9 @@ export default function AdminDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{totalApprovedProjects} Approved</div>
+                <div className="text-2xl font-bold">
+                  {totalApprovedProjects} Approved
+                </div>
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-xs text-gray-500">
                     {totalPendingProjects} pending
@@ -617,7 +762,9 @@ export default function AdminDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">₱{totalBudget.toLocaleString()}</div>
+                <div className="text-2xl font-bold">
+                  ₱{totalBudget.toLocaleString()}
+                </div>
                 <p className="text-xs text-gray-500 mt-1">
                   Allocated for approved projects
                 </p>
@@ -633,7 +780,8 @@ export default function AdminDashboard() {
               <CardContent>
                 <div className="text-2xl font-bold">{thisMonthActivities}</div>
                 <p className="text-xs text-gray-500 mt-1">
-                  {priorityCounts["Urgent & Important"] || 0} urgent priority items
+                  {priorityCounts["Urgent & Important"] || 0} urgent priority
+                  items
                 </p>
               </CardContent>
             </Card>
@@ -643,17 +791,23 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Project Overview</CardTitle>
-              <CardDescription>Budget allocation by month and committee distribution</CardDescription>
+              <CardDescription>
+                Budget allocation by month and committee distribution
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Budget Allocation by Month</h3>
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">
+                    Budget Allocation by Month
+                  </h3>
                   <Bargraph data={monthlyBudgets} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Project Distribution by Committee</h3>
-                  <Piegraph data={committeeProjectCounts} />
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">
+                    Project Distribution by Committee
+                  </h3>
+                  {/* <Piegraph data={committeeProjectCounts} /> */}
                 </div>
               </div>
             </CardContent>
@@ -681,14 +835,20 @@ export default function AdminDashboard() {
                           onChange={(e) => setSearchTerm(e.target.value)}
                         />
                       </div>
-                      <Select value={filterCommittee} onValueChange={setFilterCommittee}>
+                      <Select
+                        value={filterCommittee}
+                        onValueChange={setFilterCommittee}
+                      >
                         <SelectTrigger className="w-full sm:w-[180px]">
                           <SelectValue placeholder="Filter by committee" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Committees</SelectItem>
-                          {committees.map(committee => (
-                            <SelectItem key={committee.id} value={committee.name}>
+                          {committees.map((committee) => (
+                            <SelectItem
+                              key={committee.id}
+                              value={committee.name}
+                            >
                               {committee.name}
                             </SelectItem>
                           ))}
@@ -718,10 +878,12 @@ export default function AdminDashboard() {
                               "Urgent & Important": 1,
                               "Urgent but Not Important": 2,
                               "Important but Not Urgent": 3,
-                              "Not Urgent": 4
+                              "Not Urgent": 4,
                             };
 
-                            const priorityDiff = priorityOrder[a.priority.level] - priorityOrder[b.priority.level];
+                            const priorityDiff =
+                              priorityOrder[a.priority.level] -
+                              priorityOrder[b.priority.level];
                             if (priorityDiff !== 0) return priorityDiff;
 
                             // Then sort by due date (earliest first)
@@ -729,57 +891,87 @@ export default function AdminDashboard() {
                           })
                           .map((project) => {
                             // Find committee person
-                            const committeeInfo = committees.find(c => c.name === project.committee);
-                            const committeePerson = committeeInfo ? committeeInfo.person : "Unknown";
+                            const committeeInfo = committees.find(
+                              (c) => c.name === project.committee
+                            );
+                            const committeePerson = committeeInfo
+                              ? committeeInfo.person
+                              : "Unknown";
 
                             return (
-                              <tr key={project.id} className="border-t hover:bg-gray-50">
+                              <tr
+                                key={project.id}
+                                className="border-t hover:bg-gray-50"
+                              >
                                 <td className="p-2">
                                   <div>
-                                    <div className="font-medium">{project.name}</div>
-                                    <div className="text-sm text-gray-500 truncate max-w-xs">{project.description}</div>
+                                    <div className="font-medium">
+                                      {project.name}
+                                    </div>
+                                    <div className="text-sm text-gray-500 truncate max-w-xs">
+                                      {project.description}
+                                    </div>
                                   </div>
                                 </td>
                                 <td className="p-2">
                                   <div>
                                     <div>{project.committee}</div>
-                                    <div className="text-sm text-gray-500">{committeePerson}</div>
+                                    <div className="text-sm text-gray-500">
+                                      {committeePerson}
+                                    </div>
                                   </div>
                                 </td>
                                 <td className="p-2">
-                                  {project.dueDate.toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric'
+                                  {project.dueDate.toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
                                   })}
                                   <div className="text-xs text-gray-500">
-                                    {Math.ceil((project.dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days left
+                                    {Math.ceil(
+                                      (project.dueDate.getTime() -
+                                        new Date().getTime()) /
+                                        (1000 * 60 * 60 * 24)
+                                    )}{" "}
+                                    days left
                                   </div>
                                 </td>
                                 <td className="p-2">
-                                  <Badge className={`${project.priority.badge}`}>
+                                  <Badge
+                                    className={`${project.priority.badge}`}
+                                  >
                                     {project.priority.level}
                                   </Badge>
                                 </td>
-                                <td className="p-2">₱{project.budget.toLocaleString()}</td>
+                                <td className="p-2">
+                                  ₱{project.budget.toLocaleString()}
+                                </td>
                                 <td className="p-2">
                                   <div className="flex justify-center gap-2">
                                     <Button
                                       size="sm"
                                       variant="outline"
                                       className="flex items-center gap-1"
-                                      onClick={() => openApprovalDialog(project)}
+                                      onClick={() =>
+                                        openApprovalDialog(project)
+                                      }
                                     >
                                       <CheckCircle className="h-4 w-4" />
-                                      <span className="hidden sm:inline">Approve</span>
+                                      <span className="hidden sm:inline">
+                                        Approve
+                                      </span>
                                     </Button>
                                     <Button
                                       size="sm"
                                       variant="outline"
                                       className="flex items-center gap-1"
-                                      onClick={() => openRejectionDialog(project)}
+                                      onClick={() =>
+                                        openRejectionDialog(project)
+                                      }
                                     >
                                       <XCircle className="h-4 w-4" />
-                                      <span className="hidden sm:inline">Reject</span>
+                                      <span className="hidden sm:inline">
+                                        Reject
+                                      </span>
                                     </Button>
                                     <a
                                       href={project.documentUrl}
@@ -789,7 +981,9 @@ export default function AdminDashboard() {
                                       rel="noopener noreferrer"
                                     >
                                       <FileText className="h-4 w-4" />
-                                      <span className="hidden sm:inline ml-1">View</span>
+                                      <span className="hidden sm:inline ml-1">
+                                        View
+                                      </span>
                                     </a>
                                   </div>
                                 </td>
@@ -804,8 +998,12 @@ export default function AdminDashboard() {
                         <div className="flex justify-center mb-2">
                           <CheckCircle className="h-12 w-12 text-green-400" />
                         </div>
-                        <p className="font-medium">No pending projects to review at this time.</p>
-                        <p className="text-sm">All project proposals have been processed.</p>
+                        <p className="font-medium">
+                          No pending projects to review at this time.
+                        </p>
+                        <p className="text-sm">
+                          All project proposals have been processed.
+                        </p>
                       </div>
                     )}
                   </div>
@@ -826,18 +1024,20 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex bg-gray-100 rounded-md p-0.5">
                       <Button
-                        variant={viewFilter === 'calendar' ? 'default' : 'ghost'}
+                        variant={
+                          viewFilter === "calendar" ? "default" : "ghost"
+                        }
                         size="sm"
-                        onClick={() => setViewFilter('calendar')}
+                        onClick={() => setViewFilter("calendar")}
                         className="flex items-center gap-1"
                       >
                         <Calendar className="h-4 w-4" />
                         <span className="hidden sm:inline">Calendar</span>
                       </Button>
                       <Button
-                        variant={viewFilter === 'list' ? 'default' : 'ghost'}
+                        variant={viewFilter === "list" ? "default" : "ghost"}
                         size="sm"
-                        onClick={() => setViewFilter('list')}
+                        onClick={() => setViewFilter("list")}
                         className="flex items-center gap-1"
                       >
                         <Clock className="h-4 w-4" />
@@ -847,33 +1047,47 @@ export default function AdminDashboard() {
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col">
-                  {viewFilter === 'calendar' ? (
+                  {viewFilter === "calendar" ? (
                     <div className="border rounded-md p-4 w-full">
-                      <h3 className="font-medium mb-4 text-center">March 2025</h3>
+                      <h3 className="font-medium mb-4 text-center">
+                        March 2025
+                      </h3>
                       <div className="grid grid-cols-7 gap-1">
-                        {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-                          <div key={day} className="text-center text-sm font-medium p-2">
-                            {day}
-                          </div>
-                        ))}
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
-                          const currentDate = new Date(2025, 2, day);
-                          const hasActivity = calendarActivities.some(
-                            (activity) => activity.date.toDateString() === currentDate.toDateString()
-                          );
-                          const isSelected = date.toDateString() === currentDate.toDateString();
-
-                          return (
-                            <button
+                        {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(
+                          (day) => (
+                            <div
                               key={day}
-                              className={`text-center p-2 rounded-full hover:bg-gray-100 ${hasActivity ? "font-bold bg-blue-50" : ""
-                                } ${isSelected ? "bg-blue-100 font-bold" : ""}`}
-                              onClick={() => setDate(currentDate)}
+                              className="text-center text-sm font-medium p-2"
                             >
                               {day}
-                            </button>
-                          );
-                        })}
+                            </div>
+                          )
+                        )}
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map(
+                          (day) => {
+                            const currentDate = new Date(2025, 2, day);
+                            const hasActivity = calendarActivities.some(
+                              (activity) =>
+                                activity.date.toDateString() ===
+                                currentDate.toDateString()
+                            );
+                            const isSelected =
+                              date.toDateString() ===
+                              currentDate.toDateString();
+
+                            return (
+                              <button
+                                key={day}
+                                className={`text-center p-2 rounded-full hover:bg-gray-100 ${
+                                  hasActivity ? "font-bold bg-blue-50" : ""
+                                } ${isSelected ? "bg-blue-100 font-bold" : ""}`}
+                                onClick={() => setDate(currentDate)}
+                              >
+                                {day}
+                              </button>
+                            );
+                          }
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -883,45 +1097,58 @@ export default function AdminDashboard() {
                         {/* Timeline line */}
                         <div className="absolute h-full w-0.5 bg-gray-200 left-2 top-0"></div>
 
-                        {upcomingActivities.slice(0, 10).map((activity, index) => (
-                          <div key={index} className="ml-7 mb-4 relative">
-                            {/* Timeline dot */}
-                            <div className="absolute w-4 h-4 rounded-full bg-blue-500 -left-5 top-1.5"></div>
+                        {upcomingActivities
+                          .slice(0, 10)
+                          .map((activity, index) => (
+                            <div key={index} className="ml-7 mb-4 relative">
+                              {/* Timeline dot */}
+                              <div className="absolute w-4 h-4 rounded-full bg-blue-500 -left-5 top-1.5"></div>
 
-                            <div className="p-3 border rounded-lg bg-white shadow-sm">
-                              <div className="font-medium">{activity.title}</div>
-                              <div className="text-sm text-gray-500">
-                                {activity.date.toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric'
-                                })}
-                              </div>
-                              <div className="flex justify-between items-center mt-1">
-                                <Badge className={determinePriority(activity.project).badge}>
-                                  {determinePriority(activity.project).level}
-                                </Badge>
-                                <a
-                                  href={activity.project.documentUrl}
-                                  className="text-blue-600 text-sm hover:underline flex items-center gap-1"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <FileText className="h-3 w-3" />
-                                  Details
-                                </a>
+                              <div className="p-3 border rounded-lg bg-white shadow-sm">
+                                <div className="font-medium">
+                                  {activity.title}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {activity.date.toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}
+                                </div>
+                                <div className="flex justify-between items-center mt-1">
+                                  <Badge
+                                    className={
+                                      determinePriority(activity.project).badge
+                                    }
+                                  >
+                                    {determinePriority(activity.project).level}
+                                  </Badge>
+                                  <a
+                                    href={activity.project.documentUrl}
+                                    className="text-blue-600 text-sm hover:underline flex items-center gap-1"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <FileText className="h-3 w-3" />
+                                    Details
+                                  </a>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     </div>
                   )}
 
-                  {viewFilter === 'calendar' && (
+                  {viewFilter === "calendar" && (
                     <div className="mt-6 flex-1">
                       <h3 className="font-medium mb-2">
-                        Activities for {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                        Activities for{" "}
+                        {date.toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
                       </h3>
 
                       {selectedDateActivities.length > 0 ? (
@@ -929,14 +1156,24 @@ export default function AdminDashboard() {
                           {selectedDateActivities.map((activity, index) => {
                             const project = activity.project;
                             const priority = determinePriority(project);
-                            const committeeInfo = committees.find(c => c.name === project.committee);
-                            const committeePerson = committeeInfo ? committeeInfo.person : "Unknown";
+                            const committeeInfo = committees.find(
+                              (c) => c.name === project.committee
+                            );
+                            const committeePerson = committeeInfo
+                              ? committeeInfo.person
+                              : "Unknown";
 
                             return (
-                              <div key={index} className="p-3 border rounded-lg bg-white shadow-sm">
-                                <div className="font-medium">{activity.title}</div>
+                              <div
+                                key={index}
+                                className="p-3 border rounded-lg bg-white shadow-sm"
+                              >
+                                <div className="font-medium">
+                                  {activity.title}
+                                </div>
                                 <div className="text-sm text-gray-500">
-                                  Committee: {activity.committee} - {committeePerson}
+                                  Committee: {activity.committee} -{" "}
+                                  {committeePerson}
                                 </div>
                                 <div className="mt-1">
                                   <div className="flex justify-between items-center">
@@ -958,9 +1195,14 @@ export default function AdminDashboard() {
                                   <div className="mt-2">
                                     <div className="flex justify-between items-center text-sm">
                                       <span>Progress:</span>
-                                      <span>{project.implementation.completion}%</span>
+                                      <span>
+                                        {project.implementation.completion}%
+                                      </span>
                                     </div>
-                                    <Progress value={project.implementation.completion} className="h-2 mt-1" />
+                                    <Progress
+                                      value={project.implementation.completion}
+                                      className="h-2 mt-1"
+                                    />
                                   </div>
                                 )}
                               </div>
@@ -968,7 +1210,9 @@ export default function AdminDashboard() {
                           })}
                         </div>
                       ) : (
-                        <div className="text-gray-500 text-sm">No activities scheduled for this date.</div>
+                        <div className="text-gray-500 text-sm">
+                          No activities scheduled for this date.
+                        </div>
                       )}
                     </div>
                   )}
@@ -976,7 +1220,11 @@ export default function AdminDashboard() {
                   <div className="mt-auto pt-4">
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium">Monthly Summary</h3>
-                      <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
                         <Download className="h-4 w-4" />
                         <span>Export</span>
                       </Button>
@@ -985,18 +1233,27 @@ export default function AdminDashboard() {
                       <div className="p-2 bg-green-50 rounded-md border border-green-100">
                         <div className="text-sm text-gray-600">Completed</div>
                         <div className="font-medium">
-                          {projectProposals.filter(p =>
-                            p.implementation?.status === "Completed" &&
-                            new Date(p.implementation.endDate).getMonth() === new Date().getMonth()
-                          ).length}
+                          {
+                            projectProposals.filter(
+                              (p) =>
+                                p.implementation?.status === "Completed" &&
+                                new Date(
+                                  p.implementation.endDate
+                                ).getMonth() === new Date().getMonth()
+                            ).length
+                          }
                         </div>
                       </div>
                       <div className="p-2 bg-blue-50 rounded-md border border-blue-100">
                         <div className="text-sm text-gray-600">In Progress</div>
                         <div className="font-medium">
-                          {projectProposals.filter(p =>
-                            p.implementation?.status === "In Progress" || p.implementation?.status === "Scheduled"
-                          ).length}
+                          {
+                            projectProposals.filter(
+                              (p) =>
+                                p.implementation?.status === "In Progress" ||
+                                p.implementation?.status === "Scheduled"
+                            ).length
+                          }
                         </div>
                       </div>
                     </div>
@@ -1029,19 +1286,38 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody>
                     {committees.map((committee) => {
-                      const proposedProjects = projectProposals.filter(p => p.committee === committee.name);
-                      const approvedProjects = proposedProjects.filter(p => p.status === "Approved");
-                      const totalBudgetAllocated = approvedProjects.reduce((sum, p) => sum + p.budget, 0);
+                      const proposedProjects = projectProposals.filter(
+                        (p) => p.committee === committee.name
+                      );
+                      const approvedProjects = proposedProjects.filter(
+                        (p) => p.status === "Approved"
+                      );
+                      const totalBudgetAllocated = approvedProjects.reduce(
+                        (sum, p) => sum + p.budget,
+                        0
+                      );
 
                       return (
-                        <tr key={committee.id} className="border-t hover:bg-gray-50">
+                        <tr
+                          key={committee.id}
+                          className="border-t hover:bg-gray-50"
+                        >
                           <td className="p-2 font-medium">{committee.name}</td>
                           <td className="p-2">{committee.person}</td>
-                          <td className="p-2 text-center">{proposedProjects.length}</td>
-                          <td className="p-2 text-center">{approvedProjects.length}</td>
-                          <td className="p-2 text-right">₱{totalBudgetAllocated.toLocaleString()}</td>
+                          <td className="p-2 text-center">
+                            {proposedProjects.length}
+                          </td>
+                          <td className="p-2 text-center">
+                            {approvedProjects.length}
+                          </td>
                           <td className="p-2 text-right">
-                            <a href={committee.path} className="text-blue-600 text-sm hover:underline">
+                            ₱{totalBudgetAllocated.toLocaleString()}
+                          </td>
+                          <td className="p-2 text-right">
+                            <a
+                              href={committee.path}
+                              className="text-blue-600 text-sm hover:underline"
+                            >
                               View Details
                             </a>
                           </td>
@@ -1065,27 +1341,57 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 border rounded-lg bg-red-50">
-                  <h3 className="font-bold text-red-800 mb-2">Urgent & Important</h3>
-                  <p className="text-sm">Projects with at least 4 committee approvals and due date within 30 days.</p>
-                  <p className="text-sm mt-2">These projects require immediate attention and have broad support.</p>
+                  <h3 className="font-bold text-red-800 mb-2">
+                    Urgent & Important
+                  </h3>
+                  <p className="text-sm">
+                    Projects with at least 4 committee approvals and due date
+                    within 30 days.
+                  </p>
+                  <p className="text-sm mt-2">
+                    These projects require immediate attention and have broad
+                    support.
+                  </p>
                 </div>
 
                 <div className="p-4 border rounded-lg bg-yellow-50">
-                  <h3 className="font-bold text-yellow-800 mb-2">Urgent but Not Important</h3>
-                  <p className="text-sm">Projects with fewer than 4 committee approvals but due date within 30 days.</p>
-                  <p className="text-sm mt-2">These projects have deadlines approaching but lack broad committee support.</p>
+                  <h3 className="font-bold text-yellow-800 mb-2">
+                    Urgent but Not Important
+                  </h3>
+                  <p className="text-sm">
+                    Projects with fewer than 4 committee approvals but due date
+                    within 30 days.
+                  </p>
+                  <p className="text-sm mt-2">
+                    These projects have deadlines approaching but lack broad
+                    committee support.
+                  </p>
                 </div>
 
                 <div className="p-4 border rounded-lg bg-blue-50">
-                  <h3 className="font-bold text-blue-800 mb-2">Important but Not Urgent</h3>
-                  <p className="text-sm">Projects with at least 4 committee approvals but due date beyond 30 days.</p>
-                  <p className="text-sm mt-2">These projects have strong committee support but longer implementation timelines.</p>
+                  <h3 className="font-bold text-blue-800 mb-2">
+                    Important but Not Urgent
+                  </h3>
+                  <p className="text-sm">
+                    Projects with at least 4 committee approvals but due date
+                    beyond 30 days.
+                  </p>
+                  <p className="text-sm mt-2">
+                    These projects have strong committee support but longer
+                    implementation timelines.
+                  </p>
                 </div>
 
                 <div className="p-4 border rounded-lg bg-gray-50">
                   <h3 className="font-bold text-gray-800 mb-2">Not Urgent</h3>
-                  <p className="text-sm">Projects with fewer than 4 committee approvals and due date beyond 30 days.</p>
-                  <p className="text-sm mt-2">These projects require further committee review and have flexible timelines.</p>
+                  <p className="text-sm">
+                    Projects with fewer than 4 committee approvals and due date
+                    beyond 30 days.
+                  </p>
+                  <p className="text-sm mt-2">
+                    These projects require further committee review and have
+                    flexible timelines.
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -1099,7 +1405,8 @@ export default function AdminDashboard() {
             <DialogHeader>
               <DialogTitle>Approve Project Proposal</DialogTitle>
               <DialogDescription>
-                {selectedProject && `Review details for "${selectedProject.name}"`}
+                {selectedProject &&
+                  `Review details for "${selectedProject.name}"`}
               </DialogDescription>
             </DialogHeader>
 
@@ -1107,43 +1414,57 @@ export default function AdminDashboard() {
               {selectedProject && (
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Project Details</h3>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      Project Details
+                    </h3>
                     <p className="font-medium">{selectedProject.name}</p>
-                    <p className="text-sm text-gray-700">{selectedProject.description}</p>
+                    <p className="text-sm text-gray-700">
+                      {selectedProject.description}
+                    </p>
                     <div className="mt-1 text-sm">
                       <span className="text-gray-500">Budget: </span>
-                      <span className="font-medium">₱{selectedProject.budget.toLocaleString()}</span>
+                      <span className="font-medium">
+                        ₱{selectedProject.budget.toLocaleString()}
+                      </span>
                     </div>
                     <div className="text-sm">
                       <span className="text-gray-500">Due Date: </span>
                       <span className="font-medium">
-                        {selectedProject.dueDate.toLocaleDateString('en-US', {
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric'
+                        {selectedProject.dueDate.toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
                         })}
                       </span>
                     </div>
                     <div className="text-sm">
                       <span className="text-gray-500">Committee: </span>
-                      <span className="font-medium">{selectedProject.committee}</span>
+                      <span className="font-medium">
+                        {selectedProject.committee}
+                      </span>
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">Current Committee Approvals</h3>
+                    <h3 className="text-sm font-medium text-gray-500 mb-2">
+                      Current Committee Approvals
+                    </h3>
                     <div className="space-y-2 border rounded-md p-3 bg-gray-50">
                       {committees.map((committee) => {
                         // Find if this committee has an approval record
                         const approval = selectedProject.approvals.find(
-                          (a: { committeeId: number }) => a.committeeId === committee.id
+                          (a: { committeeId: number }) =>
+                            a.committeeId === committee.id
                         );
 
                         // Determine if approved
                         const isApproved = approval ? approval.approved : false;
 
                         return (
-                          <div key={committee.id} className="flex items-center justify-between">
+                          <div
+                            key={committee.id}
+                            className="flex items-center justify-between"
+                          >
                             <div className="text-sm">
                               {committee.name} ({committee.person})
                             </div>
@@ -1169,8 +1490,15 @@ export default function AdminDashboard() {
                       <div className="flex items-start gap-2">
                         <AlertCircle className="h-4 w-4 mt-0.5" />
                         <p>
-                          Note: A project requires at least 4 committee approvals to be fully approved.
-                          Currently, this project has {selectedProject.approvals.filter((a: { approved: boolean }) => a.approved).length} approvals.
+                          Note: A project requires at least 4 committee
+                          approvals to be fully approved. Currently, this
+                          project has{" "}
+                          {
+                            selectedProject.approvals.filter(
+                              (a: { approved: boolean }) => a.approved
+                            ).length
+                          }{" "}
+                          approvals.
                         </p>
                       </div>
                     </div>
@@ -1180,7 +1508,10 @@ export default function AdminDashboard() {
             </div>
 
             <DialogFooter className="sm:justify-end">
-              <Button variant="outline" onClick={() => setShowApprovalDialog(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setShowApprovalDialog(false)}
+              >
                 Cancel
               </Button>
               <Button
@@ -1188,19 +1519,21 @@ export default function AdminDashboard() {
                 onClick={() => {
                   // Create a new approved implementation object
                   const newImplementation = {
-                    startDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000), // Start in a week
+                    startDate: new Date(
+                      new Date().getTime() + 7 * 24 * 60 * 60 * 1000
+                    ), // Start in a week
                     endDate: new Date(selectedProject.dueDate),
                     status: "Scheduled",
-                    completion: 0
+                    completion: 0,
                   };
 
                   // Update the project
-                  const updatedProjects = projectProposals.map(project => {
+                  const updatedProjects = projectProposals.map((project) => {
                     if (project.id === selectedProject.id) {
                       return {
                         ...project,
                         status: "Approved",
-                        implementation: newImplementation
+                        implementation: newImplementation,
                       };
                     }
                     return project;
@@ -1217,12 +1550,16 @@ export default function AdminDashboard() {
         </Dialog>
 
         {/* Rejection Dialog */}
-        <Dialog open={showRejectionDialog} onOpenChange={setShowRejectionDialog}>
+        <Dialog
+          open={showRejectionDialog}
+          onOpenChange={setShowRejectionDialog}
+        >
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Reject Project Proposal</DialogTitle>
               <DialogDescription>
-                {selectedProject && `Provide a reason for rejecting "${selectedProject.name}"`}
+                {selectedProject &&
+                  `Provide a reason for rejecting "${selectedProject.name}"`}
               </DialogDescription>
             </DialogHeader>
 
@@ -1230,7 +1567,9 @@ export default function AdminDashboard() {
               {selectedProject && (
                 <div>
                   <div className="mb-4">
-                    <h3 className="text-sm font-medium text-gray-500">Rejection Reason</h3>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      Rejection Reason
+                    </h3>
                     <textarea
                       className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       placeholder="Provide a reason for rejecting this project proposal..."
@@ -1244,8 +1583,9 @@ export default function AdminDashboard() {
                     <div className="flex items-start gap-2">
                       <AlertCircle className="h-4 w-4 mt-0.5" />
                       <p>
-                        Note: Rejecting a project proposal is permanent and will notify the committee that submitted it.
-                        Please provide a clear reason for the rejection.
+                        Note: Rejecting a project proposal is permanent and will
+                        notify the committee that submitted it. Please provide a
+                        clear reason for the rejection.
                       </p>
                     </div>
                   </div>
@@ -1254,7 +1594,10 @@ export default function AdminDashboard() {
             </div>
 
             <DialogFooter className="sm:justify-end">
-              <Button variant="outline" onClick={() => setShowRejectionDialog(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setShowRejectionDialog(false)}
+              >
                 Cancel
               </Button>
               <Button variant="destructive" onClick={handleReject}>
