@@ -34,7 +34,7 @@ CREATE TABLE "notifications" (
 );
 
 -- CreateTable
-CREATE TABLE "projectProposals" (
+CREATE TABLE "projectProposals " (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -43,7 +43,7 @@ CREATE TABLE "projectProposals" (
     "postedById" TEXT NOT NULL,
     "budget" DOUBLE PRECISION NOT NULL,
 
-    CONSTRAINT "projectProposals_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "projectProposals _pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -80,16 +80,16 @@ CREATE UNIQUE INDEX "Vote_userId_proposalId_key" ON "Vote"("userId", "proposalId
 CREATE UNIQUE INDEX "approved_by_userId_proposalId_key" ON "approved_by"("userId", "proposalId");
 
 -- AddForeignKey
-ALTER TABLE "projectProposals" ADD CONSTRAINT "projectProposals_postedById_fkey" FOREIGN KEY ("postedById") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "projectProposals " ADD CONSTRAINT "projectProposals _postedById_fkey" FOREIGN KEY ("postedById") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Vote" ADD CONSTRAINT "Vote_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Vote" ADD CONSTRAINT "Vote_proposalId_fkey" FOREIGN KEY ("proposalId") REFERENCES "projectProposals"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Vote" ADD CONSTRAINT "Vote_proposalId_fkey" FOREIGN KEY ("proposalId") REFERENCES "projectProposals "("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "approved_by" ADD CONSTRAINT "approved_by_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "approved_by" ADD CONSTRAINT "approved_by_proposalId_fkey" FOREIGN KEY ("proposalId") REFERENCES "projectProposals"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "approved_by" ADD CONSTRAINT "approved_by_proposalId_fkey" FOREIGN KEY ("proposalId") REFERENCES "projectProposals "("id") ON DELETE CASCADE ON UPDATE CASCADE;

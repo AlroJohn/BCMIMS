@@ -342,12 +342,12 @@ export default function ManageUsersPage() {
                   />
                 </div>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                  {/* <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="gap-2">
                       <Filter className="h-4 w-4" />
                       Filters
                     </Button>
-                  </DropdownMenuTrigger>
+                  </DropdownMenuTrigger> */}
                   <DropdownMenuContent className="w-56">
                     <DropdownMenuLabel>Filter Users</DropdownMenuLabel>
                     <DropdownMenuSeparator />
