@@ -12,6 +12,7 @@ import {
   PieChart,
   FileText,  // Added for Project Proposal
   Users,     // Added for Manage User
+  LayoutDashboard, // Added for Committee Dashboards
 } from "lucide-react"
 
 import {
@@ -38,17 +39,7 @@ const data = {
       name: "BCMIMS",
       logo: '/images/logo.png',
       plan: "Name of user",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
+    }
   ],
   navMain: [
     {
@@ -59,72 +50,52 @@ const data = {
     },
     {
       title: "Project Proposal",
-      url: "#",
+      url: "/admin/project-proposals",
       icon: FileText,
+      isActive: true,
+    },
+    {
+      title: "Manage Users",
+      url: "/admin/manage-user",
+      icon: Users,
+      isActive: true,
+    },
+    {
+      title: "Committee Dashboards",
+      url: "#",
+      icon: LayoutDashboard,
       isActive: true,
       items: [
         {
-          title: "All Proposals",
-          url: "/admin/project-proposals",
+          title: "Education",
+          url: "/admin/dashboard/education",
         },
         {
-          title: "Pending Proposals",
-          url: "#",
+          title: "Environment",
+          url: "/admin/dashboard/environment",
         },
         {
-          title: "Approved Proposals",
-          url: "#",
+          title: "Finance",
+          url: "/admin/dashboard/finance",
         },
         {
-          title: "Rejected Proposals",
-          url: "#",
+          title: "Health Services",
+          url: "/admin/dashboard/health-services",
+        },
+        {
+          title: "Peace Order",
+          url: "/admin/dashboard/peace-order",
+        },
+        {
+          title: "Public Works",
+          url: "/admin/dashboard/public-works",
+        },
+        {
+          title: "Women",
+          url: "/admin/dashboard/women",
         },
       ],
     },
-    // {
-    //   title: "Manage User",
-    //   url: "#",
-    //   icon: Users,
-    //   isActive: true,
-    //   items: [
-    //     {
-    //       title: "All Users",
-    //       url: "/admin/manage-users",
-    //     },
-    //     {
-    //       title: "Admin",
-    //       url: "/admin/manage-users/admin",
-    //     },
-    //     {
-    //       title: "Education",
-    //       url: "/admin/manage-users/education",
-    //     },
-    //     {
-    //       title: "Environment",
-    //       url: "/admin/manage-users/environment",
-    //     },
-    //     {
-    //       title: "Finance",
-    //       url: "/admin/manage-users/finance",
-    //     },
-    //     {
-    //       title: "Health Services",
-    //       url: "/admin/manage-users/health-services",
-    //     },
-    //     {
-    //       title: "Peace Order",
-    //       url: "/admin/manage-users/peace-order",
-    //     },
-    //     {
-    //       title: "Public Works",
-    //       url: "/admin/manage-users/public-works",
-    //     },
-    //     {
-    //       title: "Women",
-    //       url: "/admin/manage-users/public-works",
-    //     },
-    //   ],
-    // },
   ],
 }
 
@@ -137,9 +108,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
       </SidebarContent>
-      <SidebarFooter>
+      {/* <SidebarFooter>
         <NavUser user={data.user} />
-      </SidebarFooter>
+      </SidebarFooter> */}
       <SidebarRail />
     </Sidebar>
   )

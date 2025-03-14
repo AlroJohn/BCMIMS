@@ -3,11 +3,22 @@
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 import SessionGuard from "@/components/custom/guard/session-guard";
 
 type Project = {
@@ -15,12 +26,11 @@ type Project = {
   name: string;
 };
 import CommitteeProjectProposalsTemplate from "@/components/shared/committee-project-proposals-template";
-
+import { useAuth } from "@/components/providers/auth-provider";
 
 export default function CaptainProjectProposals() {
-
   const searchParams = useSearchParams();
-  const status = searchParams.get('status');
+  const status = searchParams.get("status");
 
   // States for approval/rejection dialog
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -29,59 +39,105 @@ export default function CaptainProjectProposals() {
   const [approvalComment, setApprovalComment] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
   const [actionComplete, setActionComplete] = useState(false);
-
+  const [errorMessage, setErrorMessage] = useState("");
+  const { user } = useAuth();
   // Function to handle opening the approval dialog
-  const handleApprove = (project) => {
+  const handleApprove = (project: Project) => {
     setSelectedProject(project);
     setApprovalComment("");
+    setErrorMessage("");
     setShowApprovalDialog(true);
   };
 
   // Function to handle opening the rejection dialog
-  const handleReject = (project) => {
+  const handleReject = (project: Project) => {
     setSelectedProject(project);
     setRejectionReason("");
+    setErrorMessage("");
     setShowRejectionDialog(true);
   };
 
   // Function to handle final approval
-  const confirmApproval = () => {
-    // In a real application, this would make an API call to update the project status
-    console.log("Approving project:", selectedProject ? selectedProject.id : null);
-    console.log("Approval comment:", approvalComment);
+  const confirmApproval = async () => {
+    if (!selectedProject) return;
+    try {
+      const response = await fetch("/api/project-proposal/project-status", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          // Replace with actual user id from your session or auth provider
+          userId: user.id,
+          proposalId: selectedProject.id,
+          status: "Approved",
+          comment: approvalComment,
+        }),
+      });
 
-    // Show success message
-    setActionComplete(true);
+      if (!response.ok) {
+        const data = await response.json();
+        setErrorMessage(data.error || "Something went wrong");
+        return;
+      }
 
-    // Close dialog after a delay
-    setTimeout(() => {
-      setShowApprovalDialog(false);
-      setActionComplete(false);
-    }, 2000);
+      // Show success message
+      setActionComplete(true);
+      // Optionally, refresh or update UI state here
+
+      setTimeout(() => {
+        setShowApprovalDialog(false);
+        setActionComplete(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Approval error:", error);
+      setErrorMessage("An unexpected error occurred");
+    }
   };
 
   // Function to handle final rejection
-  const confirmRejection = () => {
-    // In a real application, this would make an API call to update the project status
-    console.log("Rejecting project:", selectedProject?.id);
-    console.log("Rejection reason:", rejectionReason);
+  const confirmRejection = async () => {
+    if (!selectedProject) return;
+    try {
+      const response = await fetch("/api/project-proposal/project-status", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          // Replace with actual user id from your session or auth provider
+          userId: user.id,
+          proposalId: selectedProject.id,
+          status: "Rejected",
+          comment: rejectionReason,
+        }),
+      });
 
-    // Show success message
-    setActionComplete(true);
+      if (!response.ok) {
+        const data = await response.json();
+        setErrorMessage(data.error || "Something went wrong");
+        return;
+      }
 
-    // Close dialog after a delay
-    setTimeout(() => {
-      setShowRejectionDialog(false);
-      setActionComplete(false);
-    }, 2000);
+      // Show success message
+      setActionComplete(true);
+      // Optionally, refresh or update UI state here
+
+      setTimeout(() => {
+        setShowRejectionDialog(false);
+        setActionComplete(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Rejection error:", error);
+      setErrorMessage("An unexpected error occurred");
+    }
   };
 
   return (
     <SessionGuard requiredRoles={["Admin"]}>
-
       <CommitteeProjectProposalsTemplate
         committee="CAPTAIN_COMMITTEE"
-        initialTab={status || 'all'}
+        initialTab={status || "all"}
         isAdmin={true}
         onApprove={handleApprove}
         onReject={handleReject}
@@ -93,7 +149,9 @@ export default function CaptainProjectProposals() {
           <DialogHeader>
             <DialogTitle>Approve Project Proposal</DialogTitle>
             <DialogDescription>
-              {selectedProject ? `You are approving "${selectedProject.name}"` : ""}
+              {selectedProject
+                ? `You are approving "${selectedProject.name}"`
+                : ""}
             </DialogDescription>
           </DialogHeader>
 
@@ -107,8 +165,17 @@ export default function CaptainProjectProposals() {
             </Alert>
           ) : (
             <div className="py-4 space-y-4">
+              {errorMessage && (
+                <Alert className="bg-red-50 border-red-200">
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{errorMessage}</AlertDescription>
+                </Alert>
+              )}
               <div className="space-y-2">
-                <label htmlFor="approval-comment" className="text-sm font-medium">
+                <label
+                  htmlFor="approval-comment"
+                  className="text-sm font-medium"
+                >
                   Comments (Optional)
                 </label>
                 <Textarea
@@ -124,7 +191,8 @@ export default function CaptainProjectProposals() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Important</AlertTitle>
                 <AlertDescription>
-                  This action will mark the project as approved and it will move to implementation phase.
+                  This action will mark the project as approved and it will move
+                  to implementation phase.
                 </AlertDescription>
               </Alert>
             </div>
@@ -169,8 +237,17 @@ export default function CaptainProjectProposals() {
             </Alert>
           ) : (
             <div className="py-4 space-y-4">
+              {errorMessage && (
+                <Alert className="bg-red-50 border-red-200">
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{errorMessage}</AlertDescription>
+                </Alert>
+              )}
               <div className="space-y-2">
-                <label htmlFor="rejection-reason" className="text-sm font-medium">
+                <label
+                  htmlFor="rejection-reason"
+                  className="text-sm font-medium"
+                >
                   Rejection Reason <span className="text-red-600">*</span>
                 </label>
                 <Textarea
@@ -182,7 +259,8 @@ export default function CaptainProjectProposals() {
                   required
                 />
                 <p className="text-xs text-gray-500">
-                  A clear explanation helps the committee understand why their proposal was rejected.
+                  A clear explanation helps the committee understand why their
+                  proposal was rejected.
                 </p>
               </div>
 
@@ -190,7 +268,8 @@ export default function CaptainProjectProposals() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Warning</AlertTitle>
                 <AlertDescription>
-                  This action will mark the project as rejected. The committee will be notified of your decision.
+                  This action will mark the project as rejected. The committee
+                  will be notified of your decision.
                 </AlertDescription>
               </Alert>
             </div>
@@ -199,7 +278,10 @@ export default function CaptainProjectProposals() {
           <DialogFooter className="sm:justify-end">
             {!actionComplete && (
               <>
-                <Button variant="outline" onClick={() => setShowRejectionDialog(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowRejectionDialog(false)}
+                >
                   Cancel
                 </Button>
                 <Button
@@ -214,7 +296,6 @@ export default function CaptainProjectProposals() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </SessionGuard>
   );
 }

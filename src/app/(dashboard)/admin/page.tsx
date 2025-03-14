@@ -577,7 +577,7 @@ export default function AdminDashboard() {
 
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
+            {/* <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-500">
                   Total Committees
@@ -589,7 +589,7 @@ export default function AdminDashboard() {
                   Each with a designated person in charge
                 </p>
               </CardContent>
-            </Card>
+            </Card> */}
 
             <Card>
               <CardHeader className="pb-2">

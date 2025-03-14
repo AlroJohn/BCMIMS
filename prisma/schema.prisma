@@ -40,38 +40,36 @@ model ProjectProposal {
   fileUrl      String
   postedById   String
   budget       Float                    // new budget field
-  postedBy     User                     @relation(fields: [postedById], references: [id])
+  postedBy     User                     @relation(fields: [postedById], references: [id], onDelete: Cascade)
   approvedBy   ApprovedBy[]             // Relation to approvals
   votes        Vote[]
   
   @@map("projectProposals ")
 }
 
-
-
 model Vote {
   id         String          @id @default(uuid())
   userId     String
   proposalId String
-  vote       Boolean         // For example: true for 'yes' and false for 'no'
+  vote       VoteStatus         // For example: true for 'yes' and false for 'no'
   votedAt    DateTime        @default(now())
-
-  user       User            @relation(fields: [userId], references: [id])
-  proposal   ProjectProposal @relation(fields: [proposalId], references: [id])
+  comment    String
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proposal   ProjectProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 
   @@unique([userId, proposalId])
 }
 
-
-
 model ApprovedBy {
   id          String            @id @default(uuid())
+  updatedAt    DateTime        @default(now())
   userId      String            // This must be required if approval is mandatory
   status      ApprovedStatus
   comment     String?
   proposalId  String            // ID of the project proposal being approved
-  approvedBy  User              @relation(fields: [userId], references: [id])
-  proposal    ProjectProposal   @relation(fields: [proposalId], references: [id])
+  approvedBy  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proposal    ProjectProposal   @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  @@unique([userId, proposalId], name: "userId_proposalId")
   @@map("approved_by")
 }
 
@@ -80,6 +78,12 @@ enum ApprovedStatus {
   Approved
   Rejected
 }
+
+enum VoteStatus {
+  Approved
+  Rejected
+}
+
 enum UserRole {
   Admin
   Education

@@ -19,14 +19,14 @@ export default function HomePage() {
             <p className="text-lg md:text-xl text-white max-w-2xl mb-8">
               Efficient management and monitoring of barangay activities, projects, and services for better community governance.
             </p>
-            <div className="flex flex-wrap gap-4">
+            {/* <div className="flex flex-wrap gap-4">
               <Button size="lg" className="bg-yellow-500 hover:bg-yellow-600 text-black">
                 View Services
               </Button>
               <Button size="lg" variant="outline" className="text-white border-white bg-white/10 hover:bg-none">
                 Contact Us
               </Button>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>

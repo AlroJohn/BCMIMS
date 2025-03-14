@@ -1,4 +1,4 @@
-// app/api/vote/route.ts
+// app/api/project-proposal/updateVote/route.ts
 
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
@@ -6,10 +6,10 @@ import { NextResponse } from 'next/server';
 
 export async function PUT(request: Request) {
   try {
-    const { userId, proposalId, vote } = await request.json();
+    const { userId, proposalId, vote, comment } = await request.json();
 
     // Validate input data
-    if (typeof userId !== 'string' || typeof proposalId !== 'string' || typeof vote !== 'boolean') {
+    if (typeof userId !== 'string' || typeof proposalId !== 'string') {
       return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
 
@@ -22,10 +22,12 @@ export async function PUT(request: Request) {
       },
       update: {
         vote,
+        comment,
         votedAt: new Date(), // update timestamp if exists
       },
       create: {
         userId,
+        comment,
         proposalId,
         vote,
         votedAt: new Date(),
