@@ -61,6 +61,12 @@ const data = {
       isActive: true,
     },
     {
+      title: "Manage Budget",
+      url: "/admin/budget-management",
+      icon: Users,
+      isActive: true,
+    },
+    {
       title: "Committee Dashboards",
       url: "#",
       icon: LayoutDashboard,
