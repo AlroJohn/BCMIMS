@@ -291,7 +291,7 @@ const ProjectProposals = () => {
   };
 
   const renderTableContent = (projects: ProjectProposalType[]) => (
-    <CardContent>
+    <CardContent className="max-h-[calc(100vh-17rem)] h-full overflow-hidden overflow-y-auto scroll-none p-6">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -348,12 +348,12 @@ const ProjectProposals = () => {
                           href={project.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="h-auto p-1 text-blue-600 hover:text-blue-800 hover:underline flex items-center"
+                          className="h-auto p-1 text-blue-600 hover:text-blue-800 hover:underline flex items-center text-sm"
                         >
                           <FileText className="h-3 w-3 mr-1" />
-                          View File
+                          View
                         </Link>
-                        {canEditProject(project) && (
+                        {canEditProject(project) && role !== "Admin" && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -409,7 +409,7 @@ const ProjectProposals = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
-        <Card className="max-h-[calc(100vh-8rem)] h-full overflow-hidden overflow-y-auto scroll-none">
+        <Card className="h-full flex flex-col gap-2">
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
