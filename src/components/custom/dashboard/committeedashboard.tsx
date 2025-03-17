@@ -11,20 +11,18 @@ export default function CommitteeDashboard() {
 
   const iAdmin = user.role === "Admin";
   return (
-    <div>
-      <div className="min-h-screen w-full p-6 bg-gray-50 space-y-6">
-        {!iAdmin && <CommitteeCards />}
+    <div className="min-h-screen w-full bg-gray-50 space-y-6">
+      {!iAdmin && <CommitteeCards />}
 
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="flex-1">
-            <StatusPieGraph />
-          </div>
-          <div className="flex-1">
-            <Component />
-          </div>
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex-1">
+          <StatusPieGraph />
         </div>
-        <ProjectProposals />
+        <div className="flex-1">
+          <Component />
+        </div>
       </div>
+      <ProjectProposals />
     </div>
   );
 }
