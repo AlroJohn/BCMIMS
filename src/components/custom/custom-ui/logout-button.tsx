@@ -2,8 +2,7 @@
 
 import React, { ReactNode } from 'react';
 import { supabase } from "@/lib/supabase-client";
-import { signOutUser } from '@/app/actions/signout-action';
-
+import { signOutUser } from '@/actions/signout-action';
 
 interface LogoutWrapperProps {
   children: ReactNode;

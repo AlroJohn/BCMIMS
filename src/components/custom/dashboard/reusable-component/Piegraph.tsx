@@ -18,7 +18,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { Button } from "@/components/ui/button";
+
 
 // Function to fetch current month's proposals data
 async function fetchCurrentMonthProposals() {

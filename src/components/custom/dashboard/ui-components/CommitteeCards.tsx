@@ -3,13 +3,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useEffect, useState } from "react";
-
 import { UserRole } from "@prisma/client";
 import { useAuth } from "@/components/providers/auth-provider"; // Your auth provider context
-import {
-  BudgetOverviewData,
-  getBudgetOverviewByRole,
-} from "@/app/actions/fetching-actions/budget-overview/budget-fetch";
+import { BudgetOverviewData, getBudgetOverviewByRole } from "@/actions/fetching-actions/budget-overview/budget-fetch";
+
 
 interface CommitteeCardsProps {
   role?: UserRole; // Optional: If not provided, server action will use current user's role

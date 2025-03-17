@@ -18,7 +18,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { getApprovedProjectsByMonth } from "@/app/actions/fetching-actions/project";
+import { getApprovedProjectsByMonth } from "@/actions/fetching-actions/project";
+
 
 const chartConfig = {
   desktop: {

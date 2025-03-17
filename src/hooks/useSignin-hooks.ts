@@ -3,7 +3,8 @@ import { useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { loginUser } from "@/app/actions/signin-action";
+import { loginUser } from "@/actions/signin-action";
+
 
 // Define expected role types
 type UserRole = "SUPERADMIN" | "STAFF" | "CLIENT";

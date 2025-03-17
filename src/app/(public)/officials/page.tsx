@@ -11,7 +11,8 @@ import {
 import { Mail, Phone } from "lucide-react";
 
 import { UserRole } from "@prisma/client";
-import { fetchUsers } from "@/app/api/users/update-user/route";
+import { fetchUsers } from "@/actions/update-user/route";
+
 
 // Map UserRole to position titles
 const positionTitles = {

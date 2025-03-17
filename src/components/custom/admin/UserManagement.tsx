@@ -31,7 +31,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { toast } from "sonner";
 import { UserRole } from "@prisma/client";
-import { fetchUsers, updateUser } from "@/app/api/users/update-user/route";
+import { fetchUsers, updateUser } from "@/actions/update-user/route";
+
 
 // Simplified committee role mapping
 const committeeNames = {
