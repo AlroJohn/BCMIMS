@@ -353,7 +353,7 @@ const ProjectProposals = () => {
                           <FileText className="h-3 w-3 mr-1" />
                           View File
                         </Link>
-                        {canEditProject(project) && (
+                        {canEditProject(project) && role !== "Admin" && (
                           <Button
                             size="sm"
                             variant="outline"
