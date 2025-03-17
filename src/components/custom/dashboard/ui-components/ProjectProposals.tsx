@@ -98,6 +98,74 @@ const ProjectProposals = () => {
     (params?.committee as string) || searchParams.get("committee") || "";
   const committeeParam = formatCommitteeParam(rawCommitteeParam);
 
+  useEffect(() => {
+    fetchProposals();
+  }, [committeeParam]);
+
+  const fetchProposals = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/project-proposal/fetch-proposal");
+      if (!response.ok) throw new Error("Failed to fetch proposals");
+
+      const data = await response.json();
+      const currentUserRole = role;
+      const userId = user?.id;
+      const isAdmin = currentUserRole === "Admin";
+
+      const filteredData = data.filter((proposal: ProjectProposalType) => {
+        if (proposal.postedById === userId) return true;
+        if (isAdmin && committeeParam)
+          return proposal.committee === committeeParam;
+        if (isAdmin && !committeeParam) return true;
+        if (currentUserRole === proposal.committee) return true;
+        return false;
+      });
+
+      const enhancedData = filteredData.map((proposal: ProjectProposalType) => {
+        const isApproved = getProposalStatus(proposal) === "Approved";
+        if (isApproved) {
+          const approvalDate = proposal.approvedBy.find(
+            (a) => a.status === "Approved"
+          )?.updatedAt;
+          const daysSinceApproval = approvalDate
+            ? Math.floor(
+                (Date.now() - new Date(approvalDate).getTime()) /
+                  (1000 * 60 * 60 * 24)
+              )
+            : 0;
+
+          let implementationStatus = "Scheduled";
+          let completion = 0;
+          if (daysSinceApproval > 30) {
+            implementationStatus = "Completed";
+            completion = 100;
+          } else if (daysSinceApproval > 5) {
+            implementationStatus = "In Progress";
+            completion = Math.min(
+              Math.floor((daysSinceApproval / 30) * 100),
+              95
+            );
+          }
+
+          return {
+            ...proposal,
+            implementation: { status: implementationStatus, completion },
+          };
+        }
+        return proposal;
+      });
+
+      setProjectProposals(enhancedData);
+    } catch (err) {
+      console.error("Error fetching proposals:", err);
+      setError("Failed to load project proposals");
+      toast.error("Failed to load project proposals");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCreateProject = () => {
     setSelectedProject(null);
     setIsEditing(false);
@@ -223,7 +291,7 @@ const ProjectProposals = () => {
   };
 
   const renderTableContent = (projects: ProjectProposalType[]) => (
-    <CardContent className="max-h-[calc(100vh-17rem)] h-full overflow-hidden overflow-y-auto scroll-none p-6">
+    <CardContent>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -280,12 +348,12 @@ const ProjectProposals = () => {
                           href={project.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="h-auto p-1 text-blue-600 hover:text-blue-800 hover:underline flex items-center text-sm"
+                          className="h-auto p-1 text-blue-600 hover:text-blue-800 hover:underline flex items-center"
                         >
                           <FileText className="h-3 w-3 mr-1" />
-                          View
+                          View File
                         </Link>
-                        {canEditProject(project) && role !== "Admin" && (
+                        {canEditProject(project) && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -341,7 +409,7 @@ const ProjectProposals = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
-        <Card className="h-full flex flex-col gap-2">
+        <Card className="max-h-[calc(100vh-8rem)] h-full overflow-hidden overflow-y-auto scroll-none">
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
