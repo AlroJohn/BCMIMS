@@ -18,7 +18,7 @@ model User {
   projectProposals  ProjectProposal[]   // Proposals posted by this user
   approvedBy        ApprovedBy[]        // Approvals done by this user
   votes             Vote[]
-    createdAt         DateTime            @default(now())
+  createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   @@map("users")
 }
