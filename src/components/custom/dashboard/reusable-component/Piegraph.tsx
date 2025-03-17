@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown, RefreshCcw } from "lucide-react";
 import { Cell, Pie, PieChart } from "recharts";
+import { usePathname } from "next/navigation";
 
 import {
   Card,
@@ -18,18 +19,32 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { Button } from "@/components/ui/button";
 
+// Map URL path to committee name
+const pathToCommittee = {
+  education: "Education",
+  environment: "Environment",
+  finance: "Finance",
+  "health-services": "Health Services",
+  "peace-order": "Peace Order",
+  "public-works": "Public Works",
+  women: "Women",
+};
 
-// Function to fetch current month's proposals data
-async function fetchCurrentMonthProposals() {
+// Function to fetch current month's proposals data for specific committee
+async function fetchCommitteeProposals(committeeParam) {
   try {
-    const response = await fetch("/api/project-proposal/current-month-status");
+    // Add the committee as a query parameter if provided
+    const url = "/api/project-proposal/current-month-status";
+
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error("Failed to fetch data");
     }
     return await response.json();
   } catch (error) {
-    console.error("Error fetching current month proposals:", error);
+    console.error(`Error fetching proposals:`, error);
     return null;
   }
 }
@@ -47,6 +62,11 @@ export function StatusPieGraph() {
     value: number;
     fill: string;
   }
+
+  const pathname = usePathname();
+  const committeePathName = pathname.split("/")[2]; // Get "education" from "/committee/education"
+  const committeeDisplay =
+    pathToCommittee[committeePathName] || "All Committees";
 
   const [proposalData, setProposalData] = useState<ProposalData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -76,7 +96,13 @@ export function StatusPieGraph() {
 
   // Format data for chart
   const formatChartData = (data) => {
-    if (!data || !data.counts) return [];
+    if (!data || !data.counts) {
+      return [
+        { status: "pending", value: 0, fill: statusColors.Pending },
+        { status: "approved", value: 0, fill: statusColors.Approved },
+        { status: "rejected", value: 0, fill: statusColors.Rejected },
+      ];
+    }
 
     const formattedData = [
       {
@@ -121,18 +147,18 @@ export function StatusPieGraph() {
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
-      const data = await fetchCurrentMonthProposals();
+      const data = await fetchCommitteeProposals(committeePathName);
       setProposalData(formatChartData(data));
       setIsLoading(false);
     };
 
     loadData();
-  }, []);
+  }, [committeePathName]);
 
   // Refresh data function
   const refreshData = async () => {
     setIsRefreshing(true);
-    const data = await fetchCurrentMonthProposals();
+    const data = await fetchCommitteeProposals(committeePathName);
     setProposalData(formatChartData(data));
     setIsRefreshing(false);
   };
@@ -146,7 +172,7 @@ export function StatusPieGraph() {
     return (
       <Card className="flex flex-col">
         <CardHeader className="items-center pb-0">
-          <CardTitle>Current Month Proposals</CardTitle>
+          <CardTitle>{committeeDisplay} Proposals</CardTitle>
           <CardDescription>
             {currentMonth} {currentYear}
           </CardDescription>
@@ -160,11 +186,24 @@ export function StatusPieGraph() {
 
   return (
     <Card className="flex flex-col">
-      <CardHeader className="items-center pb-0">
-        <CardTitle>Current Month Proposals</CardTitle>
-        <CardDescription>
-          {currentMonth} {currentYear}
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div className="text-center">
+          <CardTitle>{committeeDisplay} Proposals</CardTitle>
+          <CardDescription>
+            {currentMonth} {currentYear}
+          </CardDescription>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={refreshData}
+          disabled={isRefreshing}
+          className="h-8 w-8"
+        >
+          <RefreshCcw
+            className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+          />
+        </Button>
       </CardHeader>
       <CardContent className="flex-1 py-1">
         <ChartContainer

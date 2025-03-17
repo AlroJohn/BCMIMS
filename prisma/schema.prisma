@@ -71,7 +71,7 @@ model Vote {
   id         String          @id @default(uuid())
   userId     String
   proposalId String
-  vote       VoteStatus         // For example: true for 'yes' and false for 'no'
+  vote       ApprovedStatus        // For example: true for 'yes' and false for 'no'
   votedAt    DateTime        @default(now())
   comment    String
   user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -97,11 +97,6 @@ model ApprovedBy {
 
 enum ApprovedStatus {
   Pending
-  Approved
-  Rejected
-}
-
-enum VoteStatus {
   Approved
   Rejected
 }

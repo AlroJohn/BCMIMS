@@ -4,8 +4,9 @@ import { useAuth } from "@/components/providers/auth-provider";
 
 import { StatusPieGraph } from "./reusable-component/Piegraph";
 import CommitteeCards from "./ui-components/CommitteeCards";
-import ProjectProposals from "./ui-components/ProjectProposals";
+
 import { ApprovedProjectsRadarChart } from "./reusable-component/Lawa";
+import ProjectProposals from "./ui-components/ProjectProposals";
 
 export default function CommitteeDashboard() {
   const user = useAuth();
