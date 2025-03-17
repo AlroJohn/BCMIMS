@@ -167,14 +167,7 @@ export function CommitteeSidebar({
 
   // This structure allows for future committee-specific menu items
   // For example, we could add unique items for specific committees:
-  if (committee === "EDUCATION_COMMITTEE") {
-    navItems.push({
-      title: "Scholarship Programs",
-      url: "/education/scholarships",
-      icon: Frame,
-      isActive: isPathActive("/education/scholarships"),
-    });
-  } else if (committee === "ENVIRONMENT_COMMITTEE") {
+  if (committee === "ENVIRONMENT_COMMITTEE") {
     navItems.push({
       title: "Planting Activities",
       url: "/environment/planting",

@@ -38,6 +38,10 @@ const Navbar = () => {
                 About
               </Link>
 
+              <Link href="/events" className="text-gray-700 hover:text-blue-500">
+                Events
+              </Link>
+
               {/* Login Button */}
             </div>
             <Link
