@@ -40,6 +40,7 @@ import { supabase } from "@/lib/supabase-client";
 import { Textarea } from "../ui/textarea";
 import { useCallback } from "react";
 import CreateNewProjectModal from "../custom/dashboard/ui-components/CreateNewProject";
+import Link from "next/link";
 
 // Define types aligned with your Prisma schema
 type VoteStatus = "Approved" | "Rejected";
@@ -665,7 +666,7 @@ export default function CommitteeProjectProposalsTemplate({
       </div>
 
       {/* Project Statistics */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col">
@@ -717,7 +718,7 @@ export default function CommitteeProjectProposalsTemplate({
             </CardContent>
           </Card>
         )}
-      </div>
+      </div> */}
 
       {/* Project List */}
       <Card>
@@ -1310,14 +1311,14 @@ export default function CommitteeProjectProposalsTemplate({
                           {selectedProject.documentTitle}
                         </p>
                         {selectedProject.documentUrl && (
-                          <a
+                          <Link
                             href={selectedProject.documentUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-sm text-blue-600 hover:underline"
                           >
                             View Document
-                          </a>
+                          </Link>
                         )}
                       </div>
                     </div>

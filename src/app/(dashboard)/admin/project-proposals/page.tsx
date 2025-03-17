@@ -1,7 +1,7 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
 import {
   Dialog,
@@ -14,11 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import SessionGuard from "@/components/custom/guard/session-guard";
 
 type Project = {
@@ -31,6 +27,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 export default function CaptainProjectProposals() {
   const searchParams = useSearchParams();
   const status = searchParams.get("status");
+  const router = useRouter();
 
   // States for approval/rejection dialog
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
@@ -40,7 +37,9 @@ export default function CaptainProjectProposals() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [actionComplete, setActionComplete] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
   const { user } = useAuth();
+
   // Function to handle opening the approval dialog
   const handleApprove = (project: Project) => {
     setSelectedProject(project);
@@ -57,6 +56,14 @@ export default function CaptainProjectProposals() {
     setShowRejectionDialog(true);
   };
 
+  // Function to refresh only when needed
+  const refreshData = () => {
+    // Increment the key to force a re-render
+    setRefreshKey((prev) => prev + 1);
+    // Also refresh router data
+    router.refresh();
+  };
+
   // Function to handle final approval
   const confirmApproval = async () => {
     if (!selectedProject) return;
@@ -67,12 +74,12 @@ export default function CaptainProjectProposals() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          // Replace with actual user id from your session or auth provider
           userId: user.id,
           proposalId: selectedProject.id,
           status: "Approved",
           comment: approvalComment,
         }),
+        cache: "no-store",
       });
 
       if (!response.ok) {
@@ -83,11 +90,11 @@ export default function CaptainProjectProposals() {
 
       // Show success message
       setActionComplete(true);
-      // Optionally, refresh or update UI state here
 
       setTimeout(() => {
         setShowApprovalDialog(false);
         setActionComplete(false);
+        refreshData(); // Only refresh when needed
       }, 2000);
     } catch (error) {
       console.error("Approval error:", error);
@@ -105,12 +112,12 @@ export default function CaptainProjectProposals() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          // Replace with actual user id from your session or auth provider
           userId: user.id,
           proposalId: selectedProject.id,
           status: "Rejected",
           comment: rejectionReason,
         }),
+        cache: "no-store",
       });
 
       if (!response.ok) {
@@ -121,11 +128,11 @@ export default function CaptainProjectProposals() {
 
       // Show success message
       setActionComplete(true);
-      // Optionally, refresh or update UI state here
 
       setTimeout(() => {
         setShowRejectionDialog(false);
         setActionComplete(false);
+        refreshData(); // Only refresh when needed
       }, 2000);
     } catch (error) {
       console.error("Rejection error:", error);
@@ -141,6 +148,7 @@ export default function CaptainProjectProposals() {
         isAdmin={true}
         onApprove={handleApprove}
         onReject={handleReject}
+        key={`proposals-${refreshKey}`} // Only changes when refreshData is called
       />
 
       {/* Approval Dialog */}
@@ -201,7 +209,10 @@ export default function CaptainProjectProposals() {
           <DialogFooter className="sm:justify-end">
             {!actionComplete && (
               <>
-                <Button variant="outline" onClick={() => setShowApprovalDialog(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowApprovalDialog(false)}
+                >
                   Cancel
                 </Button>
                 <Button

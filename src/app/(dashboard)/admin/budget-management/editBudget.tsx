@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface EditBudgetModalProps {
   budget: {
@@ -24,14 +25,21 @@ export default function EditBudgetModal({
   onSave,
 }: EditBudgetModalProps) {
   const [totalBudget, setTotalBudget] = useState(budget.totalBudget);
-  const [allocatedBudget, setAllocatedBudget] = useState(budget.allocatedBudget);
+  const [allocatedBudget, setAllocatedBudget] = useState(
+    budget.allocatedBudget
+  );
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     // Calculate remainingBudget based on totalBudget - allocatedBudget
     const remainingBudget = totalBudget - allocatedBudget;
-    const updatedData = { id: budget.id, totalBudget, allocatedBudget, remainingBudget };
+    const updatedData = {
+      id: budget.id,
+      totalBudget,
+      allocatedBudget,
+      remainingBudget,
+    };
 
     try {
       const response = await fetch("/api/get-budget/update-budget", {
@@ -54,7 +62,12 @@ export default function EditBudgetModal({
   }
 
   return (
-    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Budget</DialogTitle>
@@ -63,7 +76,7 @@ export default function EditBudgetModal({
           {error && <p className="text-red-600 mb-4">{error}</p>}
           <div className="mb-4">
             <label className="block mb-1">Total Budget</label>
-            <input
+            <Input
               type="number"
               step="0.01"
               value={totalBudget}
@@ -74,7 +87,7 @@ export default function EditBudgetModal({
           </div>
           <div className="mb-4">
             <label className="block mb-1">Allocated Budget</label>
-            <input
+            <Input
               type="number"
               step="0.01"
               value={allocatedBudget}
@@ -84,7 +97,8 @@ export default function EditBudgetModal({
             />
           </div>
           <p className="mb-4">
-            Calculated Remaining Budget: {(totalBudget - allocatedBudget).toFixed(2)}
+            Calculated Remaining Budget:{" "}
+            {(totalBudget - allocatedBudget).toFixed(2)}
           </p>
           <DialogFooter>
             <button

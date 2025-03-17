@@ -132,7 +132,7 @@ export default function CreateNewProjectModal({
       }
 
       // If editing, add the project ID and set the method to PUT
-      let apiUrl = "/api/project-proposal";
+      const apiUrl = "/api/project-proposal";
       let method = "POST";
 
       if (isEditing && project) {

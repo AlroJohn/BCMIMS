@@ -225,7 +225,7 @@ const ProjectCalendar = ({
   const handleNextMonth = () => setDate(addMonths(date, 1));
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col max-h-[calc(100vh-8rem)]">
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
@@ -254,7 +254,7 @@ const ProjectCalendar = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col">
+      <CardContent className="flex-1 flex flex-col overflow-hidden overflow-y-auto scroll-none">
         {viewFilter === "calendar" ? (
           <div className="border rounded-md p-4 w-full">
             <div className="flex justify-between items-center mb-4">

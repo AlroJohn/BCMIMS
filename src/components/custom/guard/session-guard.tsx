@@ -13,10 +13,10 @@ interface SessionGuardProps {
   committee?: string; // Changed from string[] to string
 }
 
-export default function SessionGuard({ 
-  children, 
+export default function SessionGuard({
+  children,
   requiredRoles = [],
-  committee = "ADMIN" // Default to ADMIN, changed from array to string
+  committee = "ADMIN", // Default to ADMIN, changed from array to string
 }: SessionGuardProps) {
   const { user, role, loading } = useAuth();
   const router = useRouter();
@@ -35,60 +35,63 @@ export default function SessionGuard({
       router.replace("/auth");
       return;
     }
-    
+
     try {
       // Now it's safe to log user role since we've checked user isn't null
       console.log("USER ROLE", role);
 
-      if(role === null) {
+      if (role === null) {
         console.log("User role is null, redirecting to login");
         setIsAuthorized(false);
         router.replace("/");
         return;
       }
-      
+
       let userCommittee = "";
       let redirectPath = "";
-      
+
       // Determine committee and redirect path based on role
-      if(role === "Admin") {
+      if (role === "Admin") {
         userCommittee = "ADMIN";
         redirectPath = "/Admin";
-      } else if(role === "Education") {
+      } else if (role === "Education") {
         userCommittee = "EDUCATION_COMMITTEE";
         redirectPath = "/committee/education";
-      } else if(role === "Environment") {
+      } else if (role === "Environment") {
         userCommittee = "ENVIRONMENT_COMMITTEE";
         redirectPath = "/committee/environment";
-      } else if(role === "Finance") {
+      } else if (role === "Finance") {
         userCommittee = "FINANCE_COMMITTEE";
         redirectPath = "/committee/finance";
-      } else if(role === "HealthServices") {
+      } else if (role === "HealthServices") {
         userCommittee = "HEALTH_SERVICES_COMMITTEE";
         redirectPath = "/committee/health-services";
-      } else if(role === "PeaceOrder") {
+      } else if (role === "PeaceOrder") {
         userCommittee = "PEACE_ORDER_COMMITTEE";
         redirectPath = "/committee/peace-order";
-      } else if(role === "PublicWorks") {
+      } else if (role === "PublicWorks") {
         userCommittee = "PUBLIC_WORKS_COMMITTEE";
         redirectPath = "/committee/public-works";
-      } else if(role === "Women") {
+      } else if (role === "Women") {
         userCommittee = "WOMEN_COMMITTEE";
         redirectPath = "/committee/women";
       }
-      
+
       // Store the committee based on user's role
       setActiveCommittee(userCommittee);
-      
+
       // Check role-based access if requiredRoles are specified
       if (requiredRoles.length > 0) {
         // User must have one of the required roles
         const hasRequiredRole = role && requiredRoles.includes(role);
-        
+
         if (!hasRequiredRole) {
-          console.log(`Access denied: User role "${role}" not in required roles:`, requiredRoles);
+          console.log(
+            `Access denied: User role "${role}" not in required roles:`,
+            requiredRoles
+          );
           setIsAuthorized(false);
-          
+
           // Redirect to the appropriate page based on user's role
           if (redirectPath) {
             router.replace(redirectPath);
@@ -98,7 +101,7 @@ export default function SessionGuard({
           return;
         }
       }
-      
+
       // User is authorized
       setIsAuthorized(true);
     } catch (error) {
@@ -114,13 +117,7 @@ export default function SessionGuard({
 
   // If not authorized, show restricted access message instead of loader
   if (!isAuthorized) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 w-full fixed inset-0 top-0 left-0 z-[2000] bg-muted">
-        <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
-          <Loader2 size={47} className="text-black"/>
-        </div>
-      </div>
-    );
+    return <></>;
   }
 
   // User is authenticated and authorized
