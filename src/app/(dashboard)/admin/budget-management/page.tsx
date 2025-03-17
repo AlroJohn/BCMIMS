@@ -3,7 +3,7 @@
 import SessionGuard from "@/components/custom/guard/session-guard";
 import { useEffect, useState } from "react";
 import EditBudgetModal from "./editBudget";
-
+import { Progress } from "@/components/ui/progress";
 
 // Define interfaces for your data structure
 interface Proposal {
@@ -59,6 +59,16 @@ export default function ManageBudget() {
     );
   };
 
+  // Updated function accepts a budget parameter
+  const getProgressClass = (budget: BudgetOverview) => {
+    const utilizationPercentage =
+      (budget.totalBudget / budget.remainingBudget) * 100;
+
+    if (utilizationPercentage > 90) return "text-red-500";
+    if (utilizationPercentage > 70) return "text-yellow-500";
+    return "text-green-500";
+  };
+
   return (
     <SessionGuard requiredRoles={["Admin"]}>
       <div className="flex flex-col h-screen p-4">
@@ -72,7 +82,10 @@ export default function ManageBudget() {
             <div className="space-y-4">
               {budgetData.map((budget) => (
                 <div key={budget.id} className="p-4 border rounded shadow">
-                  <h3 className="font-bold">Budget ID: {budget.id}</h3>
+                  <Progress
+                    value={(budget.totalBudget / budget.allocatedBudget) * 100}
+                    className={getProgressClass(budget)}
+                  />
                   <p>Total Budget: {budget.totalBudget.toFixed(2)}</p>
                   <p>Allocated Budget: {budget.allocatedBudget.toFixed(2)}</p>
                   <p>Remaining Budget: {budget.remainingBudget.toFixed(2)}</p>
