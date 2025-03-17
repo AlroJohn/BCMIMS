@@ -8,6 +8,7 @@ export async function GET(request: Request) {
     const budgetData = await prisma.budgetOverview.findMany({
       include: { proposals: true },
     });
+    console.log('Fetched budget data:', budgetData);
     return NextResponse.json(budgetData);
   } catch (error) {
     console.error('Error fetching BudgetOverview data:', error);
