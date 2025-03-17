@@ -115,7 +115,7 @@ async function main() {
         title: faker.lorem.sentence(),
         description: faker.lorem.paragraph(),
         proposedDate: faker.date.recent(),
-        fileUrl: faker.internet.url(),
+        fileUrl: 'https://cyyzyqahffwimgclmplx.supabase.co/storage/v1/object/public/project_files/1742178096658-83261e38-6833-4cda-b156-acb114c29363.pdf',
         postedById: user.id,
         budget: faker.number.float({ min: 1000, max: 500000, fractionDigits: 2 }),
         committee: user.role,
