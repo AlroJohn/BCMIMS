@@ -296,11 +296,11 @@ const ProjectProposals = () => {
         <table className="w-full">
           <thead>
             <tr>
-              <th className="text-left p-2">Project</th>
-              <th className="text-left p-2">Due Date</th>
-              <th className="text-left p-2">Status</th>
-              <th className="text-left p-2">Budget</th>
-              <th className="text-center p-2">Actions</th>
+              <th className="text-left p-2 whitespace-nowrap">Project</th>
+              <th className="text-left p-2 whitespace-nowrap">Due Date</th>
+              <th className="text-left p-2 whitespace-nowrap">Status</th>
+              <th className="text-left p-2 whitespace-nowrap">Budget</th>
+              <th className="text-left p-2 whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -409,7 +409,7 @@ const ProjectProposals = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
-        <Card>
+        <Card className="max-h-[calc(100vh-8rem)] h-full overflow-hidden overflow-y-auto scroll-none">
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
@@ -494,11 +494,19 @@ const ProjectProposals = () => {
           </Tabs>
         </Card>
       </div>
+      <div className="lg:col-span-1">
+        <ProjectCalendar
+          projectProposals={projectProposals}
+          onViewProject={openProjectDetails}
+        />
+      </div>
 
-      <ProjectCalendar
-        projectProposals={projectProposals}
-        onViewProject={openProjectDetails}
-      />
+      {/* {role === "Admin" ? null : (
+        <ProjectCalendar
+          projectProposals={projectProposals}
+          onViewProject={openProjectDetails}
+        />
+      )} */}
 
       <CreateNewProjectModal
         isOpen={showModal}

@@ -47,7 +47,7 @@ export function StatusPieGraph() {
     value: number;
     fill: string;
   }
-  
+
   const [proposalData, setProposalData] = useState<ProposalData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -166,7 +166,7 @@ export function StatusPieGraph() {
           {currentMonth} {currentYear}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
+      <CardContent className="flex-1 py-1">
         <ChartContainer
           config={chartConfig}
           className="mx-auto aspect-square max-h-[250px] pb-0 [&_.recharts-pie-label-text]:fill-foreground"
@@ -179,7 +179,9 @@ export function StatusPieGraph() {
                   formatter={(value, name) => {
                     return [
                       `${value} proposals`,
-                      typeof name === "string" ? name.charAt(0).toUpperCase() + name.slice(1) : name,
+                      typeof name === "string"
+                        ? name.charAt(0).toUpperCase() + name.slice(1)
+                        : name,
                     ];
                   }}
                 />
@@ -218,7 +220,7 @@ export function StatusPieGraph() {
         <div className="leading-none text-muted-foreground">
           Total of {total} proposals this month
         </div>
-        <Button
+        {/* <Button
           variant="outline"
           size="sm"
           onClick={refreshData}
@@ -229,7 +231,7 @@ export function StatusPieGraph() {
             className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
           />
           Refresh Data
-        </Button>
+        </Button> */}
       </CardFooter>
     </Card>
   );

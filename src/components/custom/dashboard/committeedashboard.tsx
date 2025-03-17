@@ -7,26 +7,24 @@ import CommitteeCards from "./ui-components/CommitteeCards";
 import ProjectProposals from "./ui-components/ProjectProposals";
 
 export default function CommitteeDashboard() {
-
   const user = useAuth();
 
-  const iAdmin = user.role === "Admin"
+  const iAdmin = user.role === "Admin";
   return (
     <div>
-      <div className="min-h-screen w-full p-6 bg-gray-50">
+      <div className="min-h-screen w-full p-6 bg-gray-50 space-y-6">
+        {!iAdmin && <CommitteeCards />}
 
-      {!iAdmin && <CommitteeCards />}
-
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1 py-4">
-              <StatusPieGraph />
-            </div>
-            <div className="flex-1">
-              <Component />
-            </div>
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex-1">
+            <StatusPieGraph />
           </div>
-          <ProjectProposals />
+          <div className="flex-1">
+            <Component />
+          </div>
         </div>
+        <ProjectProposals />
       </div>
+    </div>
   );
 }
