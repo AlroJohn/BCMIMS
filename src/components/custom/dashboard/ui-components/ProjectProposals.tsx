@@ -98,6 +98,74 @@ const ProjectProposals = () => {
     (params?.committee as string) || searchParams.get("committee") || "";
   const committeeParam = formatCommitteeParam(rawCommitteeParam);
 
+  useEffect(() => {
+    fetchProposals();
+  }, [committeeParam]);
+
+  const fetchProposals = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/project-proposal/fetch-proposal");
+      if (!response.ok) throw new Error("Failed to fetch proposals");
+
+      const data = await response.json();
+      const currentUserRole = role;
+      const userId = user?.id;
+      const isAdmin = currentUserRole === "Admin";
+
+      const filteredData = data.filter((proposal: ProjectProposalType) => {
+        if (proposal.postedById === userId) return true;
+        if (isAdmin && committeeParam)
+          return proposal.committee === committeeParam;
+        if (isAdmin && !committeeParam) return true;
+        if (currentUserRole === proposal.committee) return true;
+        return false;
+      });
+
+      const enhancedData = filteredData.map((proposal: ProjectProposalType) => {
+        const isApproved = getProposalStatus(proposal) === "Approved";
+        if (isApproved) {
+          const approvalDate = proposal.approvedBy.find(
+            (a) => a.status === "Approved"
+          )?.updatedAt;
+          const daysSinceApproval = approvalDate
+            ? Math.floor(
+                (Date.now() - new Date(approvalDate).getTime()) /
+                  (1000 * 60 * 60 * 24)
+              )
+            : 0;
+
+          let implementationStatus = "Scheduled";
+          let completion = 0;
+          if (daysSinceApproval > 30) {
+            implementationStatus = "Completed";
+            completion = 100;
+          } else if (daysSinceApproval > 5) {
+            implementationStatus = "In Progress";
+            completion = Math.min(
+              Math.floor((daysSinceApproval / 30) * 100),
+              95
+            );
+          }
+
+          return {
+            ...proposal,
+            implementation: { status: implementationStatus, completion },
+          };
+        }
+        return proposal;
+      });
+
+      setProjectProposals(enhancedData);
+    } catch (err) {
+      console.error("Error fetching proposals:", err);
+      setError("Failed to load project proposals");
+      toast.error("Failed to load project proposals");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCreateProject = () => {
     setSelectedProject(null);
     setIsEditing(false);
