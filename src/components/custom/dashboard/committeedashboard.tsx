@@ -1,10 +1,11 @@
 "use client";
 
 import { useAuth } from "@/components/providers/auth-provider";
-import { Component } from "./reusable-component/Lawa";
+
 import { StatusPieGraph } from "./reusable-component/Piegraph";
 import CommitteeCards from "./ui-components/CommitteeCards";
 import ProjectProposals from "./ui-components/ProjectProposals";
+import { ApprovedProjectsRadarChart } from "./reusable-component/Lawa";
 
 export default function CommitteeDashboard() {
   const user = useAuth();
@@ -19,7 +20,7 @@ export default function CommitteeDashboard() {
           <StatusPieGraph />
         </div>
         <div className="flex-1">
-          <Component />
+          <ApprovedProjectsRadarChart />
         </div>
       </div>
       <ProjectProposals />

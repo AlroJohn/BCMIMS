@@ -220,18 +220,6 @@ export function StatusPieGraph() {
         <div className="leading-none text-muted-foreground">
           Total of {total} proposals this month
         </div>
-        {/* <Button
-          variant="outline"
-          size="sm"
-          onClick={refreshData}
-          disabled={isRefreshing}
-          className="mt-2"
-        >
-          <RefreshCcw
-            className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
-          />
-          Refresh Data
-        </Button> */}
       </CardFooter>
     </Card>
   );

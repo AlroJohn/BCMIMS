@@ -666,7 +666,7 @@ export default function CommitteeProjectProposalsTemplate({
       </div>
 
       {/* Project Statistics */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col">
@@ -718,7 +718,7 @@ export default function CommitteeProjectProposalsTemplate({
             </CardContent>
           </Card>
         )}
-      </div>
+      </div> */}
 
       {/* Project List */}
       <Card>

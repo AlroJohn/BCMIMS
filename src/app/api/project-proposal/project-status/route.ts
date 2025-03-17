@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 
 export async function PUT(request: Request) {
   try {
@@ -43,6 +44,22 @@ export async function PUT(request: Request) {
         updatedAt: new Date(),
       },
     });
+
+    // Revalidate paths that might display project data
+    revalidatePath('/admin/project-proposals');
+    // revalidatePath('/projects');
+    // revalidatePath(`/projects/${proposalId}`);
+
+    // You can also revalidate committee-specific paths if needed
+    // Get the project details to determine the committee
+    const project = await prisma.projectProposal.findUnique({
+      where: { id: proposalId },
+      select: { committee: true }
+    });
+
+    if (project) {
+      revalidatePath(`/committee/${project.committee.toLowerCase()}`);
+    }
 
     return NextResponse.json(updatedApproval, { status: 200 });
   } catch (error) {
