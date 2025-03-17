@@ -132,7 +132,7 @@ export default function CreateNewProjectModal({
       }
 
       // If editing, add the project ID and set the method to PUT
-      let apiUrl = "/api/project-proposal";
+      const apiUrl = "/api/project-proposal";
       let method = "POST";
 
       if (isEditing && project) {
@@ -449,7 +449,7 @@ export default function CreateNewProjectModal({
                 !description ||
                 !budget
               }
-            > 
+            >
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

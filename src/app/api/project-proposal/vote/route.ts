@@ -36,6 +36,13 @@ export async function POST(req: NextRequest) {
         proposalId,
         vote,
         votedAt: new Date(),
+        comment: "", // Add appropriate comment if needed
+        user: {
+          connect: { id: userId },
+        },
+        proposal: {
+          connect: { id: proposalId },
+        },
       },
       include: {
         user: {
