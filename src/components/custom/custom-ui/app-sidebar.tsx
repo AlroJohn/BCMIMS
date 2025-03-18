@@ -67,7 +67,7 @@ const data = {
       isActive: true,
     },
     {
-      title: "Committee Dashboards",
+      title: "Committee Page",
       url: "#",
       icon: LayoutDashboard,
       isActive: true,
