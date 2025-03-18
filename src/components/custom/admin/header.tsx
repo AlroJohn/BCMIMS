@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { Bell } from "lucide-react"
-import { ThemeToggle } from "../theme/theme-toggle"
-import { Button } from "@/components/ui/button"
+import { Bell } from "lucide-react";
+import { ThemeToggle } from "../theme/theme-toggle";
+import { Button } from "@/components/ui/button";
 
 import {
   DropdownMenu,
@@ -11,13 +11,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Separator } from "@/components/ui/separator"
-import LogoutWrapper from "../custom-ui/logout-button"
-import { DynamicBreadcrumb } from "./admin-breadcrumb-route"
-
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
+import LogoutWrapper from "../custom-ui/logout-button";
+import { DynamicBreadcrumb } from "./admin-breadcrumb-route";
 
 export default function Header() {
   return (
@@ -29,10 +28,10 @@ export default function Header() {
       </div>
       <div className="flex items-center gap-2  px-4">
         {/* <ThemeToggle /> */}
-        <Button variant="outline" size="icon" className="rounded-full">
+        {/* <Button variant="outline" size="icon" className="rounded-full">
           <Bell className="h-4 w-4" />
           <span className="sr-only">Notifications</span>
-        </Button>
+        </Button> */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -50,8 +49,8 @@ export default function Header() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            {/* <DropdownMenuItem>Profile</DropdownMenuItem>
+            <DropdownMenuItem>Settings</DropdownMenuItem> */}
             <DropdownMenuSeparator />
             <LogoutWrapper>
               <DropdownMenuItem>Log out</DropdownMenuItem>
@@ -60,5 +59,5 @@ export default function Header() {
         </DropdownMenu>
       </div>
     </header>
-  )
+  );
 }

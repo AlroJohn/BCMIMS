@@ -20,11 +20,11 @@ export type UserData = {
 export async function fetchUsers(): Promise<UserData[]> {
   try {
     const users = await prisma.user.findMany({
-      where: {
-        role: {
-          not: UserRole.Admin // Filter out Admin users
-        }
-      },
+      // where: {
+      //   role: {
+      //     not: UserRole.Admin // Filter out Admin users
+      //   }
+      // },
       select: {
         id: true,
         name: true,
