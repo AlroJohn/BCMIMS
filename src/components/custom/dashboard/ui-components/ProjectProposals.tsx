@@ -436,7 +436,7 @@ const ProjectProposals = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                {role === "Admin" ? null : (
+                {/* {role === "Admin" ? null : (
                   <Button
                     onClick={handleCreateProject}
                     className="flex items-center gap-2"
@@ -444,7 +444,7 @@ const ProjectProposals = () => {
                     <Plus className="h-4 w-4" />
                     New Project
                   </Button>
-                )}
+                )} */}
               </div>
             </div>
           </CardHeader>
