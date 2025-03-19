@@ -7,6 +7,7 @@ export async function GET(request: Request) {
   try {
     const budgetData = await prisma.budgetOverview.findMany({
       include: { proposals: true },
+      orderBy: { createdAt: 'asc' },
     });
     console.log('Fetched budget data:', budgetData);
     return NextResponse.json(budgetData);
