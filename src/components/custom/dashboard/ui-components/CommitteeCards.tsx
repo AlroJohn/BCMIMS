@@ -1,56 +1,84 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { useEffect, useState } from "react";
-import { UserRole } from "@prisma/client";
-import { useAuth } from "@/components/providers/auth-provider"; // Your auth provider context
-import { BudgetOverviewData, getBudgetOverviewByRole } from "@/actions/fetching-actions/budget-overview/budget-fetch";
+import { useAuth } from "@/components/providers/auth-provider";
 
+import { useParams } from "next/navigation";
+import {
+  BudgetOverviewData,
+  getBudgetByCommitteeSlug,
+} from "@/actions/fetching-actions/budget-overview/fetch-budget";
 
-interface CommitteeCardsProps {
-  role?: UserRole; // Optional: If not provided, server action will use current user's role
+interface CommitteeDashboardProps {
+  defaultCommittee?: string;
 }
 
-const CommitteeCards = ({ role }: CommitteeCardsProps) => {
+export default function CommitteeDashboard({
+  defaultCommittee,
+}: CommitteeDashboardProps) {
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<BudgetOverviewData | null>(null);
+  const [budgetData, setBudgetData] = useState<BudgetOverviewData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { user } = useAuth(); // Get current user from auth context
+  const { user } = useAuth();
+  const params = useParams();
+
+  // Get committee from URL params or use default
+  const committeeSlug = params?.committee || defaultCommittee || "";
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchBudgetData = async () => {
       try {
         setLoading(true);
-        // Pass both role and user ID
-        const budgetData = await getBudgetOverviewByRole(role, user?.id);
-        setData(budgetData);
+
+        // If we have a committee in URL params, fetch that specific committee's budget
+        if (committeeSlug) {
+          const data = await getBudgetByCommitteeSlug(committeeSlug);
+          setBudgetData(data);
+        }
+        // Otherwise use the user's role (for their dashboard)
+        else if (user?.id) {
+          // Convert user role format (like HealthServices) to URL slug format (health-services)
+          const roleSlug = user.role
+            ? user.role
+                .toString()
+                // Insert dashes before capital letters and convert to lowercase
+                .replace(/([A-Z])/g, "-$1")
+                .toLowerCase()
+                // Remove dash at the beginning if it exists
+                .replace(/^-/, "")
+            : "admin";
+
+          const data = await getBudgetByCommitteeSlug(roleSlug);
+          setBudgetData(data);
+        }
+
         setError(null);
       } catch (err) {
-        console.error("Error fetching committee data:", err);
-        setError("Failed to load committee information");
+        console.error("Error fetching committee budget data:", err);
+        setError("Failed to load committee budget information");
       } finally {
         setLoading(false);
       }
     };
 
-    // Only fetch if we have a user or a specific role was provided
-    if (user?.id || role) {
-      fetchData();
-    }
-  }, [role, user?.id]);
+    fetchBudgetData();
+  }, [committeeSlug, user?.id, user?.role]);
 
   // Function to determine the progress bar color based on budget utilization
-  const getProgressClass = () => {
-    if (!data) return "bg-gray-200";
+  const getProgressColor = () => {
+    if (!budgetData) return "bg-gray-200";
 
     const utilizationPercentage =
-      (data.totalBudget / data.committeeInfo.budget) * 100;
+      (budgetData.allocatedBudget /
+        (budgetData.allocatedBudget + budgetData.remainingBudget)) *
+      100;
 
-    if (utilizationPercentage > 90) return "text-red-500";
-    if (utilizationPercentage > 70) return "text-yellow-500";
-    return "text-green-500";
+    if (utilizationPercentage > 90) return "bg-red-500";
+    if (utilizationPercentage > 70) return "bg-yellow-500";
+    return "bg-green-500";
   };
 
   if (loading) {
@@ -65,7 +93,7 @@ const CommitteeCards = ({ role }: CommitteeCardsProps) => {
     );
   }
 
-  if (error || !data) {
+  if (error || !budgetData) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -79,7 +107,10 @@ const CommitteeCards = ({ role }: CommitteeCardsProps) => {
     );
   }
 
-  const { committeeInfo, totalProjects, totalBudget } = data;
+  const { committeeInfo, totalProjects, allocatedBudget, remainingBudget } =
+    budgetData;
+  const totalBudget = allocatedBudget + remainingBudget;
+  const utilizationPercentage = (allocatedBudget / totalBudget) * 100;
 
   return (
     <Card>
@@ -87,14 +118,18 @@ const CommitteeCards = ({ role }: CommitteeCardsProps) => {
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex-1">
             <h2 className="text-xl font-semibold mb-2">
-              {committeeInfo.role.charAt(0).toUpperCase() +
-                committeeInfo.role.slice(1)}{" "}
-              Committee
+              {committeeInfo.role === "Admin"
+                ? "Barangay Captain"
+                : `${committeeInfo.role} Committee`}
             </h2>
             <p className="text-gray-600 mb-4">{committeeInfo.description}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-500">Committee Head</p>
+                <p className="text-sm text-gray-500">
+                  {committeeInfo.role === "Admin"
+                    ? "Punong Barangay"
+                    : "Kagawad"}
+                </p>
                 <p className="font-medium">{committeeInfo.person}</p>
               </div>
               <div>
@@ -109,26 +144,28 @@ const CommitteeCards = ({ role }: CommitteeCardsProps) => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <p className="text-sm text-gray-500">Total Budget</p>
-                <p className="font-medium">
-                  ₱{committeeInfo.budget.toLocaleString()}
-                </p>
+                <p className="font-medium">₱{totalBudget.toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Allocated</p>
-                <p className="font-medium">₱{totalBudget.toLocaleString()}</p>
+                <p className="font-medium">
+                  ₱{allocatedBudget.toLocaleString()}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Remaining</p>
                 <p className="font-medium">
-                  ₱{(committeeInfo.budget - totalBudget).toLocaleString()}
+                  ₱{remainingBudget.toLocaleString()}
                 </p>
               </div>
             </div>
             <div className="mt-2">
-              <p className="text-xs text-gray-500 mb-1">Budget Utilization</p>
+              <p className="text-xs text-gray-500 mb-1">
+                Budget Utilization ({utilizationPercentage.toFixed(1)}%)
+              </p>
               <Progress
-                value={(totalBudget / committeeInfo.budget) * 100}
-                className={getProgressClass()}
+                value={utilizationPercentage}
+                className={getProgressColor()}
               />
             </div>
           </div>
@@ -136,6 +173,4 @@ const CommitteeCards = ({ role }: CommitteeCardsProps) => {
       </CardContent>
     </Card>
   );
-};
-
-export default CommitteeCards;
+}

@@ -217,7 +217,7 @@ const ProjectProposals = () => {
       if (approvedVotes > rejectedVotes && approvedVotes > totalVotes / 2)
         return "Approved";
       if (rejectedVotes > approvedVotes && rejectedVotes > totalVotes / 2)
-        return "Rejected";
+        return "Disapproved";
     }
 
     // Fallback to ApprovedBy if no conclusive vote

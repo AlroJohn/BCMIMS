@@ -134,34 +134,7 @@ export function CommitteeSidebar({
       url: `${committeeInfo.path}/project-proposals`,
       icon: FileText,
       isActive: pathname.includes("/project-proposals"),
-      items: [
-        {
-          title: "All Proposals",
-          url: `${committeeInfo.path}/project-proposals`,
-          isActive: pathname.includes("/project-proposals") && !currentStatus,
-        },
-        {
-          title: "Pending Proposals",
-          url: `${committeeInfo.path}/project-proposals?status=pending`,
-          isActive:
-            pathname.includes("/project-proposals") &&
-            currentStatus === "pending",
-        },
-        {
-          title: "Approved Proposals",
-          url: `${committeeInfo.path}/project-proposals?status=approved`,
-          isActive:
-            pathname.includes("/project-proposals") &&
-            currentStatus === "approved",
-        },
-        {
-          title: "Rejected Proposals",
-          url: `${committeeInfo.path}/project-proposals?status=rejected`,
-          isActive:
-            pathname.includes("/project-proposals") &&
-            currentStatus === "rejected",
-        },
-      ],
+  
     },
   ];
 

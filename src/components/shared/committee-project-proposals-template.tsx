@@ -10,7 +10,13 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Plus, Search } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Search,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -20,6 +26,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { useAuth } from "../providers/auth-provider";
 import CreateNewProjectModal from "../custom/dashboard/ui-components/CreateNewProject";
 import PriorityMatrixDialog from "../custom/admin/Committee-projects-components/PriorityMatrix";
@@ -60,7 +75,27 @@ export default function CommitteeProjectProposalsTemplate({
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5); // Default to 5 items per page
+  const rowsPerPageOptions = [5, 10, 25, 50]; // Available options for rows per page
+
   const { user } = useAuth();
+
+  const committeeInfo =
+    committeeInfoMap[committee as keyof typeof committeeInfoMap];
+
+  // Define hasVoted function BEFORE using it in useMemo
+  const hasVoted = useCallback(
+    (project: Project) => {
+      if (isAdmin) return true;
+      return project.votes.some(
+        (vote) => vote.user.role === committeeInfo?.name?.replace(" & ", "")
+      );
+    },
+    [isAdmin, committeeInfo?.name]
+  );
 
   // Fetch projects
   const fetchProjects = useCallback(async () => {
@@ -151,8 +186,11 @@ export default function CommitteeProjectProposalsTemplate({
     }
   }, [initialTab]);
 
-  const committeeInfo =
-    committeeInfoMap[committee as keyof typeof committeeInfoMap];
+  // Reset pagination when tab, search, or items per page changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchTerm, itemsPerPage]);
+
   const projectProposals = isAdmin ? projects : projects.filter(() => true);
 
   // Memoize filtered projects based on search and tab
@@ -165,14 +203,87 @@ export default function CommitteeProjectProposalsTemplate({
 
       if (!matchesSearch) return false;
 
-      if (activeTab === "to-vote" && !isAdmin) {
-        return !hasVoted(project);
-      }
-
-      if (activeTab === "all" || activeTab === "to-vote") return true;
+      if (activeTab === "all") return true;
       return project.status.toLowerCase() === activeTab.toLowerCase();
     });
-  }, [projectProposals, searchTerm, activeTab, isAdmin]);
+  }, [projectProposals, searchTerm, activeTab]);
+
+  // Get current page projects
+  const currentProjects = useMemo(() => {
+    const indexOfLastProject = currentPage * itemsPerPage;
+    const indexOfFirstProject = indexOfLastProject - itemsPerPage;
+    return filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
+  }, [filteredProjects, currentPage, itemsPerPage]);
+
+  // Calculate total number of pages
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProjects.length / itemsPerPage)
+  );
+
+  // Generate page numbers for pagination
+  const pageNumbers = useMemo(() => {
+    // Explicitly define the type for pages array to include both numbers and string
+    const pages: Array<number | "ellipsis"> = [];
+    const maxPagesToShow = 5; // Maximum number of page links to display
+
+    if (totalPages <= maxPagesToShow) {
+      // If fewer pages than max, show all pages
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Complex pagination with ellipsis
+      if (currentPage <= 3) {
+        // Near the start
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push("ellipsis");
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        // Near the end
+        pages.push(1);
+        pages.push("ellipsis");
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        // Somewhere in the middle
+        pages.push(1);
+        pages.push("ellipsis");
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
+        pages.push("ellipsis");
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  }, [currentPage, totalPages]);
+
+  // Pagination functions
+  const goToPage = useCallback(
+    (page: number) => {
+      if (page >= 1 && page <= totalPages) {
+        setCurrentPage(page);
+      }
+    },
+    [totalPages]
+  );
+
+  const goToPreviousPage = useCallback(() => {
+    if (currentPage > 1) {
+      setCurrentPage((prevPage) => prevPage - 1);
+    }
+  }, [currentPage]);
+
+  const goToNextPage = useCallback(() => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  }, [currentPage, totalPages]);
 
   // Statistics
   const totalProjects = projectProposals.length;
@@ -185,9 +296,6 @@ export default function CommitteeProjectProposalsTemplate({
   const rejectedProjects = projectProposals.filter(
     (p) => p.status === "Rejected"
   ).length;
-  const toVoteProjects = !isAdmin
-    ? projectProposals.filter((project) => !hasVoted(project)).length
-    : 0;
 
   const openProjectDetails = (project: Project) => {
     setSelectedProject(project);
@@ -249,13 +357,6 @@ export default function CommitteeProjectProposalsTemplate({
     }
   };
 
-  const hasVoted = (project: Project) => {
-    if (isAdmin) return true;
-    return project.votes.some(
-      (vote) => vote.user.role === committeeInfo.name.replace(" & ", "")
-    );
-  };
-
   if (loading) {
     return <div>Loading projects...</div>;
   }
@@ -284,15 +385,10 @@ export default function CommitteeProjectProposalsTemplate({
         { key: "status", header: "Status" },
         { key: "actions", header: "Actions" },
       ],
-      "to-vote": [
-        ...defaultColumns,
-        { key: "priority", header: "Priority" },
-        { key: "votes", header: "Votes" },
-        { key: "actions", header: "Actions" },
-      ],
       pending: [
         ...defaultColumns,
         { key: "priority", header: "Priority" },
+        { key: "votes", header: "Votes" },
         { key: "actions", header: "Actions" },
       ],
       approved: [
@@ -320,6 +416,8 @@ export default function CommitteeProjectProposalsTemplate({
     index: number
   ) => {
     const priority = determinePriority(project);
+    // Calculate the absolute index based on pagination
+    const absoluteIndex = (currentPage - 1) * itemsPerPage + index;
 
     switch (columnKey) {
       case "project":
@@ -354,7 +452,7 @@ export default function CommitteeProjectProposalsTemplate({
           </div>
         );
       case "priority":
-        return <Badge className={priority.badge}>{index + 1}</Badge>;
+        return <Badge className={priority.badge}>{absoluteIndex + 1}</Badge>;
       case "status":
         return (
           <Badge className={getStatusBadge(project.status)}>
@@ -398,7 +496,7 @@ export default function CommitteeProjectProposalsTemplate({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">
-          {isAdmin ? "All" : committeeInfo.name} Committee Project Proposals
+          {isAdmin ? "All" : committeeInfo?.name} Committee Project Proposals
         </h1>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowPriorityMatrix(true)}>
@@ -426,7 +524,7 @@ export default function CommitteeProjectProposalsTemplate({
               <CardDescription>
                 {isAdmin
                   ? "All project proposals from all committees"
-                  : `All project proposals requiring ${committeeInfo.name} Committee input`}
+                  : `All project proposals requiring ${committeeInfo?.name} Committee input`}
               </CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -448,17 +546,10 @@ export default function CommitteeProjectProposalsTemplate({
             <TabsList
               className="grid w-full"
               style={{
-                gridTemplateColumns: isAdmin
-                  ? "repeat(4, 1fr)"
-                  : "repeat(5, 1fr)",
+                gridTemplateColumns: "repeat(4, 1fr)",
               }}
             >
               <TabsTrigger value="all">All ({totalProjects})</TabsTrigger>
-              {!isAdmin && (
-                <TabsTrigger value="to-vote">
-                  To Vote ({toVoteProjects})
-                </TabsTrigger>
-              )}
               <TabsTrigger value="pending">
                 Pending ({pendingProjects})
               </TabsTrigger>
@@ -485,9 +576,9 @@ export default function CommitteeProjectProposalsTemplate({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredProjects.length > 0 ? (
-                      filteredProjects.map((project, index) => (
-                        <TableRow key={project.id}>
+                    {currentProjects.length > 0 ? (
+                      currentProjects.map((project, index) => (
+                        <TableRow key={project.id} className="hover:bg-gray-50">
                           {columns.map((column) => (
                             <TableCell
                               key={`${project.id}-${column.key}`}
@@ -502,11 +593,9 @@ export default function CommitteeProjectProposalsTemplate({
                       <TableRow>
                         <TableCell
                           colSpan={columns.length}
-                          className="p-4 text-center text-gray-500"
+                          className="h-32 p-4 text-center text-gray-500"
                         >
-                          {activeTab === "to-vote"
-                            ? "No projects found requiring your vote"
-                            : activeTab === "approved"
+                          {activeTab === "approved"
                             ? "No approved projects found"
                             : activeTab === "rejected"
                             ? "No rejected projects found"
@@ -518,7 +607,71 @@ export default function CommitteeProjectProposalsTemplate({
                     )}
                   </TableBody>
                 </Table>
+
+                <div className="py-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-sm text-gray-500">
+                  <div className="flex items-center gap-2">
+                    <span>Rows per page:</span>
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                      className="border rounded p-1"
+                    >
+                      {rowsPerPageOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {filteredProjects.length > itemsPerPage && (
+                    <div className="">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious
+                              onClick={goToPreviousPage}
+                              className={
+                                currentPage === 1
+                                  ? "pointer-events-none opacity-50"
+                                  : "cursor-pointer"
+                              }
+                            />
+                          </PaginationItem>
+
+                          {pageNumbers.map((page, index) => (
+                            <PaginationItem key={`page-${index}`}>
+                              {page === "ellipsis" ? (
+                                <PaginationEllipsis />
+                              ) : (
+                                <PaginationLink
+                                  isActive={currentPage === page}
+                                  onClick={() => goToPage(page)}
+                                >
+                                  {page}
+                                </PaginationLink>
+                              )}
+                            </PaginationItem>
+                          ))}
+
+                          <PaginationItem>
+                            <PaginationNext
+                              onClick={goToNextPage}
+                              className={
+                                currentPage === totalPages
+                                  ? "pointer-events-none opacity-50"
+                                  : "cursor-pointer"
+                              }
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Pagination Component */}
             </CardContent>
           </TabsContent>
         </Tabs>

@@ -5,8 +5,9 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { StatusPieGraph } from "./reusable-component/Piegraph";
 import CommitteeCards from "./ui-components/CommitteeCards";
 
-import { ApprovedProjectsRadarChart } from "./reusable-component/Lawa";
+import { ApprovedProjectsRadarChart } from "./reusable-component/RadarApproved";
 import ProjectProposals from "./ui-components/ProjectProposals";
+import { RejectedProjectsRadarChart } from "./reusable-component/RadarDisapproved";
 
 export default function CommitteeDashboard() {
   const user = useAuth();
@@ -22,6 +23,9 @@ export default function CommitteeDashboard() {
         </div>
         <div className="flex-1">
           <ApprovedProjectsRadarChart />
+        </div>
+        <div className="flex-1">
+          <RejectedProjectsRadarChart />
         </div>
       </div>
       <ProjectProposals />

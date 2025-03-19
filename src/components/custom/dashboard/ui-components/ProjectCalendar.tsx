@@ -224,20 +224,6 @@ const ProjectDetailsDialog = ({
             </div>
           )}
         </div>
-
-        <div className="mt-6 flex justify-end gap-2">
-          {selectedProject.fileUrl && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1"
-            >
-              <Download className="w-4 h-4" />
-              Download File
-            </Button>
-          )}
-          <Button onClick={() => setShowProjectDetails(false)}>Close</Button>
-        </div>
       </div>
     </div>
   );
