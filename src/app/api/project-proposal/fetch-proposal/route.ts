@@ -4,69 +4,51 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const proposals = await prisma.projectProposal.findMany({
-      where: {
-        OR: [
-          {
-            approvedBy: {
-              some: {
-                status: 'Approved'
-              }
-            }
-          },
-
-          {
-            votes: {
-              some: {}
-            }
-          }
-        ]
-      },
       include: {
-        postedBy: true,
+        postedBy: {
+          select: { id: true, name: true, role: true },
+        },
         votes: {
           include: {
-            user: true
-          }
+            user: {
+              select: { id: true, name: true, role: true },
+            },
+          },
         },
         approvedBy: {
           include: {
-            approvedBy: true
-          }
-        }
+            approvedBy: {
+              select: { id: true, name: true, role: true },
+            },
+          },
+        },
       },
     });
 
-    // Then filter further in JavaScript to ensure we only get truly approved proposals
-    const approvedProposals = proposals.filter(proposal => {
-      // Check vote-based approval
+    const formattedProposals = proposals.map((proposal) => {
+      // Compute status primarily from Vote table
+      let status = "Pending";
       if (proposal.votes.length > 0) {
-        const approvedVotes = proposal.votes.filter(v => v.vote === "Approved").length;
-        const rejectedVotes = proposal.votes.filter(v => v.vote === "Rejected").length;
+        const approvedVotes = proposal.votes.filter((v) => v.vote === "Approved").length;
+        const rejectedVotes = proposal.votes.filter((v) => v.vote === "Rejected").length;
         const totalVotes = proposal.votes.length;
 
         if (approvedVotes > rejectedVotes && approvedVotes > totalVotes / 2) {
-          return true; // This proposal is approved via votes
+          status = "Approved";
+        } else if (rejectedVotes > approvedVotes && rejectedVotes > totalVotes / 2) {
+          status = "Rejected";
         }
-      }
-
-      // Check approval-based approval (if not already approved by votes)
-      if (proposal.approvedBy.length > 0) {
+      } else if (proposal.approvedBy.length > 0) {
+        // Fallback to ApprovedBy if no votes
         const latestApproval = proposal.approvedBy.sort(
           (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         )[0];
-
-        if (latestApproval.status === "Approved") {
-          return true; // This proposal is approved via approvals
-        }
+        status = latestApproval.status;
       }
 
-      return false; // Not approved
-    });
-
-    const formattedProposals = approvedProposals.map((proposal) => {
       return {
         ...proposal,
-        status: "Approved", // All proposals here are definitely approved
+        status, // Include computed status
         postedBy: proposal.postedBy || { id: "unknown", name: "Unknown User", role: "Unknown" },
         votes: proposal.votes.map((vote) => ({
           ...vote,

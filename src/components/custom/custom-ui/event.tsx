@@ -71,7 +71,9 @@ const CalendarOfEvents = () => {
         setError(null);
 
         // Fetch approved proposals from the API
-        const response = await fetch("/api/project-proposal/fetch-proposal");
+        const response = await fetch(
+          "/api/project-proposal/fetch-proposal-calendar"
+        );
 
         if (!response.ok) {
           throw new Error(`Failed to fetch proposals: ${response.statusText}`);
