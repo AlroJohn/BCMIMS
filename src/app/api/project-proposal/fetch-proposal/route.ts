@@ -22,6 +22,14 @@ export async function GET() {
             },
           },
         },
+        _count: {
+          select: { votes: true }
+        }
+      },
+      orderBy: {
+        votes: {
+          _count: 'desc'
+        }
       },
     });
 
@@ -63,6 +71,7 @@ export async function GET() {
         })),
         proposedDate: proposal.proposedDate.toISOString(),
         createdAt: proposal.createdAt?.toISOString(),
+        voteCount: proposal.votes.length,
       };
     });
 

@@ -216,7 +216,7 @@ const UserManagement = () => {
                   <TableHead>Contact</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Last Updated</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

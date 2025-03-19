@@ -300,7 +300,7 @@ const ProjectProposals = () => {
               <th className="text-left p-2 whitespace-nowrap">Due Date</th>
               <th className="text-left p-2 whitespace-nowrap">Status</th>
               <th className="text-left p-2 whitespace-nowrap">Budget</th>
-              <th className="text-left p-2 whitespace-nowrap">Actions</th>
+              <th className="text-left p-2 whitespace-nowrap">Action</th>
             </tr>
           </thead>
           <tbody>
