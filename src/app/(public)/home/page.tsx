@@ -39,68 +39,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Projects Overview */}
-      {/* <section>
-        <h2 className="text-3xl font-bold mb-6">Ongoing Projects</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {[
-            {
-              title: "Road Improvement Project",
-              status: "In Progress",
-              completion: 65,
-              committee: "Public Works",
-              description:
-                "Repairing and improving the main roads within the barangay",
-            },
-            {
-              title: "Community Garden Initiative",
-              status: "In Progress",
-              completion: 40,
-              committee: "Environment",
-              description:
-                "Creating community gardens to promote sustainable food production",
-            },
-          ].map((project, i) => (
-            <Card key={i} className="overflow-hidden">
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle>{project.title}</CardTitle>
-                    <CardDescription>
-                      Committee: {project.committee}
-                    </CardDescription>
-                  </div>
-                  <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                    {project.status}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-3">{project.description}</p>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>Progress</span>
-                    <span>{project.completion}%</span>
-                  </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-blue-500"
-                      style={{ width: `${project.completion}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <div className="flex justify-center mt-8">
-          <Button>View All Projects</Button>
-        </div>
-      </section> */}
-
       <CalendarOfEvents />
-      {/* Location Section */}
-      {/* Location Section */}
+
       <section>
         <h2 className="text-3xl font-bold mb-6">Find Us</h2>
         <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center relative overflow-hidden">

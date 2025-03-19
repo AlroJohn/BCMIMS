@@ -16,15 +16,10 @@ export type UserData = {
   updatedAt?: Date;
 };
 
-// Fetch all users (excluding Admin users)
+// Fetch all users
 export async function fetchUsers(): Promise<UserData[]> {
   try {
     const users = await prisma.user.findMany({
-      // where: {
-      //   role: {
-      //     not: UserRole.Admin // Filter out Admin users
-      //   }
-      // },
       select: {
         id: true,
         name: true,
@@ -65,18 +60,7 @@ export async function updateUser(data: UpdateUserData): Promise<UserData> {
       throw new Error('Missing required fields');
     }
 
-    // Get current user data to check role
-    const currentUser = await prisma.user.findUnique({
-      where: { id },
-      select: { role: true }
-    });
-
-    // If the user is an Admin, prevent changes
-    if (currentUser?.role === UserRole.Admin) {
-      throw new Error('Admin users cannot be modified');
-    }
-
-    // Update the user
+    // Update the user without any role-based restrictions
     const updatedUser = await prisma.user.update({
       where: { id },
       data: {

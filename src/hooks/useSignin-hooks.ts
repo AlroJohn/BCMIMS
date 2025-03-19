@@ -7,7 +7,7 @@ import { loginUser } from "@/actions/signin-action";
 
 
 // Define expected role types
-type UserRole = "SUPERADMIN" | "STAFF" | "CLIENT";
+type UserRole = "Admin" | "Education" | "Environment" | "Finance" | "HealthServices" | "PeaceOrder" | "PublicWorks" | "Women";
 
 export interface LoginData {
   email: string;
