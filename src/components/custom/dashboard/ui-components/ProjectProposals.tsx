@@ -495,10 +495,7 @@ const ProjectProposals = () => {
         </Card>
       </div>
       <div className="lg:col-span-1">
-        <ProjectCalendar
-          projectProposals={projectProposals}
-          onViewProject={openProjectDetails}
-        />
+        <ProjectCalendar />
       </div>
 
       {/* {role === "Admin" ? null : (
