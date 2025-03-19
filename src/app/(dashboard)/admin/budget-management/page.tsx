@@ -6,8 +6,9 @@ import EditBudgetModal from "./editBudget";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, AlertCircle, Plus } from "lucide-react";
+import { Edit, AlertCircle, Plus, Filter } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Define interfaces for your data structure
 interface Proposal {
@@ -32,6 +33,7 @@ export default function ManageBudget() {
   const [editingBudget, setEditingBudget] = useState<BudgetOverview | null>(
     null
   );
+  const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
     async function fetchBudgetData() {
@@ -86,10 +88,17 @@ export default function ManageBudget() {
     return "[--progress-foreground:theme(colors.green.500)]";
   };
 
-  // Filter out budgets with committeeRole "Admin"
-  const filteredBudgetData = budgetData.filter(
-    (budget) => budget.committeeRole !== "Admin"
-  );
+  // Filter budgets based on active tab
+  const getFilteredBudgets = () => {
+    if (activeTab === "admin") {
+      return budgetData.filter((budget) => budget.committeeRole === "Admin");
+    } else if (activeTab === "committees") {
+      return budgetData.filter((budget) => budget.committeeRole !== "Admin");
+    }
+    return budgetData; // "all" tab shows everything
+  };
+
+  const filteredBudgetData = getFilteredBudgets();
 
   // Render empty state with notification
   if (!loading && budgetData.length === 0) {
@@ -115,6 +124,14 @@ export default function ManageBudget() {
     );
   }
 
+  // Check if we have admin budgets
+  const hasAdminBudgets = budgetData.some(
+    (budget) => budget.committeeRole === "Admin"
+  );
+  const hasCommitteeBudgets = budgetData.some(
+    (budget) => budget.committeeRole !== "Admin"
+  );
+
   return (
     <SessionGuard requiredRoles={["Admin"]}>
       <div className="p-4 h-full">
@@ -128,103 +145,82 @@ export default function ManageBudget() {
           <div className="flex justify-center items-center h-64">
             <p className="text-muted-foreground">Loading budget data...</p>
           </div>
-        ) : filteredBudgetData.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredBudgetData.map((budget) => (
-              <Card
-                key={budget.id}
-                className="shadow-sm hover:shadow-md transition-shadow relative pb-10"
-              >
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-medium">{budget.committeeRole}</h3>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(budget.month).toLocaleDateString(undefined, {
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
-                  </div>
-
-                  <div className="space-y-3 mt-2">
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span>Budget Allocation</span>
-                        <span className="font-medium">
-                          {getProgressValue(budget).toFixed(0)}%
-                        </span>
-                      </div>
-                      <Progress
-                        value={getProgressValue(budget)}
-                        className={`h-2 ${getProgressColor(budget)}`}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <p className="text-muted-foreground">Total</p>
-                        <p className="font-medium">
-                          ₱{budget.totalBudget.toLocaleString()}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Allocated</p>
-                        <p className="font-medium">
-                          ₱{budget.allocatedBudget.toLocaleString()}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Remaining</p>
-                        <p className="font-medium">
-                          ₱{budget.remainingBudget.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    {budget.proposals && budget.proposals.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">
-                          Proposals ({budget.proposals.length})
-                        </p>
-                        <div className="max-h-12 overflow-hidden text-xs">
-                          {budget.proposals.slice(0, 2).map((proposal) => (
-                            <p key={proposal.id} className="truncate">
-                              {proposal.title}
-                            </p>
-                          ))}
-                          {budget.proposals.length > 2 && (
-                            <p className="text-muted-foreground">
-                              +{budget.proposals.length - 2} more
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-                <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(budget)}
-                    className="flex items-center justify-center gap-1 text-xs shadow-sm"
-                  >
-                    <Edit className="h-3 w-3" />
-                    Edit Budget
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
         ) : (
-          <Alert className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>No Non-Admin Budgets Found</AlertTitle>
-            <AlertDescription>
-              There are budgets in the system, but they all have the Admin
-              committee role, which are filtered out by default.
-            </AlertDescription>
-          </Alert>
+          <div className="space-y-6">
+            <Tabs
+              defaultValue="all"
+              className="w-full"
+              onValueChange={setActiveTab}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <TabsList>
+                  <TabsTrigger value="all">All Budgets</TabsTrigger>
+                  <TabsTrigger value="admin">Admin Budgets</TabsTrigger>
+                  <TabsTrigger value="committees">
+                    Committee Budgets
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* Uncomment if you want to add a create button
+                <Button className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" /> Create Budget
+                </Button>
+                */}
+              </div>
+
+              <TabsContent value="all" className="mt-0">
+                {budgetData.length === 0 ? (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>No Budgets Available</AlertTitle>
+                    <AlertDescription>
+                      There are no budgets configured in the system.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <BudgetCards budgets={budgetData} onEdit={handleEdit} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="admin" className="mt-0">
+                {!hasAdminBudgets ? (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>No Admin Budgets</AlertTitle>
+                    <AlertDescription>
+                      There are no Admin budgets configured in the system.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <BudgetCards
+                    budgets={budgetData.filter(
+                      (b) => b.committeeRole === "Admin"
+                    )}
+                    onEdit={handleEdit}
+                  />
+                )}
+              </TabsContent>
+
+              <TabsContent value="committees" className="mt-0">
+                {!hasCommitteeBudgets ? (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>No Committee Budgets</AlertTitle>
+                    <AlertDescription>
+                      There are no Committee budgets configured in the system.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <BudgetCards
+                    budgets={budgetData.filter(
+                      (b) => b.committeeRole !== "Admin"
+                    )}
+                    onEdit={handleEdit}
+                  />
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
         )}
 
         {editingBudget && (
@@ -236,5 +232,121 @@ export default function ManageBudget() {
         )}
       </div>
     </SessionGuard>
+  );
+}
+
+// Extracted budget cards into a separate component for reuse
+function BudgetCards({
+  budgets,
+  onEdit,
+}: {
+  budgets: BudgetOverview[];
+  onEdit: (budget: BudgetOverview) => void;
+}) {
+  // Fixed progress calculation
+  const getProgressValue = (budget: BudgetOverview) => {
+    return (budget.allocatedBudget / budget.totalBudget) * 100;
+  };
+
+  // Updated function for progress color
+  const getProgressColor = (budget: BudgetOverview) => {
+    const utilizationPercentage =
+      (budget.allocatedBudget / budget.totalBudget) * 100;
+
+    if (utilizationPercentage > 90)
+      return "[--progress-foreground:theme(colors.red.500)]";
+    if (utilizationPercentage > 70)
+      return "[--progress-foreground:theme(colors.yellow.500)]";
+    return "[--progress-foreground:theme(colors.green.500)]";
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {budgets.map((budget) => (
+        <Card
+          key={budget.id}
+          className="shadow-sm hover:shadow-md transition-shadow relative pb-10"
+        >
+          <CardContent className="p-4">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-medium">{budget.committeeRole}</h3>
+              <span className="text-sm text-muted-foreground">
+                {new Date(budget.month).toLocaleDateString(undefined, {
+                  month: "short",
+                  year: "numeric",
+                })}
+              </span>
+            </div>
+
+            <div className="space-y-3 mt-2">
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span>Budget Allocation</span>
+                  <span className="font-medium">
+                    {getProgressValue(budget).toFixed(0)}%
+                  </span>
+                </div>
+                <Progress
+                  value={getProgressValue(budget)}
+                  className={`h-2 ${getProgressColor(budget)}`}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Total</p>
+                  <p className="font-medium">
+                    ₱{budget.totalBudget.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Allocated</p>
+                  <p className="font-medium">
+                    ₱{budget.allocatedBudget.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Remaining</p>
+                  <p className="font-medium">
+                    ₱{budget.remainingBudget.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {budget.proposals && budget.proposals.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">
+                    Proposals ({budget.proposals.length})
+                  </p>
+                  <div className="max-h-12 overflow-hidden text-xs">
+                    {budget.proposals.slice(0, 2).map((proposal) => (
+                      <p key={proposal.id} className="truncate">
+                        {proposal.title}
+                      </p>
+                    ))}
+                    {budget.proposals.length > 2 && (
+                      <p className="text-muted-foreground">
+                        +{budget.proposals.length - 2} more
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+          <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onEdit(budget)}
+              className="flex items-center justify-center gap-1 text-xs shadow-sm"
+            >
+              <Edit className="h-3 w-3" />
+              Edit Budget
+            </Button>
+          </div>
+        </Card>
+      ))}
+    </div>
   );
 }
