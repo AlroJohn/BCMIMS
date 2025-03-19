@@ -45,14 +45,14 @@ const Navbar = () => {
               </Link>
 
               {/* Show Events link only if user is logged in */}
-              {isLoggedIn && (
+              {/* {isLoggedIn && (
                 <Link
                   href="/events"
                   className="text-gray-700 hover:text-blue-500"
                 >
                   Events
                 </Link>
-              )}
+              )} */}
 
               {isLoggedIn && (
                 <Link

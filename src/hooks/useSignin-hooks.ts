@@ -63,35 +63,35 @@ export const useLogin = () => {
         // If we got session data from the server, set it in the browser
         if (response.session) {
           console.log("Setting client-side session");
-          
+
           // Set the session in the browser using Supabase client
           await supabase.auth.setSession({
             access_token: response.session.access_token,
             refresh_token: response.session.refresh_token
           });
-          
+
           // Manually set cookies for middleware
           const expires = new Date(response.session.expires_at * 1000).toUTCString();
           document.cookie = `sb-access-token=${response.session.access_token}; path=/; expires=${expires}; SameSite=Lax; secure`;
           document.cookie = `sb-refresh-token=${response.session.refresh_token}; path=/; expires=${expires}; SameSite=Lax; secure`;
         }
-        
+
         setSuccess(true);
-        
+
         // Safely set the role - handle undefined case
         if (response.role) {
           setUserRole(response.role);
         }
-        
+
         toast.success("Logged in successfully!");
         console.log("User authenticated successfully");
-        
+
         // Add a delay to ensure session is stored properly
         setTimeout(() => {
           // Use the redirectUrl from the server response
           if (response.redirectUrl) {
             console.log("Redirecting to:", response.redirectUrl);
-            
+
             // Use replace instead of push for cleaner navigation
             router.push(response.redirectUrl);
           } else {
@@ -111,13 +111,13 @@ export const useLogin = () => {
     }
   };
 
-  return { 
-    formData, 
-    handleChange, 
-    handleSubmit, 
-    loading, 
-    error, 
+  return {
+    formData,
+    handleChange,
+    handleSubmit,
+    loading,
+    error,
     success,
-    userRole 
+    userRole
   };
 };
