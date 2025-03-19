@@ -10,19 +10,7 @@ import Link from "next/link";
 
 const SigninWrapper = () => {
   const { formData, handleChange, handleSubmit, loading } = useLogin();
-
-  // Updated page routes to remove "/dashboard" since (dashboard) is a Route Group
-  const pages = [
-    { name: "Admin", path: "/admin" },
-    { name: "Education", path: "/committee/education" },
-    { name: "Environment", path: "/committee/environment" },
-    { name: "Finance", path: "/committee/finance" },
-    { name: "Health Services", path: "/committee/health-services" },
-    { name: "Peace Order", path: "/committee/peace-order" },
-    { name: "Public Works", path: "/committee/public-works" },
-    { name: "Women", path: "/committee/women" },
-  ];
-
+ 
   return (
     <div className="flex items-center justify-center h-full w-full p-4">
       <Card className="w-full max-w-md shadow-lg relative bg-white">
