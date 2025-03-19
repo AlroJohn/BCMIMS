@@ -244,12 +244,18 @@ function BudgetCards({
   onEdit: (budget: BudgetOverview) => void;
 }) {
   // Fixed progress calculation
-  const getProgressValue = (budget: BudgetOverview) => {
+  const getProgressValue = (budget) => {
+    // Return 0 if totalBudget is 0 to prevent division by zero resulting in NaN
+    if (budget.totalBudget === 0) return 0;
     return (budget.allocatedBudget / budget.totalBudget) * 100;
   };
 
   // Updated function for progress color
-  const getProgressColor = (budget: BudgetOverview) => {
+  const getProgressColor = (budget) => {
+    // If totalBudget is 0, return default color (green)
+    if (budget.totalBudget === 0)
+      return "[--progress-foreground:theme(colors.green.500)]";
+
     const utilizationPercentage =
       (budget.allocatedBudget / budget.totalBudget) * 100;
 
