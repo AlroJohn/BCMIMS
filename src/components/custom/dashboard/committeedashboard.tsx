@@ -8,9 +8,10 @@ import CommitteeCards from "./ui-components/CommitteeCards";
 import { ApprovedProjectsRadarChart } from "./reusable-component/RadarApproved";
 import ProjectProposals from "./ui-components/ProjectProposals";
 import { RejectedProjectsRadarChart } from "./reusable-component/RadarDisapproved";
+import CalendarOfEvents from "../custom-ui/event";
 
 export default function CommitteeDashboard() {
-  const user = useAuth();
+  const { user, role } = useAuth();
 
   const iAdmin = user.role === "Admin";
   return (
@@ -28,7 +29,8 @@ export default function CommitteeDashboard() {
           <RejectedProjectsRadarChart />
         </div>
       </div>
-      <ProjectProposals />
+      {role !== "Admin" && <ProjectProposals />}
+      {role === "Admin" && <CalendarOfEvents />}
     </div>
   );
 }
