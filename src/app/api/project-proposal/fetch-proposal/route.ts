@@ -26,11 +26,6 @@ export async function GET() {
           select: { votes: true }
         }
       },
-      orderBy: {
-        votes: {
-          _count: 'desc'
-        }
-      },
     });
 
     const formattedProposals = proposals.map((proposal) => {
@@ -75,7 +70,29 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json(formattedProposals);
+    // Sort the proposals by status priority (Approved -> Pending -> Rejected) and then by vote count
+    const sortedProposals = formattedProposals.sort((a, b) => {
+      // Define status priority (higher number = higher priority)
+      const statusPriority = {
+        "Approved": 3,
+        "Pending": 2,
+        "Rejected": 1
+      };
+
+      // First compare by status priority
+      const statusComparison =
+        statusPriority[b.status] - statusPriority[a.status];
+
+      // If status is the same, sort by vote count (descending)
+      if (statusComparison === 0) {
+        return b.voteCount - a.voteCount;
+      }
+
+      // Otherwise sort by status priority
+      return statusComparison;
+    });
+
+    return NextResponse.json(sortedProposals);
   } catch (error) {
     console.error("Error fetching proposals:", error);
     return NextResponse.json({ error: "Failed to fetch proposals" }, { status: 500 });

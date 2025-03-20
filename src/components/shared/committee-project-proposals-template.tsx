@@ -383,22 +383,22 @@ export default function CommitteeProjectProposalsTemplate({
         ...defaultColumns,
         { key: "priority", header: "Priority" },
         { key: "status", header: "Status" },
-        { key: "actions", header: "Actions" },
+        { key: "remarks", header: "Remarks" },
       ],
       pending: [
         ...defaultColumns,
         { key: "priority", header: "Priority" },
-        { key: "actions", header: "Actions" },
+        { key: "remarks", header: "Remarks" },
       ],
       approved: [
         ...defaultColumns,
         { key: "implementation", header: "Implementation" },
-        { key: "actions", header: "Actions" },
+        { key: "remarks", header: "Remarks" },
       ],
       rejected: [
         ...defaultColumns,
         { key: "rejectionReason", header: "Rejection Reason" },
-        { key: "actions", header: "Actions" },
+        { key: "remarks", header: "Remarks" },
       ],
     };
 
@@ -556,7 +556,7 @@ export default function CommitteeProjectProposalsTemplate({
                 Approved ({approvedProjects})
               </TabsTrigger>
               <TabsTrigger value="rejected">
-                Rejected ({rejectedProjects})
+                Disapproved ({rejectedProjects})
               </TabsTrigger>
             </TabsList>
           </div>

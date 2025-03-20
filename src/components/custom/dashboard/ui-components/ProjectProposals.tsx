@@ -217,7 +217,7 @@ const ProjectProposals = () => {
       if (approvedVotes > rejectedVotes && approvedVotes > totalVotes / 2)
         return "Approved";
       if (rejectedVotes > approvedVotes && rejectedVotes > totalVotes / 2)
-        return "Disapproved";
+        return "Rejected";
     }
 
     // Fallback to ApprovedBy if no conclusive vote
@@ -300,7 +300,7 @@ const ProjectProposals = () => {
               <th className="text-left p-2 whitespace-nowrap">Due Date</th>
               <th className="text-left p-2 whitespace-nowrap">Status</th>
               <th className="text-left p-2 whitespace-nowrap">Budget</th>
-              <th className="text-left p-2 whitespace-nowrap">Action</th>
+              <th className="text-left p-2 whitespace-nowrap">Remarks</th>
             </tr>
           </thead>
           <tbody>
@@ -462,7 +462,7 @@ const ProjectProposals = () => {
                   Pending ({pendingProjects})
                 </TabsTrigger>
                 <TabsTrigger value="rejected">
-                  Rejected ({rejectedProjects})
+                  Disapproved ({rejectedProjects})
                 </TabsTrigger>
               </TabsList>
             </div>
