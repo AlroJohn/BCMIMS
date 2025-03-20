@@ -472,7 +472,7 @@ export default function CommitteeProjectProposalsTemplate({
             {project.rejectionReason || "No reason provided"}
           </span>
         );
-      case "actions":
+      case "remarks":
         return (
           <ActionButtons
             project={project}
