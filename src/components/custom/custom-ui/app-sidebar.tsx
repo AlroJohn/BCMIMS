@@ -61,7 +61,7 @@ const data = {
       isActive: true,
     },
     {
-      title: "Manage Budget",
+      title: "Overall budget",
       url: "/admin/budget-management",
       icon: Users,
       isActive: true,
