@@ -18,7 +18,7 @@ export async function GET(req: Request) {
       // Try to find the user in the database
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, role: true, email: true },
+        select: { id: true, role: true, email: true, phone: true, name: true, profile: true, createdAt: true },
       });
 
       if (!user) {
@@ -27,7 +27,20 @@ export async function GET(req: Request) {
       }
 
       console.log(`User role API: Found user with role: ${user.role}`);
-      return NextResponse.json({ role: user.role });
+
+      // Return both role and userData to include all user details
+      return NextResponse.json({
+        role: user.role,
+        userData: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          phone: user.phone,
+          profile: user.profile,
+          createdAt: user.createdAt
+        }
+      });
+
     } catch (dbError) {
       console.error("User role API: Database error:", dbError);
       return NextResponse.json(

@@ -134,7 +134,6 @@ export function CommitteeSidebar({
       url: `${committeeInfo.path}/project-proposals`,
       icon: FileText,
       isActive: pathname.includes("/project-proposals"),
-  
     },
   ];
 

@@ -388,7 +388,6 @@ export default function CommitteeProjectProposalsTemplate({
       pending: [
         ...defaultColumns,
         { key: "priority", header: "Priority" },
-        { key: "votes", header: "Votes" },
         { key: "actions", header: "Actions" },
       ],
       approved: [
