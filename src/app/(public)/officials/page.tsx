@@ -11,7 +11,7 @@ import {
 import { Mail, Phone } from "lucide-react";
 
 import { UserRole } from "@prisma/client";
-import { fetchUsers } from "@/app/api/users/update-user/route";
+import { fetchUsers } from "@/actions/update-user/route";
 
 // Map UserRole to position titles
 const positionTitles = {
@@ -135,13 +135,12 @@ export default function OfficialsPage() {
                   alt={captain.name}
                   className="w-full h-full object-cover transition-transform hover:scale-105"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      "/api/placeholder/400/400";
+                    (e.target as HTMLImageElement).src = "images/logo.jpeg";
                   }}
                 />
               </div>
               <CardHeader className="pb-2">
-                <CardTitle>{captain.name}</CardTitle>
+                <CardTitle>{captain.name} </CardTitle>
                 <CardDescription>{captain.position}</CardDescription>
               </CardHeader>
               <CardContent>
@@ -163,7 +162,7 @@ export default function OfficialsPage() {
 
       {/* Kagawads */}
       {kagawads.length > 0 && (
-        <div>
+        <>
           <h2 className="text-2xl font-semibold mb-8 text-center">
             Barangay Kagawads
           </h2>
@@ -199,7 +198,7 @@ export default function OfficialsPage() {
               </Card>
             ))}
           </div>
-        </div>
+        </>
       )}
 
       {/* Organizational Chart */}

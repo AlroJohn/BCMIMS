@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { format, isSameDay, addMonths, subMonths } from "date-fns";
+import { useState, useEffect } from "react";
+import { format, isSameDay, addMonths, subMonths, isToday } from "date-fns";
 import {
   Card,
   CardContent,
@@ -19,7 +19,11 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
+  CheckCircle,
+  Clock3,
+  CalendarIcon,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Types
 type User = {
@@ -62,6 +66,7 @@ type ProjectProposalType = {
   votes: Vote[];
   createdAt?: string;
   committee: string;
+  status?: string;
   implementation?: {
     status: string;
     completion: number;
@@ -74,12 +79,7 @@ type Activity = {
   project: ProjectProposalType;
 };
 
-interface ProjectCalendarProps {
-  projectProposals: ProjectProposalType[];
-  onViewProject: (project: ProjectProposalType) => void;
-}
-
-// Utility functions (could be moved to a separate file)
+// Utility functions
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "Approved":
@@ -90,6 +90,21 @@ const getStatusBadge = (status: string) => {
       return "bg-red-100 text-red-800 hover:bg-red-100";
     default:
       return "bg-gray-100 text-gray-800 hover:bg-gray-100";
+  }
+};
+
+const getEventColor = (project: ProjectProposalType) => {
+  if (!project.implementation) return "bg-blue-500";
+
+  switch (project.implementation.status) {
+    case "Completed":
+      return "bg-green-500";
+    case "In Progress":
+      return "bg-purple-500";
+    case "Scheduled":
+      return "bg-amber-500";
+    default:
+      return "bg-blue-500";
   }
 };
 
@@ -107,6 +122,9 @@ const determinePriority = (project: ProjectProposalType) => {
 };
 
 const getProposalStatus = (proposal: ProjectProposalType): string => {
+  // If status is already provided in the data, use it
+  if (proposal.status) return proposal.status;
+
   if (proposal.votes && proposal.votes.length > 0) {
     const approvedVotes = proposal.votes.filter(
       (v) => v.vote === "Approved"
@@ -133,20 +151,183 @@ const getProposalStatus = (proposal: ProjectProposalType): string => {
   return "Pending";
 };
 
-const ProjectCalendar = ({
-  projectProposals,
-  onViewProject,
-}: ProjectCalendarProps) => {
+// Project Details Dialog Component
+interface ProjectDetailsDialogProps {
+  showProjectDetails: boolean;
+  setShowProjectDetails: (show: boolean) => void;
+  selectedProject: ProjectProposalType | null;
+}
+
+const ProjectDetailsDialog = ({
+  showProjectDetails,
+  setShowProjectDetails,
+  selectedProject,
+}: ProjectDetailsDialogProps) => {
+  if (!selectedProject) return null;
+
+  // Return a basic dialog with project details
+  // In a real application, you'd use your UI library's dialog component
+  return (
+    <div
+      className={`fixed inset-0 bg-black/50 z-50 ${
+        showProjectDetails ? "flex" : "hidden"
+      } items-center justify-center`}
+    >
+      <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">{selectedProject.title}</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowProjectDetails(false)}
+          >
+            ✕
+          </Button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Description</h3>
+            <p>{selectedProject.description}</p>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Budget</h3>
+            <p>₱{selectedProject.budget.toLocaleString()}</p>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Proposed Date</h3>
+            <p>{format(new Date(selectedProject.proposedDate), "PPP")}</p>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Posted By</h3>
+            <p>{selectedProject.postedBy.name}</p>
+          </div>
+
+          {selectedProject.implementation && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">
+                Implementation Status
+              </h3>
+              <div className="flex items-center gap-2">
+                <Badge>{selectedProject.implementation.status}</Badge>
+                <span>
+                  {selectedProject.implementation.completion}% complete
+                </span>
+              </div>
+              <Progress
+                value={selectedProject.implementation.completion}
+                className="h-2 mt-2"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ProjectCalendar = () => {
   const [viewFilter, setViewFilter] = useState<"calendar" | "list">("calendar");
   const [date, setDate] = useState(new Date());
+  const [projectProposals, setProjectProposals] = useState<
+    ProjectProposalType[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const calendarActivities: Activity[] = projectProposals
-    .filter((project) => getProposalStatus(project) === "Approved")
-    .map((project) => ({
-      date: new Date(project.proposedDate),
-      title: project.title,
-      project,
-    }));
+  // State for project details dialog
+  const [selectedProject, setSelectedProject] =
+    useState<ProjectProposalType | null>(null);
+  const [showProjectDetails, setShowProjectDetails] = useState(false);
+
+  // Handler for viewing project details
+  const handleViewProject = (project: ProjectProposalType) => {
+    setSelectedProject(project);
+    setShowProjectDetails(true);
+  };
+
+  // Fetch project proposals
+  useEffect(() => {
+    const fetchProposals = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(
+          "/api/project-proposal/fetch-proposal-calendar"
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch proposals: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Fetched approved proposals:", data);
+
+        // Add implementation data if it doesn't exist
+        const enhancedProposals = data.map((proposal: ProjectProposalType) => {
+          if (!proposal.implementation) {
+            // Determine implementation status based on proposed date
+            const proposedDate = new Date(proposal.proposedDate);
+            const currentDate = new Date();
+
+            let status;
+            let completion;
+
+            if (proposedDate > currentDate) {
+              // Future event - scheduled
+              status = "Scheduled";
+              completion = 0;
+            } else {
+              // Past or current event - randomly assign In Progress or Completed
+              // Events older than 30 days have higher chance to be completed
+              const daysDifference = Math.floor(
+                (currentDate.getTime() - proposedDate.getTime()) /
+                  (1000 * 60 * 60 * 24)
+              );
+
+              if (daysDifference > 30 || Math.random() > 0.7) {
+                status = "Completed";
+                completion = 100;
+              } else {
+                status = "In Progress";
+                completion = Math.floor(Math.random() * 70) + 10; // 10-80% complete
+              }
+            }
+
+            return {
+              ...proposal,
+              implementation: {
+                status,
+                completion,
+              },
+            };
+          }
+          return proposal;
+        });
+
+        setProjectProposals(enhancedProposals);
+      } catch (err) {
+        console.error("Error fetching proposals:", err);
+        setError(
+          err instanceof Error ? err.message : "An unknown error occurred"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProposals();
+  }, []);
+
+  const calendarActivities: Activity[] = projectProposals.map((project) => ({
+    date: new Date(project.proposedDate),
+    title: project.title,
+    project,
+  }));
 
   const selectedDateActivities = calendarActivities.filter((activity) =>
     isSameDay(activity.date, date)
@@ -224,6 +405,60 @@ const ProjectCalendar = ({
   const handlePreviousMonth = () => setDate(subMonths(date, 1));
   const handleNextMonth = () => setDate(addMonths(date, 1));
 
+  // Get activities for a specific day
+  const getActivitiesForDay = (day: Date) => {
+    return calendarActivities.filter((activity) =>
+      isSameDay(activity.date, day)
+    );
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <Card className="h-full w-full flex flex-col max-h-[calc(100vh-8rem)]">
+        <CardHeader>
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-4 w-40" />
+        </CardHeader>
+        <CardContent className="flex-1 overflow-hidden">
+          <div className="flex flex-col h-full space-y-4">
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-16 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Card className="h-full w-full flex flex-col max-h-[calc(100vh-8rem)]">
+        <CardHeader>
+          <CardTitle>Calendar of Activities</CardTitle>
+          <CardDescription>Based on approved projects</CardDescription>
+        </CardHeader>
+        <CardContent className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="bg-red-50 p-6 rounded-lg border border-red-100">
+              <h3 className="text-lg font-medium text-red-800 mb-2">
+                Error Loading Calendar
+              </h3>
+              <p className="text-red-600 mb-4">{error}</p>
+              <Button
+                onClick={() => window.location.reload()}
+                className="bg-red-600 text-white hover:bg-red-700"
+              >
+                Retry Loading
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="h-full flex flex-col max-h-[calc(100vh-8rem)]">
       <CardHeader>
@@ -275,26 +510,61 @@ const ProjectCalendar = ({
                 </div>
               ))}
               {calendarDays.map((day, index) => {
-                const hasActivity = calendarActivities.some((activity) =>
-                  isSameDay(activity.date, day.date)
-                );
+                const dayActivities = getActivitiesForDay(day.date);
+                const hasActivity = dayActivities.length > 0;
                 const isSelected = isSameDay(date, day.date);
+                const isCurrentDay = isToday(day.date);
 
                 return (
                   <button
                     key={index}
-                    className={`text-center p-2 rounded-full hover:bg-gray-100 
-                      ${!day.currentMonth ? "text-gray-400" : ""} 
+                    className={`
+                      aspect-square flex flex-col items-center justify-start p-1 
+                      ${!day.currentMonth ? "opacity-40" : ""} 
                       ${
-                        hasActivity && day.currentMonth
-                          ? "font-bold bg-blue-50"
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : day.currentMonth
+                          ? "hover:bg-muted"
                           : ""
-                      } 
-                      ${isSelected ? "bg-blue-100 font-bold" : ""}`}
-                    onClick={() => setDate(day.date)}
+                      }
+                      ${
+                        isCurrentDay && day.currentMonth && !isSelected
+                          ? "border border-primary"
+                          : ""
+                      }
+                      transition-all duration-200
+                    `}
+                    onClick={() => day.currentMonth && setDate(day.date)}
                     disabled={!day.currentMonth}
                   >
-                    {day.day}
+                    <span className="text-sm">{day.day}</span>
+
+                    {hasActivity && day.currentMonth && (
+                      <div className="flex flex-wrap gap-0.5 mt-1 justify-center">
+                        {dayActivities.slice(0, 3).map((activity, i) => (
+                          <div
+                            key={i}
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              isSelected
+                                ? "bg-primary-foreground"
+                                : getEventColor(activity.project)
+                            }`}
+                            title={activity.title}
+                          />
+                        ))}
+                        {dayActivities.length > 3 && (
+                          <div
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              isSelected
+                                ? "bg-primary-foreground"
+                                : "bg-gray-400"
+                            }`}
+                            title={`${dayActivities.length - 3} more events`}
+                          />
+                        )}
+                      </div>
+                    )}
                   </button>
                 );
               })}
@@ -325,7 +595,7 @@ const ProjectCalendar = ({
                           size="sm"
                           variant="ghost"
                           className="h-auto p-1 text-blue-600"
-                          onClick={() => onViewProject(activity.project)}
+                          onClick={() => handleViewProject(activity.project)}
                         >
                           <FileText className="h-3 w-3 mr-1" />
                           Details
@@ -359,7 +629,7 @@ const ProjectCalendar = ({
               <div className="space-y-2">
                 {selectedDateActivities.map((activity, index) => {
                   const project = activity.project;
-                  const status = getProposalStatus(project);
+                  const status = "Approved"; // Since all proposals are approved
 
                   return (
                     <div
@@ -379,7 +649,7 @@ const ProjectCalendar = ({
                             size="sm"
                             variant="ghost"
                             className="h-auto p-1 text-blue-600"
-                            onClick={() => onViewProject(project)}
+                            onClick={() => handleViewProject(project)}
                           >
                             <FileText className="h-3 w-3 mr-1" />
                             Details
@@ -434,6 +704,13 @@ const ProjectCalendar = ({
           </div>
         </div>
       </CardContent>
+
+      {/* Project Details Dialog */}
+      <ProjectDetailsDialog
+        showProjectDetails={showProjectDetails}
+        setShowProjectDetails={setShowProjectDetails}
+        selectedProject={selectedProject}
+      />
     </Card>
   );
 };

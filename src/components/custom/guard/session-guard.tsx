@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/auth-provider";
 import GuradLoader from "../loader/loading-guard";
-import CommitteeLayoutTemplate from "../dashboard/committee-layout-template";
-import { Loader2 } from "lucide-react";
 
 interface SessionGuardProps {
   children: React.ReactNode;

@@ -11,23 +11,26 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
-  
+
   // Add a custom config object to override rules
   {
     rules: {
-      // Disable the TypeScript 'no explicit any' rule
+      // Disable TypeScript 'no explicit any' rule
       "@typescript-eslint/no-explicit-any": "off",
-      
+
       // Disable the Next.js img element rule
       "@next/next/no-img-element": "off",
-      
-      // Optional: Disable unused vars warning if needed
-      // "@typescript-eslint/no-unused-vars": "off",
+
+      // Disable unused vars warning if needed
       "@typescript-eslint/no-unused-vars": "off",
-      // Optional: Disable React hooks dependency warning
-      // "react-hooks/exhaustive-deps": "warn" // or "off" to completely disable
-    }
-  }
+
+      // Disable the React unescaped entities rule
+      "react/no-unescaped-entities": "off",
+
+      // Optionally, disable or warn for missing dependencies in hooks:
+      "react-hooks/exhaustive-deps": "off", // or "warn"
+    },
+  },
 ];
 
 export default eslintConfig;

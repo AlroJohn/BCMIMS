@@ -42,7 +42,7 @@ export const SmsService = {
       ? new Date(data.proposedDate).toLocaleDateString()
       : data.proposedDate.toLocaleDateString();
 
-    const message = `New Project Proposal: "${data.title}" has been submitted with a budget of $${data.budget}. Proposed date: ${formattedDate}.`;
+    const message = `New Project Proposal: "${data.title}" has been submitted with a budget of ₱${data.budget}. Proposed date: ${formattedDate}. Come and check it out at https://barangay56taysan.vercel.app/auth`;
 
     return this.sendSms(recipientNumber, message);
   }

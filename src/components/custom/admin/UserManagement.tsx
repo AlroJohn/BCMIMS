@@ -28,10 +28,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Plus, RefreshCw } from "lucide-react";
 
 import { toast } from "sonner";
 import { UserRole } from "@prisma/client";
-import { fetchUsers, updateUser } from "@/app/api/users/update-user/route";
+import { fetchUsers, updateUser } from "@/actions/update-user/route";
+import AddUserModal from "../custom-ui/add-user";
 
 // Simplified committee role mapping
 const committeeNames = {
@@ -43,6 +45,7 @@ const committeeNames = {
   [UserRole.PeaceOrder]: "Committee on Peace and Order",
   [UserRole.PublicWorks]: "Committee on Public Works and Infrastructure",
   [UserRole.Women]: "Committee on Women, Children and Family",
+  [UserRole.None]: "Sub Committee",
 };
 
 // User type definition
@@ -61,6 +64,9 @@ const UserManagement = () => {
   // State for users data
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Add User Modal state
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
 
   // Edit dialog state
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -114,7 +120,6 @@ const UserManagement = () => {
       }
 
       setUploadingImage(true);
-      //   toast.info("Processing image...");
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -180,20 +185,52 @@ const UserManagement = () => {
 
   // Format date for display
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    try {
+      return new Date(date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch (error) {
+      return "Invalid date";
+    }
+  };
+
+  // Safe way to get initials from name
+  const getInitials = (name: string | undefined | null) => {
+    if (!name) return "";
+
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
   };
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">User Management</h1>
-        <Button onClick={loadUsers} variant="outline" size="sm">
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setIsAddUserOpen(true)}
+            variant="default"
+            size="sm"
+            className="flex items-center gap-1"
+          >
+            <Plus className="h-4 w-4" />
+            Add User
+          </Button>
+          <Button
+            onClick={loadUsers}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -215,7 +252,7 @@ const UserManagement = () => {
                   <TableHead>Contact</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Last Updated</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -226,7 +263,7 @@ const UserManagement = () => {
                         <Avatar>
                           <AvatarImage src={user.profile || undefined} />
                           <AvatarFallback>
-                            {user.name.charAt(0).toUpperCase()}
+                            {getInitials(user.name)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
@@ -250,6 +287,13 @@ const UserManagement = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Add User Modal */}
+      <AddUserModal
+        isOpen={isAddUserOpen}
+        onClose={() => setIsAddUserOpen(false)}
+        onSuccess={loadUsers}
+      />
 
       {/* Edit User Dialog */}
       <Dialog
@@ -279,7 +323,7 @@ const UserManagement = () => {
               ) : (
                 <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
                   <span className="text-2xl text-gray-500">
-                    {editName.charAt(0).toUpperCase()}
+                    {editName ? editName.charAt(0).toUpperCase() : ""}
                   </span>
                 </div>
               )}

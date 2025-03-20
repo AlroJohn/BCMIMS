@@ -291,7 +291,7 @@ const ProjectProposals = () => {
   };
 
   const renderTableContent = (projects: ProjectProposalType[]) => (
-    <CardContent className="max-h-[calc(100vh-17rem)] h-full overflow-hidden overflow-y-auto scroll-none p-6">
+    <CardContent>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -300,7 +300,7 @@ const ProjectProposals = () => {
               <th className="text-left p-2 whitespace-nowrap">Due Date</th>
               <th className="text-left p-2 whitespace-nowrap">Status</th>
               <th className="text-left p-2 whitespace-nowrap">Budget</th>
-              <th className="text-left p-2 whitespace-nowrap">Actions</th>
+              <th className="text-left p-2 whitespace-nowrap">Remarks</th>
             </tr>
           </thead>
           <tbody>
@@ -348,10 +348,10 @@ const ProjectProposals = () => {
                           href={project.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="h-auto p-1 text-blue-600 hover:text-blue-800 hover:underline flex items-center text-sm"
+                          className="h-auto p-1 text-blue-600 hover:text-blue-800 hover:underline flex items-center"
                         >
                           <FileText className="h-3 w-3 mr-1" />
-                          View
+                          View File
                         </Link>
                         {canEditProject(project) && role !== "Admin" && (
                           <Button
@@ -409,7 +409,7 @@ const ProjectProposals = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
-        <Card className="h-full flex flex-col gap-2">
+        <Card className="max-h-[calc(100vh-8rem)] h-full overflow-hidden overflow-y-auto scroll-none">
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
@@ -436,7 +436,7 @@ const ProjectProposals = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                {role === "Admin" ? null : (
+                {/* {role === "Admin" ? null : (
                   <Button
                     onClick={handleCreateProject}
                     className="flex items-center gap-2"
@@ -444,7 +444,7 @@ const ProjectProposals = () => {
                     <Plus className="h-4 w-4" />
                     New Project
                   </Button>
-                )}
+                )} */}
               </div>
             </div>
           </CardHeader>
@@ -462,7 +462,7 @@ const ProjectProposals = () => {
                   Pending ({pendingProjects})
                 </TabsTrigger>
                 <TabsTrigger value="rejected">
-                  Rejected ({rejectedProjects})
+                  Disapproved ({rejectedProjects})
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -495,10 +495,7 @@ const ProjectProposals = () => {
         </Card>
       </div>
       <div className="lg:col-span-1">
-        <ProjectCalendar
-          projectProposals={projectProposals}
-          onViewProject={openProjectDetails}
-        />
+        <ProjectCalendar />
       </div>
 
       {/* {role === "Admin" ? null : (

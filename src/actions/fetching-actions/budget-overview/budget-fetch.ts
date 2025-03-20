@@ -70,7 +70,7 @@ export async function getBudgetOverviewByRole(role?: UserRole, userId?: string):
     // Get budget overview for the role
     const budgetOverview = await prisma.budgetOverview.findFirst({
         where: { committeeRole: role },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'asc' },
     });
 
     // Get total number of projects for this committee

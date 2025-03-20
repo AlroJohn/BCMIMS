@@ -18,7 +18,7 @@ model User {
   projectProposals  ProjectProposal[]   // Proposals posted by this user
   approvedBy        ApprovedBy[]        // Approvals done by this user
   votes             Vote[]
-    createdAt         DateTime            @default(now())
+  createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   @@map("users")
 }
@@ -71,7 +71,7 @@ model Vote {
   id         String          @id @default(uuid())
   userId     String
   proposalId String
-  vote       VoteStatus         // For example: true for 'yes' and false for 'no'
+  vote       ApprovedStatus        // For example: true for 'yes' and false for 'no'
   votedAt    DateTime        @default(now())
   comment    String
   user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -101,11 +101,6 @@ enum ApprovedStatus {
   Rejected
 }
 
-enum VoteStatus {
-  Approved
-  Rejected
-}
-
 enum UserRole {
   Admin
   Education
@@ -115,4 +110,5 @@ enum UserRole {
   PeaceOrder
   PublicWorks
   Women
+  None
 }

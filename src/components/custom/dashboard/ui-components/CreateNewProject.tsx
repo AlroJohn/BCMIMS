@@ -32,6 +32,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { useAuth } from "@/components/providers/auth-provider";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { SmsService } from "@/services/twilioService";
+// Import the SMS service
 
 // Define types
 type ProjectProposalType = {
@@ -70,7 +72,8 @@ export default function CreateNewProjectModal({
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [existingFileUrl, setExistingFileUrl] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  // Check if we're in edit mode - fixed variable definition
+  const isEditMode = isEditing && !!project;
   const { user, role } = useAuth(); // Get current user info
 
   // Initialize form with project data if in edit mode
@@ -93,6 +96,26 @@ export default function CreateNewProjectModal({
       setExistingFileUrl("");
     }
   }, [isEditing, project, isOpen]);
+
+  // Send SMS notification function
+  const sendSmsNotification = async (proposalData: any) => {
+    try {
+      // Use the SMS service to send notification
+      const result = await SmsService.sendProjectProposalNotification({
+        title: proposalData.title,
+        budget: proposalData.budget,
+        proposedDate: proposalData.proposedDate,
+      });
+
+      if (result.success) {
+        console.log("SMS notification sent successfully");
+      } else {
+        console.error("Failed to send SMS notification:", result.message);
+      }
+    } catch (error) {
+      console.error("Error sending SMS notification:", error);
+    }
+  };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -169,6 +192,15 @@ export default function CreateNewProjectModal({
           : result; // Use new project data for creations
 
         onSubmit(finalResult);
+      }
+
+      // Only send SMS for new projects
+      if (!isEditMode && dueDate) {
+        await sendSmsNotification({
+          title,
+          budget,
+          proposedDate: dueDate.toISOString(),
+        });
       }
 
       // Close the modal without refreshing the page

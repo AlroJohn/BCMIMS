@@ -38,7 +38,7 @@ export function NavMain({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Extract status query param (pending, approved, rejected)
+  // Extract status query param (e.g. pending, approved, rejected)
   const status = searchParams.get("status");
 
   return (
@@ -46,17 +46,17 @@ export function NavMain({
       <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) =>
+          // If this item has sub-items, we render a collapsible group
           item.items ? (
-            // Collapsible menu item with submenu
             <Collapsible
               key={item.title}
               asChild
+              // We open the collapsible if:
+              // - The item itself is active, OR
+              // - Any sub-item is active
               defaultOpen={
                 item.isActive ||
-                item.items.some(
-                  (subItem) =>
-                    subItem.isActive || pathname.startsWith(subItem.url)
-                )
+                item.items.some((subItem) => pathname.startsWith(subItem.url))
               }
               className="group/collapsible"
             >
@@ -64,10 +64,9 @@ export function NavMain({
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton
                     tooltip={item.title}
+                    // Highlight the top-level button if `pathname` starts with `item.url`
                     className={
-                      item.url.includes("project-proposals")
-                        ? "" // Do NOT gray out project-proposals
-                        : pathname.startsWith(item.url)
+                      pathname.startsWith(item.url)
                         ? "text-accent-foreground bg-gray-500/20 dark:bg-muted"
                         : ""
                     }
@@ -80,25 +79,29 @@ export function NavMain({
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     {item.items?.map((subItem) => {
-                      // Highlight "All Proposals" when no status is set
+                      // Extra logic to highlight "All Proposals" when no status is set
                       const isAllProposals =
-                        subItem.url.endsWith("project-proposals") && !status;
+                        subItem.url.includes("status=pending");
+
+                      // Instead of ignoring, we’ll check if the current path starts
+                      // with the subItem’s URL (and also handle the `status` param for proposals)
+                      const isSubActive =
+                        isAllProposals ||
+                        pathname.startsWith(subItem.url) ||
+                        (subItem.url.includes("status=pending") &&
+                          status === "pending") ||
+                        (subItem.url.includes("status=approved") &&
+                          status === "approved") ||
+                        (subItem.url.includes("status=rejected") &&
+                          status === "rejected");
 
                       return (
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton
                             asChild
+                            // Highlight sub-item if `pathname` matches
                             className={
-                              isAllProposals
-                                ? "text-accent-foreground bg-gray-500/20 dark:bg-muted"
-                                : subItem.url.includes("status=pending") &&
-                                  status === "pending"
-                                ? "text-accent-foreground bg-gray-500/20 dark:bg-muted"
-                                : subItem.url.includes("status=approved") &&
-                                  status === "approved"
-                                ? "text-accent-foreground bg-gray-500/20 dark:bg-muted"
-                                : subItem.url.includes("status=rejected") &&
-                                  status === "rejected"
+                              isSubActive
                                 ? "text-accent-foreground bg-gray-500/20 dark:bg-muted"
                                 : ""
                             }
@@ -115,16 +118,14 @@ export function NavMain({
               </SidebarMenuItem>
             </Collapsible>
           ) : (
-            // Non-collapsible menu item (single route)
+            // For single-route items (no children)
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 asChild
                 tooltip={item.title}
+                // Remove any exceptions and simply highlight if `pathname` starts with the item’s URL
                 className={
-                  item.url.includes("project-proposals") ||
-                  item.url.includes("dashboard")
-                    ? "" // Prevent graying out project-proposals and dashboard
-                    : pathname.startsWith(item.url)
+                  pathname.startsWith(item.url)
                     ? "text-accent-foreground bg-gray-500/20 dark:bg-muted"
                     : ""
                 }
