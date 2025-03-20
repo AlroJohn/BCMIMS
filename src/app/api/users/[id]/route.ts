@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase-client";
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: any
 ) {
     try {
         // Verify authentication
@@ -18,6 +18,15 @@ export async function GET(
                 { status: 401 }
             );
         }
+
+        // Only allow users to fetch their own data (or admins)
+        if (session.user.id !== params.id && session.user.app_metadata.role !== "Admin") {
+            return NextResponse.json(
+                { error: "Forbidden" },
+                { status: 403 }
+            );
+        }
+        // ... rest of the code ...
 
         // Only allow users to fetch their own data (or admins)
         if (session.user.id !== params.id && session.user.app_metadata.role !== "Admin") {

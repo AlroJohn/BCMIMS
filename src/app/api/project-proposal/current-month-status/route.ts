@@ -43,7 +43,8 @@ export async function GET(request: NextRequest) {
                 [UserRole.HealthServices]: "Health Services",
                 [UserRole.PeaceOrder]: "Peace Order",
                 [UserRole.PublicWorks]: "Public Works",
-                [UserRole.Women]: "Women"
+                [UserRole.Women]: "Women",
+                [UserRole.None]: "Sub Committee"
             };
 
             return displayMap[role];
