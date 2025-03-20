@@ -195,7 +195,7 @@ export default function CommitteeProjectProposalsTemplate({
 
   // Memoize filtered projects based on search and tab
   const filteredProjects = useMemo(() => {
-    let filtered = projectProposals.filter((project) => {
+    const filtered = projectProposals.filter((project) => {
       const matchesSearch =
         !searchTerm ||
         project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -227,8 +227,12 @@ export default function CommitteeProjectProposalsTemplate({
 
       // Sort by votes if there are votes
       if (a.votes.length > 0 || b.votes.length > 0) {
-        const aVotes = a.votes.filter((vote) => vote.vote === "Approved").length;
-        const bVotes = b.votes.filter((vote) => vote.vote === "Approved").length;
+        const aVotes = a.votes.filter(
+          (vote) => vote.vote === "Approved"
+        ).length;
+        const bVotes = b.votes.filter(
+          (vote) => vote.vote === "Approved"
+        ).length;
         return bVotes - aVotes; // Most to lowest votes
       }
 
