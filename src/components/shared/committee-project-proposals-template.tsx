@@ -195,7 +195,7 @@ export default function CommitteeProjectProposalsTemplate({
 
   // Memoize filtered projects based on search and tab
   const filteredProjects = useMemo(() => {
-    return projectProposals.filter((project) => {
+    let filtered = projectProposals.filter((project) => {
       const matchesSearch =
         !searchTerm ||
         project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -203,10 +203,41 @@ export default function CommitteeProjectProposalsTemplate({
 
       if (!matchesSearch) return false;
 
-      if (activeTab === "all") return true;
+      // For the "to-vote" tab, check if the project is pending and if the user hasn't voted yet
+      if (activeTab === "to-vote" && !isAdmin) {
+        const committeeVote = project.votes.find(
+          (vote) => vote.user.role === committeeInfo.name.replace(" & ", "")
+        );
+        return project.status === "Pending" && !committeeVote;
+      }
+
+      if (activeTab === "all" || activeTab === "to-vote") return true;
       return project.status.toLowerCase() === activeTab.toLowerCase();
     });
-  }, [projectProposals, searchTerm, activeTab]);
+
+    // Sorting logic
+    filtered.sort((a, b) => {
+      // Always show approved projects first
+      if (a.status === "Approved" && b.status !== "Approved") return -1;
+      if (b.status === "Approved" && a.status !== "Approved") return 1;
+
+      // Always show rejected projects last
+      if (a.status === "Rejected" && b.status !== "Rejected") return 1;
+      if (b.status === "Rejected" && a.status !== "Rejected") return -1;
+
+      // Sort by votes if there are votes
+      if (a.votes.length > 0 || b.votes.length > 0) {
+        const aVotes = a.votes.filter((vote) => vote.vote === "Approved").length;
+        const bVotes = b.votes.filter((vote) => vote.vote === "Approved").length;
+        return bVotes - aVotes; // Most to lowest votes
+      }
+
+      // Sort by dateProposed (oldest to newest)
+      return a.dateProposed.getTime() - b.dateProposed.getTime();
+    });
+
+    return filtered;
+  }, [projectProposals, searchTerm, activeTab, isAdmin, committeeInfo.name]);
 
   // Get current page projects
   const currentProjects = useMemo(() => {
