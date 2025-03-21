@@ -120,15 +120,18 @@ export function ProfileEditModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-lg h-[90dvh] overflow-hidden p-2">
+          <DialogHeader className="p-0">
             <DialogTitle>Edit Profile</DialogTitle>
             <DialogDescription>
               Update your profile information below
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-6 py-4">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 p-4 overflow-y-auto scroll-none"
+          >
             {/* Profile Image */}
             <div className="grid place-items-center">
               <div
@@ -168,7 +171,7 @@ export function ProfileEditModal({
             </div>
 
             {/* Form Fields Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
@@ -239,7 +242,7 @@ export function ProfileEditModal({
               </div>
 
               {/* Role (read-only) */}
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2 ">
                 <Label htmlFor="role">Role</Label>
                 <Input
                   id="role"
@@ -254,7 +257,7 @@ export function ProfileEditModal({
               </div>
             </div>
 
-            <DialogFooter className="pt-4 grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+            <DialogFooter className="p-0 grid grid-cols-2 gap-2 sm:flex sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
