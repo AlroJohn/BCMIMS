@@ -214,7 +214,7 @@ export default function CommitteeProjectProposalsTemplate({
       if (activeTab === "all" || activeTab === "to-vote") return true;
       return project.status.toLowerCase() === activeTab.toLowerCase();
     });
-
+    https://meet.google.com/smc-oiog-yvg
     // Sorting logic
     filtered.sort((a, b) => {
       // Always show approved projects first
