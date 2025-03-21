@@ -61,7 +61,7 @@ const data = {
       isActive: true,
     },
     {
-      title: "Overall budget",
+      title: "Total Appropriation",
       url: "/admin/budget-management",
       icon: Users,
       isActive: true,

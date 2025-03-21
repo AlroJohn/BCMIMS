@@ -17,7 +17,9 @@ interface ApprovedProposal {
 }
 
 export default function ManageBudget() {
-  const [approvedBudgets, setApprovedBudgets] = useState<ApprovedProposal[]>([]);
+  const [approvedBudgets, setApprovedBudgets] = useState<ApprovedProposal[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [activeTab, setActiveTab] = useState("approved");
@@ -33,7 +35,6 @@ export default function ManageBudget() {
         const data: ApprovedProposal[] = await response.json();
         console.log("Approved proposals data:", data);
         setApprovedBudgets(data);
-
       } catch (err: any) {
         console.error("Error fetching data:", err);
         setError(err);
@@ -48,7 +49,11 @@ export default function ManageBudget() {
   return (
     <SessionGuard requiredRoles={["Admin"]}>
       <div className="p-4 h-full">
-        {error && <div className="mb-4 p-2 bg-red-100 border text-red-700 rounded">Error: {error.message}</div>}
+        {error && (
+          <div className="mb-4 p-2 bg-red-100 border text-red-700 rounded">
+            Error: {error.message}
+          </div>
+        )}
 
         {loading ? (
           <div className="flex justify-center items-center h-64">
@@ -56,7 +61,11 @@ export default function ManageBudget() {
           </div>
         ) : (
           <div className="space-y-6">
-            <Tabs defaultValue="approved" className="w-full" onValueChange={setActiveTab}>
+            <Tabs
+              defaultValue="approved"
+              className="w-full"
+              onValueChange={setActiveTab}
+            >
               <div className="flex justify-between items-center mb-4">
                 <TabsList>
                   <TabsTrigger value="approved">Approved Budgets</TabsTrigger>
@@ -74,7 +83,6 @@ export default function ManageBudget() {
   );
 }
 
-
 // Extracted budget cards into a separate component for reuse
 function BudgetCards({ budgets }: { budgets: ApprovedProposal[] }) {
   return (
@@ -83,7 +91,9 @@ function BudgetCards({ budgets }: { budgets: ApprovedProposal[] }) {
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>No Approved Budgets</AlertTitle>
-          <AlertDescription>No project proposals have been approved yet.</AlertDescription>
+          <AlertDescription>
+            No project proposals have been approved yet.
+          </AlertDescription>
         </Alert>
       ) : (
         budgets.map((budget) => (
@@ -93,12 +103,18 @@ function BudgetCards({ budgets }: { budgets: ApprovedProposal[] }) {
                 <h2 className="text-lg font-bold">{budget.committee}</h2>
               </div>
               <p className="text-sm text-muted-foreground">
-                Approved Proposals: <span className="font-semibold">{budget.approvedProposalsCount}</span>
+                Approved Proposals:{" "}
+                <span className="font-semibold">
+                  {budget.approvedProposalsCount}
+                </span>
               </p>
               <p className="text-sm text-muted-foreground">
-                Overall Budget: <span className="font-semibold">₱{budget.totalApprovedBudget.toLocaleString()}</span>
+                Total Appropriation:{" "}
+                <span className="font-semibold">
+                  ₱{budget.totalApprovedBudget.toLocaleString()}
+                </span>
               </p>
-              <Progress value={(budget.totalApprovedBudget)} className="mt-2" />
+              <Progress value={budget.totalApprovedBudget} className="mt-2" />
             </CardContent>
           </Card>
         ))
