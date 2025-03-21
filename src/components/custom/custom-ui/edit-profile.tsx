@@ -130,7 +130,7 @@ export function ProfileEditModal({
 
           <form onSubmit={handleSubmit} className="space-y-6 py-4">
             {/* Profile Image */}
-            <div className="flex flex-col items-center justify-center">
+            <div className="grid place-items-center">
               <div
                 className="relative cursor-pointer group"
                 onClick={handleProfileImageClick}
@@ -167,100 +167,108 @@ export function ProfileEditModal({
               </Button>
             </div>
 
-            {/* Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your full name"
-                required
-              />
-            </div>
-
-            {/* Email (with update option) */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="email">Email</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEmailModalOpen(true)}
-                  className="h-7 px-2 text-xs"
-                >
-                  <Mail className="mr-1 h-3 w-3" />
-                  Change Email
-                </Button>
+            {/* Form Fields Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Name */}
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your full name"
+                  required
+                />
               </div>
-              <Input
-                id="email"
-                value={user.email}
-                readOnly
-                className="bg-muted"
-              />
-            </div>
 
-            {/* Phone */}
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Your phone number"
-              />
-            </div>
-
-            {/* Password update option */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label>Password</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPasswordModalOpen(true)}
-                  className="h-7 px-2 text-xs"
-                >
-                  <Lock className="mr-1 h-3 w-3" />
-                  Change Password
-                </Button>
+              {/* Email (with update option) */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="email">Email</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEmailModalOpen(true)}
+                    className="h-7 px-2 text-xs"
+                  >
+                    <Mail className="mr-1 h-3 w-3" />
+                    Change Email
+                  </Button>
+                </div>
+                <Input
+                  id="email"
+                  value={user.email}
+                  readOnly
+                  className="bg-muted"
+                />
               </div>
-              <Input
-                type="password"
-                value="••••••••"
-                readOnly
-                className="bg-muted"
-              />
+
+              {/* Phone */}
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Your phone number"
+                />
+              </div>
+
+              {/* Password update option */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>Password</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPasswordModalOpen(true)}
+                    className="h-7 px-2 text-xs"
+                  >
+                    <Lock className="mr-1 h-3 w-3" />
+                    Change Password
+                  </Button>
+                </div>
+                <Input
+                  type="password"
+                  value="••••••••"
+                  readOnly
+                  className="bg-muted"
+                />
+              </div>
+
+              {/* Role (read-only) */}
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="role">Role</Label>
+                <Input
+                  id="role"
+                  value={role || "No role assigned"}
+                  readOnly
+                  disabled
+                  className="bg-muted"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Role cannot be changed
+                </p>
+              </div>
             </div>
 
-            {/* Role (read-only) */}
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Input
-                id="role"
-                value={role || "No role assigned"}
-                readOnly
-                disabled
-                className="bg-muted"
-              />
-              <p className="text-xs text-muted-foreground">
-                Role cannot be changed
-              </p>
-            </div>
-
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-4 grid grid-cols-2 gap-2 sm:flex sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 disabled={isLoading}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full sm:w-auto"
+              >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Changes
               </Button>
