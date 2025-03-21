@@ -11,31 +11,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus, RefreshCw } from "lucide-react";
 
 import { toast } from "sonner";
 import { UserRole } from "@prisma/client";
-import { fetchUsers, updateUser } from "@/actions/update-user/route";
+import { fetchUsers } from "@/actions/update-user/update-manage-user";
 import AddUserModal from "../custom-ui/add-user";
+import EditUserModal from "../custom-ui/edit-user-management";
 
-// Simplified committee role mapping
+// Main role names
 const committeeNames = {
   [UserRole.Admin]: "Admin",
   [UserRole.Education]: "Committee on Education and Culture",
@@ -45,8 +30,54 @@ const committeeNames = {
   [UserRole.PeaceOrder]: "Committee on Peace and Order",
   [UserRole.PublicWorks]: "Committee on Public Works and Infrastructure",
   [UserRole.Women]: "Committee on Women, Children and Family",
-  [UserRole.None]: "Sub Committee",
 };
+
+// Sub-roles mapping by main role
+const subRoleNames = {
+  [UserRole.Admin]: "Sub-Admin",
+  [UserRole.Education]: "Sub-Education",
+  [UserRole.Environment]: "Sub-Environment",
+  [UserRole.Finance]: "Sub-Finance",
+  [UserRole.HealthServices]: "Sub-Health",
+  [UserRole.PeaceOrder]: "Sub-Peace",
+  [UserRole.PublicWorks]: "Sub-Public Works",
+  [UserRole.Women]: "Sub-Women",
+};
+
+const subRoleOptions = [
+  { value: "Admin:Sub-Admin", label: "Sub-Admin", mainRole: UserRole.Admin },
+  {
+    value: "Education:Sub-Education",
+    label: "Sub-Education",
+    mainRole: UserRole.Education,
+  },
+  {
+    value: "Environment:Sub-Environment",
+    label: "Sub-Environment",
+    mainRole: UserRole.Environment,
+  },
+  {
+    value: "Finance:Sub-Finance",
+    label: "Sub-Finance",
+    mainRole: UserRole.Finance,
+  },
+  {
+    value: "HealthServices:Sub-Health",
+    label: "Sub-Health",
+    mainRole: UserRole.HealthServices,
+  },
+  {
+    value: "PeaceOrder:Sub-Peace",
+    label: "Sub-Peace",
+    mainRole: UserRole.PeaceOrder,
+  },
+  {
+    value: "PublicWorks:Sub-Public Works",
+    label: "Sub-Public Works",
+    mainRole: UserRole.PublicWorks,
+  },
+  { value: "Women:Sub-Women", label: "Sub-Women", mainRole: UserRole.Women },
+];
 
 // User type definition
 interface User {
@@ -56,6 +87,8 @@ interface User {
   phone: string | null;
   profile: string | null;
   role: UserRole;
+  subRole?: boolean;
+  metadata?: any;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -65,19 +98,10 @@ const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Add User Modal state
+  // Modal states
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
-
-  // Edit dialog state
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editPhone, setEditPhone] = useState("");
-  const [editProfile, setEditProfile] = useState("");
-  const [editRole, setEditRole] = useState<UserRole>(UserRole.Admin);
-  const [profilePreview, setProfilePreview] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Fetch users on component mount
   useEffect(() => {
@@ -89,7 +113,20 @@ const UserManagement = () => {
     setLoading(true);
     try {
       const data = await fetchUsers();
-      setUsers(data as User[]);
+
+      // Process users to add sub-role information if stored in metadata
+      const processedUsers = (data as User[]).map((user) => {
+        // Extract sub-role name from metadata if it exists
+        const metadata = user.metadata || {};
+        const subRoleName = metadata.subRoleName;
+
+        return {
+          ...user,
+          subRoleName,
+        };
+      });
+
+      setUsers(processedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users");
@@ -101,86 +138,7 @@ const UserManagement = () => {
   // Handle user edit click
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
-    setEditName(user.name);
-    setEditPhone(user.phone || "");
-    setEditProfile(user.profile || "");
-    setEditRole(user.role);
-    setProfilePreview(user.profile);
     setIsEditOpen(true);
-  };
-
-  // Handle file upload for profile picture
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file size (max 25MB)
-      if (file.size > 25 * 1024 * 1024) {
-        toast.error("File is too large. Maximum size is 25MB.");
-        return;
-      }
-
-      setUploadingImage(true);
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        // Get base64 string
-        const base64String = reader.result as string;
-        setEditProfile(base64String);
-        setProfilePreview(base64String);
-        setUploadingImage(false);
-      };
-      reader.onerror = () => {
-        toast.error("Error reading file");
-        setUploadingImage(false);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Handle save user
-  const handleSaveUser = async () => {
-    if (!selectedUser) return;
-    if (uploadingImage) {
-      toast.error("Please wait for image processing to complete");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Make sure we have a base64 string for the profile picture
-      const profileData = editProfile ? editProfile : null;
-
-      // Use the server action to update the user
-      await updateUser({
-        id: selectedUser.id,
-        name: editName,
-        phone: editPhone,
-        profile: profileData,
-        role: editRole,
-      });
-
-      // Update local state
-      const updatedUsers = users.map((user) =>
-        user.id === selectedUser.id
-          ? {
-              ...user,
-              name: editName,
-              phone: editPhone,
-              profile: profileData,
-              role: editRole,
-            }
-          : user
-      );
-      setUsers(updatedUsers);
-      setIsEditOpen(false);
-      toast.success("User updated successfully");
-    } catch (error) {
-      console.error("Error updating user:", error);
-      toast.error("Failed to update user");
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   // Format date for display
@@ -205,6 +163,24 @@ const UserManagement = () => {
       .map((n) => n[0])
       .join("")
       .toUpperCase();
+  };
+
+  // Get display role name based on subRole flag
+  const getDisplayRole = (user: User) => {
+    // If user has subRole flag set to true
+    if (user.subRole === true) {
+      // First check if there's a specific subRoleName in metadata
+      if (user.metadata?.subRoleName) {
+        return user.metadata.subRoleName;
+      }
+      // Otherwise use the default sub-role name for their role
+      else if (subRoleNames[user.role]) {
+        return subRoleNames[user.role];
+      }
+    }
+
+    // If subRole is false or not defined, show the main role name
+    return committeeNames[user.role];
   };
 
   return (
@@ -273,7 +249,16 @@ const UserManagement = () => {
                       </div>
                     </TableCell>
                     <TableCell>{user.phone || "-"}</TableCell>
-                    <TableCell>{committeeNames[user.role]}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span>{getDisplayRole(user)}</span>
+                        {user.subRole && (
+                          <span className="text-xs text-blue-500">
+                            Sub-role
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{formatDate(user.updatedAt)}</TableCell>
                     <TableCell>
                       <Button size="sm" onClick={() => handleEditUser(user)}>
@@ -295,113 +280,13 @@ const UserManagement = () => {
         onSuccess={loadUsers}
       />
 
-      {/* Edit User Dialog */}
-      <Dialog
-        open={isEditOpen}
-        onOpenChange={(open) => {
-          if (!isSubmitting && !uploadingImage) {
-            setIsEditOpen(open);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            {/* Profile picture preview */}
-            <div className="flex justify-center mb-4">
-              {profilePreview ? (
-                <div className="w-24 h-24 rounded-full overflow-hidden">
-                  <img
-                    src={profilePreview}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-2xl text-gray-500">
-                    {editName ? editName.charAt(0).toUpperCase() : ""}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="profile-upload">Profile Picture</Label>
-              <Input
-                id="profile-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                disabled={uploadingImage}
-              />
-              <p className="text-xs text-gray-500">Maximum size: 25MB</p>
-              {uploadingImage && (
-                <div className="flex items-center mt-1 space-x-2">
-                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
-                  <span className="text-xs">Processing image...</span>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={editPhone}
-                onChange={(e) => setEditPhone(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select
-                value={editRole}
-                onValueChange={(value) => setEditRole(value as UserRole)}
-              >
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(committeeNames).map(([role, name]) => (
-                    <SelectItem key={role} value={role as UserRole}>
-                      {name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditOpen(false)}
-              disabled={isSubmitting || uploadingImage}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSaveUser}
-              disabled={isSubmitting || uploadingImage}
-            >
-              {isSubmitting ? "Saving..." : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Edit User Modal */}
+      <EditUserModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        user={selectedUser}
+        onSuccess={loadUsers}
+      />
     </div>
   );
 };

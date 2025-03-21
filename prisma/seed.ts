@@ -1,6 +1,7 @@
 import { PrismaClient, UserRole } from '@prisma/client'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
+import { sub } from 'date-fns'
 
 const prisma = new PrismaClient()
 
@@ -44,14 +45,14 @@ async function main() {
 
   // Create Users
   const customUsersData = [
-    { name: 'Admin User', email: 'admin@example.com', password: 'test', phone: '+639630305154', role: UserRole.Admin },
-    { name: 'Education User', email: 'education@example.com', password: 'test', phone: '+639123456789', role: UserRole.Education },
-    { name: 'Environment User', email: 'environment@example.com', password: 'test', phone: '+639987654321', role: UserRole.Environment },
-    { name: 'Finance User', email: 'finance@example.com', password: 'test', phone: '+639112233445', role: UserRole.Finance },
-    { name: 'Health Services User', email: 'healthservices@example.com', password: 'test', phone: '+639556677889', role: UserRole.HealthServices },
-    { name: 'Peace Order User', email: 'peaceorder@example.com', password: 'test', phone: '+639998877665', role: UserRole.PeaceOrder },
-    { name: 'Public Works User', email: 'publicworks@example.com', password: 'test', phone: '+639334455667', role: UserRole.PublicWorks },
-    { name: 'Women User', email: 'women@example.com', password: 'test', phone: '+639776655443', role: UserRole.Women },
+    { name: 'Admin User', email: 'admin@example.com', password: 'test', phone: '+639630305154', role: UserRole.Admin, subRole: false },
+    { name: 'Education User', email: 'education@example.com', password: 'test', phone: '+639123456789', role: UserRole.Education, subRole: false },
+    { name: 'Environment User', email: 'environment@example.com', password: 'test', phone: '+639987654321', role: UserRole.Environment, subRole: false },
+    { name: 'Finance User', email: 'finance@example.com', password: 'test', phone: '+639112233445', role: UserRole.Finance, subRole: false },
+    { name: 'Health Services User', email: 'healthservices@example.com', password: 'test', phone: '+639556677889', role: UserRole.HealthServices, subRole: false },
+    { name: 'Peace Order User', email: 'peaceorder@example.com', password: 'test', phone: '+639998877665', role: UserRole.PeaceOrder, subRole: false },
+    { name: 'Public Works User', email: 'publicworks@example.com', password: 'test', phone: '+639334455667', role: UserRole.PublicWorks, subRole: false },
+    { name: 'Women User', email: 'women@example.com', password: 'test', phone: '+639776655443', role: UserRole.Women, subRole: false },
   ]
 
   const users = await Promise.all(
@@ -72,6 +73,7 @@ async function main() {
           password: hashedPassword,
           phone: user.phone,
           role: user.role,
+          subRole: user.subRole, // Add this line to include the subRole field
         },
       })
     })

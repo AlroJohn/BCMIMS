@@ -299,7 +299,7 @@ const ProjectProposals = () => {
               <th className="text-left p-2 whitespace-nowrap">Project</th>
               <th className="text-left p-2 whitespace-nowrap">Due Date</th>
               <th className="text-left p-2 whitespace-nowrap">Status</th>
-              <th className="text-left p-2 whitespace-nowrap">Budget</th>
+              <th className="text-left p-2 whitespace-nowrap">Total Budget</th>
               <th className="text-left p-2 whitespace-nowrap">Remarks</th>
             </tr>
           </thead>

@@ -14,10 +14,12 @@ model User {
   name              String
   phone             String?             // For SMS notifications
   profile           String?
-  role              UserRole 
+  role              UserRole
+  subRole           Boolean?             // Optional field for more specific role
   projectProposals  ProjectProposal[]   // Proposals posted by this user
   approvedBy        ApprovedBy[]        // Approvals done by this user
   votes             Vote[]
+  metadata          Json?               // Store additional user data
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   @@map("users")
@@ -110,5 +112,4 @@ enum UserRole {
   PeaceOrder
   PublicWorks
   Women
-  None
 }

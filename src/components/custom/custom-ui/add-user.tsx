@@ -17,12 +17,15 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectSeparator,
+  SelectGroup,
+  SelectLabel,
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { UserRole } from "@prisma/client";
 import { createUser } from "@/actions/update-user/create-user";
 
-// Committee role mapping (using the same one from UserManagement)
+// Committee role mapping
 const committeeNames = {
   [UserRole.Admin]: "Admin",
   [UserRole.Education]: "Committee on Education and Culture",
@@ -32,8 +35,43 @@ const committeeNames = {
   [UserRole.PeaceOrder]: "Committee on Peace and Order",
   [UserRole.PublicWorks]: "Committee on Public Works and Infrastructure",
   [UserRole.Women]: "Committee on Women, Children and Family",
-  [UserRole.None]: "Sub Committee",
 };
+
+// Sub-roles mapping with the same main role as key
+const subRoleOptions = [
+  { value: "Admin:Sub-Admin", label: "Sub-Admin", mainRole: UserRole.Admin },
+  {
+    value: "Education:Sub-Education",
+    label: "Sub-Education",
+    mainRole: UserRole.Education,
+  },
+  {
+    value: "Environment:Sub-Environment",
+    label: "Sub-Environment",
+    mainRole: UserRole.Environment,
+  },
+  {
+    value: "Finance:Sub-Finance",
+    label: "Sub-Finance",
+    mainRole: UserRole.Finance,
+  },
+  {
+    value: "HealthServices:Sub-Health",
+    label: "Sub-Health",
+    mainRole: UserRole.HealthServices,
+  },
+  {
+    value: "PeaceOrder:Sub-Peace",
+    label: "Sub-Peace",
+    mainRole: UserRole.PeaceOrder,
+  },
+  {
+    value: "PublicWorks:Sub-Public Works",
+    label: "Sub-Public Works",
+    mainRole: UserRole.PublicWorks,
+  },
+  { value: "Women:Sub-Women", label: "Sub-Women", mainRole: UserRole.Women },
+];
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -52,7 +90,7 @@ export default function AddUserModal({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
-  const [role, setRole] = useState<UserRole>(UserRole.Education); // Default role
+  const [selectedRole, setSelectedRole] = useState("");
   const [profile, setProfile] = useState<string | null>(null);
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
 
@@ -66,6 +104,7 @@ export default function AddUserModal({
     email?: string;
     password?: string;
     confirmPassword?: string;
+    role?: string;
   }>({});
 
   // Reset form state
@@ -75,10 +114,31 @@ export default function AddUserModal({
     setPassword("");
     setConfirmPassword("");
     setPhone("");
-    setRole(UserRole.Education);
+    setSelectedRole("");
     setProfile(null);
     setProfilePreview(null);
     setErrors({});
+  };
+
+  // Check if the selected role is a sub-role
+  const isSubRoleSelected = selectedRole.includes(":");
+
+  // Parse the selected role to determine main role and sub-role
+  const parseSelectedRole = () => {
+    // For sub-roles, format is "mainRole:subRole"
+    if (isSubRoleSelected) {
+      const parts = selectedRole.split(":");
+      return {
+        role: parts[0] as UserRole,
+        subRoleName: parts[1],
+      };
+    } else {
+      // For main roles, just return the role itself
+      return {
+        role: selectedRole as UserRole,
+        subRoleName: undefined,
+      };
+    }
   };
 
   // Handle file upload for profile picture
@@ -125,12 +185,16 @@ export default function AddUserModal({
 
     if (!password) {
       newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+    } else if (password.length < 4) {
+      newErrors.password = "Password must be at least 4 characters";
     }
 
     if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = "Passwords don't match";
+    }
+
+    if (!selectedRole) {
+      newErrors.role = "Role is required";
     }
 
     setErrors(newErrors);
@@ -153,6 +217,13 @@ export default function AddUserModal({
     setIsSubmitting(true);
 
     try {
+      // Parse the selected role value
+      const { role, subRoleName } = parseSelectedRole();
+
+      // Create metadata for storing sub-role name if selected
+      const metadata =
+        isSubRoleSelected && subRoleName ? { subRoleName } : undefined;
+
       await createUser({
         name,
         email,
@@ -160,6 +231,8 @@ export default function AddUserModal({
         phone: phone || null,
         profile,
         role,
+        subRole: isSubRoleSelected, // Set the subRole boolean field
+        metadata, // Store the sub-role name in metadata
       });
 
       toast.success("User created successfully");
@@ -174,6 +247,12 @@ export default function AddUserModal({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Handle role change
+  const handleRoleChange = (value: string) => {
+    setSelectedRole(value);
+    // The isSubRoleSelected variable will update automatically based on the new value
   };
 
   return (
@@ -308,27 +387,54 @@ export default function AddUserModal({
             />
           </div>
 
-          {/* Role field */}
+          {/* Flat Role Selection using SelectGroup */}
           <div className="space-y-2">
             <Label htmlFor="role">
               Role <span className="text-red-500">*</span>
             </Label>
             <Select
-              value={role}
-              onValueChange={(value) => setRole(value as UserRole)}
+              value={selectedRole}
+              onValueChange={handleRoleChange}
               disabled={isSubmitting}
             >
               <SelectTrigger id="role">
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(committeeNames).map(([roleValue, name]) => (
-                  <SelectItem key={roleValue} value={roleValue as UserRole}>
-                    {name}
-                  </SelectItem>
-                ))}
+                {/* Main roles group */}
+                <SelectGroup>
+                  <SelectLabel>Main Roles</SelectLabel>
+                  {Object.entries(committeeNames).map(([roleKey, roleName]) => (
+                    <SelectItem key={roleKey} value={roleKey}>
+                      {roleName}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+
+                <SelectSeparator />
+
+                {/* Sub-roles group */}
+                <SelectGroup>
+                  <SelectLabel>Sub Roles</SelectLabel>
+                  {subRoleOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
+            {errors.role && (
+              <p className="text-sm text-red-500">{errors.role}</p>
+            )}
+
+            {/* Show the subRole value that will be set */}
+            {selectedRole && (
+              <p className="text-xs text-blue-500 mt-1">
+                subRole will be set to:{" "}
+                <strong>{isSubRoleSelected ? "true" : "false"}</strong>
+              </p>
+            )}
           </div>
 
           <DialogFooter className="pt-4">

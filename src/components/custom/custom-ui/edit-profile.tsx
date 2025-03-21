@@ -15,13 +15,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
+
+import { EmailUpdateModal, PasswordUpdateModal } from "./email-password";
 import { updateUserProfile } from "@/actions/update-user/update-own";
 
 interface ProfileEditModalProps {
   user: User;
-  role: string | null; // Fixed type: string | null instead of User
+  role: string | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -38,6 +40,10 @@ export function ProfileEditModal({
   const [profile, setProfile] = useState<string | null>(user.profile);
   const [previewImage, setPreviewImage] = useState<string | null>(user.profile);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // State for email and password modals
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
 
   // Reset form when user changes or modal opens
   useEffect(() => {
@@ -112,123 +118,171 @@ export function ProfileEditModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Edit Profile</DialogTitle>
-          <DialogDescription>
-            Update your profile information below
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>
+              Update your profile information below
+            </DialogDescription>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          {/* Profile Image */}
-          <div className="flex flex-col items-center justify-center">
-            <div
-              className="relative cursor-pointer group"
-              onClick={handleProfileImageClick}
-            >
-              <Avatar className="h-24 w-24">
-                <AvatarImage
-                  className="object-cover"
-                  src={previewImage || undefined}
-                  alt={name}
-                />
-                <AvatarFallback className="text-lg">
-                  {user?.name ? getInitials(user.name) : "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Camera className="h-8 w-8 text-white" />
+          <form onSubmit={handleSubmit} className="space-y-6 py-4">
+            {/* Profile Image */}
+            <div className="flex flex-col items-center justify-center">
+              <div
+                className="relative cursor-pointer group"
+                onClick={handleProfileImageClick}
+              >
+                <Avatar className="h-24 w-24">
+                  <AvatarImage
+                    className="object-cover"
+                    src={previewImage || undefined}
+                    alt={name}
+                  />
+                  <AvatarFallback className="text-lg">
+                    {user?.name ? getInitials(user.name) : "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera className="h-8 w-8 text-white" />
+                </div>
               </div>
+              <Input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                className="mt-2"
+                onClick={handleProfileImageClick}
+              >
+                Change Photo
+              </Button>
             </div>
-            <Input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/*"
-              className="hidden"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              type="button"
-              className="mt-2"
-              onClick={handleProfileImageClick}
-            >
-              Change Photo
-            </Button>
-          </div>
 
-          {/* Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your full name"
-              required
-            />
-          </div>
+            {/* Name */}
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your full name"
+                required
+              />
+            </div>
 
-          {/* Email (read-only) */}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              value={user.email}
-              readOnly
-              disabled
-              className="bg-muted"
-            />
-            <p className="text-xs text-muted-foreground">
-              Email cannot be changed
-            </p>
-          </div>
+            {/* Email (with update option) */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="email">Email</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEmailModalOpen(true)}
+                  className="h-7 px-2 text-xs"
+                >
+                  <Mail className="mr-1 h-3 w-3" />
+                  Change Email
+                </Button>
+              </div>
+              <Input
+                id="email"
+                value={user.email}
+                readOnly
+                className="bg-muted"
+              />
+            </div>
 
-          {/* Phone */}
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              id="phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Your phone number"
-            />
-          </div>
+            {/* Phone */}
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Your phone number"
+              />
+            </div>
 
-          {/* Role (read-only) */}
-          <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Input
-              id="role"
-              value={role || "No role assigned"}
-              readOnly
-              disabled
-              className="bg-muted"
-            />
-            <p className="text-xs text-muted-foreground">
-              Role cannot be changed
-            </p>
-          </div>
+            {/* Password update option */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label>Password</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPasswordModalOpen(true)}
+                  className="h-7 px-2 text-xs"
+                >
+                  <Lock className="mr-1 h-3 w-3" />
+                  Change Password
+                </Button>
+              </div>
+              <Input
+                type="password"
+                value="••••••••"
+                readOnly
+                className="bg-muted"
+              />
+            </div>
 
-          <DialogFooter className="pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            {/* Role (read-only) */}
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Input
+                id="role"
+                value={role || "No role assigned"}
+                readOnly
+                disabled
+                className="bg-muted"
+              />
+              <p className="text-xs text-muted-foreground">
+                Role cannot be changed
+              </p>
+            </div>
+
+            <DialogFooter className="pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Email Update Modal */}
+      <EmailUpdateModal
+        userId={user.id}
+        currentEmail={user.email}
+        isOpen={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+      />
+
+      {/* Password Update Modal */}
+      <PasswordUpdateModal
+        userId={user.id}
+        isOpen={passwordModalOpen}
+        onClose={() => setPasswordModalOpen(false)}
+      />
+    </>
   );
 }

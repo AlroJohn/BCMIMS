@@ -1,5 +1,3 @@
-// actions/update-user/create-user.ts
-
 "use server";
 
 import { prisma } from "@/lib/prisma";
@@ -15,12 +13,14 @@ interface CreateUserParams {
   phone: string | null;
   profile: string | null;
   role: UserRole;
+  subRole?: boolean; // Map directly to the subRole field in the User model
+  metadata?: any; // For storing sub-role name or other information
 }
 
 // Create user function that handles Supabase auth and database creation
 export async function createUser(data: CreateUserParams) {
   try {
-    const { name, email, password, phone, profile, role } = data;
+    const { name, email, password, phone, profile, role, subRole, metadata } = data;
 
     // Validate required fields
     if (!name || !email || !password || !role) {
@@ -36,16 +36,21 @@ export async function createUser(data: CreateUserParams) {
       throw new Error("Email already in use");
     }
 
+    // Prepare user metadata for Supabase
+    const userMetadata = {
+      name,
+      role,
+      subRole: subRole || false,
+      ...(metadata || {}),
+    };
+
     // 1. Create user in Supabase Auth using the admin client
     const { data: authData, error: authError } =
       await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true, // Auto confirm the email
-        user_metadata: {
-          name,
-          role,
-        },
+        user_metadata: userMetadata,
       });
 
     if (authError) {
@@ -67,6 +72,8 @@ export async function createUser(data: CreateUserParams) {
         phone,
         profile,
         role,
+        subRole: subRole || false, // Set the subRole field directly
+        metadata, // Store additional info in metadata
       },
     });
 
@@ -80,7 +87,7 @@ export async function createUser(data: CreateUserParams) {
   }
 }
 
-// fetchUsers function remains unchanged
+// Update fetchUsers to include the subRole field
 export async function fetchUsers() {
   try {
     const users = await prisma.user.findMany({
@@ -91,6 +98,8 @@ export async function fetchUsers() {
         phone: true,
         profile: true,
         role: true,
+        subRole: true, // Include the subRole field
+        metadata: true, // Also include metadata for any additional info
         createdAt: true,
         updatedAt: true,
       },
@@ -98,6 +107,7 @@ export async function fetchUsers() {
         name: "asc",
       },
     });
+
     return users;
   } catch (error) {
     console.error("Error fetching users:", error);
