@@ -35,13 +35,12 @@ export async function GET(request: NextRequest) {
         },
       });
       
-      if (user && user.pendingEmail === data.user.email) {
+      if (user && data.user.email) {
         // Update the main email in Prisma
         await prisma.user.update({
           where: { id: user.id },
           data: {
             email: data.user.email,
-            pendingEmail: null,
             updatedAt: new Date(),
           },
         });
