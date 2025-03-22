@@ -3,6 +3,8 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import NotificationService from '@/services/project-notification-service';
+
 
 export async function PUT(request: Request) {
   try {
@@ -26,15 +28,15 @@ export async function PUT(request: Request) {
     // Cast the status to the enum type
     const approvedStatus = status as 'Pending' | 'Approved' | 'Rejected';
 
+    // Update the approval status
     const updatedApproval = await prisma.approvedBy.upsert({
       where: {
-        // Make sure your Prisma schema defines a composite unique constraint with this name.
         userId_proposalId: { userId, proposalId },
       },
       update: {
         status: approvedStatus,
         comment,
-        updatedAt: new Date(), // This will update the timestamp if the record exists.
+        updatedAt: new Date(),
       },
       create: {
         userId,
@@ -45,18 +47,25 @@ export async function PUT(request: Request) {
       },
     });
 
+    // Only send notifications for Approved or Rejected status
+    if (approvedStatus === 'Approved' || approvedStatus === 'Rejected') {
+      // Send notification about the status change
+      await NotificationService.sendProjectStatusNotification(
+        proposalId,
+        approvedStatus,
+        comment
+      );
+    }
+
     // Revalidate paths that might display project data
     revalidatePath('/admin/project-proposals');
-    // revalidatePath('/projects');
-    // revalidatePath(`/projects/${proposalId}`);
 
-    // You can also revalidate committee-specific paths if needed
-    // Get the project details to determine the committee
+    // Get the project to revalidate committee-specific paths
     const project = await prisma.projectProposal.findUnique({
-      where: { id: proposalId },
-      select: { committee: true }
+      where: { id: proposalId }
     });
 
+    // Revalidate committee-specific paths if needed
     if (project) {
       revalidatePath(`/committee/${project.committee.toLowerCase()}`);
     }

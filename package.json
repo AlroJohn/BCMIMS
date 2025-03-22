@@ -55,6 +55,7 @@
     "sonner": "^2.0.1",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
+    "telerivet": "^1.7.0",
     "twilio": "^5.5.0",
     "zod": "^3.24.2"
   },

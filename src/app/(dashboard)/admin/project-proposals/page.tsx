@@ -1,8 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,13 +15,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import SessionGuard from "@/components/custom/guard/session-guard";
-
-type Project = {
-  id: string;
-  name: string;
-};
 import CommitteeProjectProposalsTemplate from "@/components/shared/committee-project-proposals-template";
 import { useAuth } from "@/components/providers/auth-provider";
+import { toast } from "sonner";
+import { Project } from "@/components/custom/admin/Committee-projects-components/ProjectDetails";
 
 export default function CaptainProjectProposals() {
   const searchParams = useSearchParams();
@@ -38,6 +34,7 @@ export default function CaptainProjectProposals() {
   const [actionComplete, setActionComplete] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
 
   // Function to handle opening the approval dialog
@@ -67,6 +64,7 @@ export default function CaptainProjectProposals() {
   // Function to handle final approval
   const confirmApproval = async () => {
     if (!selectedProject) return;
+    setIsSubmitting(true);
     try {
       const response = await fetch("/api/project-proposal/project-status", {
         method: "PUT",
@@ -90,6 +88,7 @@ export default function CaptainProjectProposals() {
 
       // Show success message
       setActionComplete(true);
+      toast.success("Project Approved");
 
       setTimeout(() => {
         setShowApprovalDialog(false);
@@ -99,12 +98,20 @@ export default function CaptainProjectProposals() {
     } catch (error) {
       console.error("Approval error:", error);
       setErrorMessage("An unexpected error occurred");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Function to handle final rejection
   const confirmRejection = async () => {
     if (!selectedProject) return;
+    if (!rejectionReason.trim()) {
+      setErrorMessage("Please provide a reason for rejection");
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
       const response = await fetch("/api/project-proposal/project-status", {
         method: "PUT",
@@ -128,6 +135,7 @@ export default function CaptainProjectProposals() {
 
       // Show success message
       setActionComplete(true);
+      toast.success("Project Rejected");
 
       setTimeout(() => {
         setShowRejectionDialog(false);
@@ -137,6 +145,8 @@ export default function CaptainProjectProposals() {
     } catch (error) {
       console.error("Rejection error:", error);
       setErrorMessage("An unexpected error occurred");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -168,7 +178,8 @@ export default function CaptainProjectProposals() {
               <CheckCircle className="h-4 w-4 text-green-600" />
               <AlertTitle>Success!</AlertTitle>
               <AlertDescription>
-                The project has been approved successfully.
+                The project has been approved successfully and a notification
+                has been sent.
               </AlertDescription>
             </Alert>
           ) : (
@@ -199,8 +210,8 @@ export default function CaptainProjectProposals() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Important</AlertTitle>
                 <AlertDescription>
-                  This action will mark the project as approved and it will move
-                  to implementation phase.
+                  This action will mark the project as approved, and an SMS
+                  notification will be sent to the project owner.
                 </AlertDescription>
               </Alert>
             </div>
@@ -212,6 +223,7 @@ export default function CaptainProjectProposals() {
                 <Button
                   variant="outline"
                   onClick={() => setShowApprovalDialog(false)}
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </Button>
@@ -219,8 +231,9 @@ export default function CaptainProjectProposals() {
                   variant="default"
                   className="bg-green-600 hover:bg-green-700"
                   onClick={confirmApproval}
+                  disabled={isSubmitting}
                 >
-                  Confirm Approval
+                  {isSubmitting ? "Processing..." : "Confirm Approval"}
                 </Button>
               </>
             )}
@@ -243,7 +256,8 @@ export default function CaptainProjectProposals() {
               <XCircle className="h-4 w-4 text-red-600" />
               <AlertTitle>Project Rejected</AlertTitle>
               <AlertDescription>
-                The project has been rejected successfully.
+                The project has been rejected successfully and a notification
+                has been sent.
               </AlertDescription>
             </Alert>
           ) : (
@@ -280,7 +294,7 @@ export default function CaptainProjectProposals() {
                 <AlertTitle>Warning</AlertTitle>
                 <AlertDescription>
                   This action will mark the project as rejected. The committee
-                  will be notified of your decision.
+                  will be notified of your decision via SMS.
                 </AlertDescription>
               </Alert>
             </div>
@@ -292,15 +306,16 @@ export default function CaptainProjectProposals() {
                 <Button
                   variant="outline"
                   onClick={() => setShowRejectionDialog(false)}
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </Button>
                 <Button
                   variant="destructive"
                   onClick={confirmRejection}
-                  disabled={!rejectionReason.trim()}
+                  disabled={!rejectionReason.trim() || isSubmitting}
                 >
-                  Confirm Rejection
+                  {isSubmitting ? "Processing..." : "Confirm Rejection"}
                 </Button>
               </>
             )}

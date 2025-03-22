@@ -98,6 +98,9 @@ export default function CreateNewProjectModal({
   }, [isEditing, project, isOpen]);
 
   // Send SMS notification function
+  // Replace the existing sendSmsNotification function in CreateNewProjectModal
+
+  // Send SMS notification function
   const sendSmsNotification = async (proposalData: any) => {
     try {
       // Use the SMS service to send notification
@@ -110,10 +113,11 @@ export default function CreateNewProjectModal({
       if (result.success) {
         console.log("SMS notification sent successfully");
       } else {
-        console.error("Failed to send SMS notification:", result.message);
+        console.error("Error sending admin notification:", result.error);
       }
     } catch (error) {
       console.error("Error sending SMS notification:", error);
+      // Don't throw the error - just log it so it doesn't block the form submission
     }
   };
 
