@@ -55,6 +55,12 @@ const data = {
       isActive: true,
     },
     {
+      title: "Projects",
+      url: "/admin/projects",
+      icon: FileText,
+      isActive: true,
+    },
+    {
       title: "Manage Users",
       url: "/admin/manage-user",
       icon: Users,

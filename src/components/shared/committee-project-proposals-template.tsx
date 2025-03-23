@@ -711,7 +711,7 @@ export default function CommitteeProjectProposalsTemplate({
         </Tabs>
       </Card>
 
-      {/* Project Details Dialog */}
+      {/* Project Details Dialog */}a
       <ProjectDetailsDialog
         open={showProjectDetails}
         onOpenChange={setShowProjectDetails}
