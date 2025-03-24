@@ -57,7 +57,7 @@ async function sendSMS(to: string, message: string) {
 // Helper function to format phone number
 function formatPhoneNumber(phone: string): string {
   // Remove any non-digit characters except the + sign at the beginning
-  let formattedPhone = phone.trim();
+  const formattedPhone = phone.trim();
 
   // If it already starts with +63, return as is
   if (formattedPhone.startsWith('+63')) {
