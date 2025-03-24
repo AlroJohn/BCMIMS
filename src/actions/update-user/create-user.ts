@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { supabaseAdmin } from "@/lib/supabase-admin"; // Import the admin client
 import { UserRole } from "@prisma/client";
+import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
 // Type definition for creating a user
@@ -61,13 +62,14 @@ export async function createUser(data: CreateUserParams) {
     if (!authData.user) {
       throw new Error("Failed to create user in authentication system");
     }
-
+    const hashedPassword = await bcrypt.hash(password, 10)
     // 2. Create user in our database with the same ID from Supabase
     const user = await prisma.user.create({
+
       data: {
         id: authData.user.id,
         email,
-        password: "supabase-auth", // We don't store actual password hash
+        password: hashedPassword, // We don't store actual password hash
         name,
         phone,
         profile,
