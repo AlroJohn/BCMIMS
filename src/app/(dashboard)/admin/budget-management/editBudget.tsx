@@ -57,7 +57,7 @@ export default function EditBudgetModal({
 
     // Allow zero budget, only validate negative values
     if (totalBudget < 0) {
-      errors.totalBudget = "Total budget cannot be negative";
+      errors.totalBudget = "budget cannot be negative";
     }
 
     if (allocatedBudget < 0) {
