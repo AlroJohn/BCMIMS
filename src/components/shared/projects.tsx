@@ -29,6 +29,7 @@ import ProjectDetailsDialog, { Project, ProjectVote } from "../custom/admin/Comm
 import { useAuth } from "../providers/auth-provider";
 import { determinePriority } from "../custom/admin/Committee-projects-components/ProjectUtiliry";
 import Badge from "../custom/admin/Committee-projects-components/Badge";
+import { FileText } from "lucide-react";
 
 // Define an interface for the vote data returned by your API
 interface VoteData {
@@ -218,13 +219,16 @@ export default function ProjectTable() {
                       <TableCell>{proposal.status}</TableCell>
                       <TableCell>
                         <Button
-                          variant="link"
+                          size="sm"
+                          variant="outline"
+                          className="flex items-center gap-1"
                           onClick={() => {
                             setSelectedProject(project);
                             setIsModalOpen(true);
                           }}
                         >
-                          View Details
+                          <FileText className="h-4 w-4" />
+                          <span className="hidden sm:inline">View Details</span>
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -301,7 +305,7 @@ export default function ProjectTable() {
           selectedProject={selectedProject}
           isAdmin={isAdmin}
           hasVoted={() => false}
-          openVoteDialog={() => {}}
+          openVoteDialog={() => { }}
         />
       )}
     </>
