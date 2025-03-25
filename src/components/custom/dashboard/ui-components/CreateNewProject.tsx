@@ -233,7 +233,7 @@ export default function CreateNewProjectModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !isSubmitting && onClose()}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {isEditing
@@ -250,8 +250,8 @@ export default function CreateNewProjectModal({
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right">
-                Title*
+              <Label htmlFor="title" className="">
+                AIP reference code*
               </Label>
               <Input
                 id="title"
@@ -284,7 +284,7 @@ export default function CreateNewProjectModal({
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="budget" className="text-right">
-                Budget (₱)*
+                Total Cost (₱)*
               </Label>
               <Input
                 id="budget"
@@ -317,7 +317,7 @@ export default function CreateNewProjectModal({
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="dueDate" className="text-right">
-                Due Date*
+                Date completion
               </Label>
               <div className="col-span-3">
                 <Popover>

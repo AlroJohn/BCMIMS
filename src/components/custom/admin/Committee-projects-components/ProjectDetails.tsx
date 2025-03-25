@@ -43,6 +43,8 @@ export type Project = {
   documentTitle: string;
   documentUrl: string;
   dueDate: Date;
+  createdAt: Date;
+  updatedAt: Date;
   dateProposed: Date;
   status: string;
   rejectionReason: string | null;

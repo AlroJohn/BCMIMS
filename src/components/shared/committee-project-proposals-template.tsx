@@ -140,6 +140,8 @@ export default function CommitteeProjectProposalsTemplate({
 
         return {
           id: p.id || "unknown-id",
+          createdAt: p.createdAt,
+          updatedAt: p.updatedAt,
           name: p.title || "Untitled Project",
           description: p.description || "",
           committee: committeeObj.name,
@@ -406,7 +408,9 @@ export default function CommitteeProjectProposalsTemplate({
     const defaultColumns = [
       { key: "project", header: "Project" },
       { key: "committee", header: "Committee" },
+      { key: "StartDate", header: "Start Date" },
       { key: "dueDate", header: "Due Date" },
+      { key: "ExtendDate", header: "Extended Date" },
     ];
 
     // Additional columns based on tab
@@ -467,22 +471,54 @@ export default function CommitteeProjectProposalsTemplate({
         );
       case "committee":
         return project.committee;
+      case "StartDate":
+        const startDate = project.createdAt
+          ? new Date(project.createdAt)
+          : null;
+        return (
+          <div>
+            {startDate && !isNaN(startDate.getTime())
+              ? startDate.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "N/A"}
+          </div>
+        );
       case "dueDate":
+        const diffDays = Math.ceil(
+          (project.dueDate.getTime() - new Date().getTime()) /
+            (1000 * 60 * 60 * 24)
+        );
         return (
           <div>
             {project.dueDate.toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
+              year: "numeric",
             })}
             {activeTab !== "approved" && activeTab !== "rejected" && (
               <div className="text-xs text-gray-500">
-                {Math.ceil(
-                  (project.dueDate.getTime() - new Date().getTime()) /
-                    (1000 * 60 * 60 * 24)
-                )}{" "}
-                days left
+                {diffDays <= 0 ? "Due" : `${diffDays} days left`}
               </div>
             )}
+          </div>
+        );
+
+      case "ExtendDate":
+        const extendDate = project.updatedAt
+          ? new Date(project.updatedAt)
+          : null;
+        return (
+          <div>
+            {extendDate && !isNaN(extendDate.getTime())
+              ? extendDate.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "N/A"}
           </div>
         );
       case "priority":
@@ -711,7 +747,7 @@ export default function CommitteeProjectProposalsTemplate({
         </Tabs>
       </Card>
 
-      {/* Project Details Dialog */}a
+      {/* Project Details Dialog */}
       <ProjectDetailsDialog
         open={showProjectDetails}
         onOpenChange={setShowProjectDetails}

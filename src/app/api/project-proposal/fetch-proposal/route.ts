@@ -66,6 +66,7 @@ export async function GET() {
         })),
         proposedDate: proposal.proposedDate.toISOString(),
         createdAt: proposal.createdAt?.toISOString(),
+        updatedAt: proposal.updatedAt?.toISOString(),
         voteCount: proposal.votes.length,
       };
     });
