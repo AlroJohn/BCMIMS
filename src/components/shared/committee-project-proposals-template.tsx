@@ -409,7 +409,7 @@ export default function CommitteeProjectProposalsTemplate({
       { key: "project", header: "Project" },
       { key: "committee", header: "Committee" },
       { key: "StartDate", header: "Start Date" },
-      { key: "dueDate", header: "Due Date" },
+      { key: "dueDate", header: "Target Completion" },
       { key: "ExtendDate", header: "Extended Date" },
     ];
 
