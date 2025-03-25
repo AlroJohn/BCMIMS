@@ -101,7 +101,7 @@ const ProjectDetailsDialog = ({
             Detailed information for "{selectedProject.name}"
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 overflow-y-auto flex-grow pr-2">
+        <div className="py-4 overflow-y-auto scroll-none flex-grow pr-2">
           <div className="space-y-6">
             {/* Project Info Section */}
             <div className="space-y-2">
@@ -174,11 +174,11 @@ const ProjectDetailsDialog = ({
               <h3 className="text-sm font-medium text-gray-500">
                 Project Document
               </h3>
-              <div className="bg-gray-50 p-4 rounded-md border">
-                <div className="flex items-center">
+              <div className="bg-gray-50  rounded-md border overflow-hidden">
+                <div className="flex items-center w-full h-full p-4">
                   <FileText className="h-6 w-6 text-blue-600 mr-2" />
                   <div>
-                    <p className="font-medium">
+                    <p className="font-medium line-clamp-1">
                       {selectedProject.documentTitle}
                     </p>
                     {selectedProject.documentUrl && (

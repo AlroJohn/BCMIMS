@@ -190,7 +190,7 @@ export default function CaptainProjectProposals() {
                   <AlertDescription>{errorMessage}</AlertDescription>
                 </Alert>
               )}
-              <div className="space-y-2">
+              <div className="flex flex-col gap-4">
                 <label
                   htmlFor="approval-comment"
                   className="text-sm font-medium"
@@ -268,7 +268,7 @@ export default function CaptainProjectProposals() {
                   <AlertDescription>{errorMessage}</AlertDescription>
                 </Alert>
               )}
-              <div className="space-y-2">
+              <div className="flex flex-col gap-4">
                 <label
                   htmlFor="rejection-reason"
                   className="text-sm font-medium"

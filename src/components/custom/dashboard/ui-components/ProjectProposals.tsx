@@ -326,12 +326,30 @@ const ProjectProposals = () => {
                     </td>
                     <td className="p-2">
                       {format(dueDate, "MMM d")}
-                      <div className="text-xs text-gray-500">
+                      <div
+                        className={`text-xs ${
+                          Math.ceil(
+                            (dueDate.getTime() - new Date().getTime()) /
+                              (1000 * 60 * 60 * 24)
+                          ) <= 0
+                            ? "text-red-500 font-medium"
+                            : "text-gray-500"
+                        }`}
+                      >
                         {Math.ceil(
                           (dueDate.getTime() - new Date().getTime()) /
                             (1000 * 60 * 60 * 24)
-                        )}{" "}
-                        days left
+                        ) <= 0
+                          ? Math.ceil(
+                              (dueDate.getTime() - new Date().getTime()) /
+                                (1000 * 60 * 60 * 24)
+                            ) === 0
+                            ? "Due today"
+                            : "Overdue"
+                          : `${Math.ceil(
+                              (dueDate.getTime() - new Date().getTime()) /
+                                (1000 * 60 * 60 * 24)
+                            )} days left`}
                       </div>
                     </td>
                     <td className="p-2">
