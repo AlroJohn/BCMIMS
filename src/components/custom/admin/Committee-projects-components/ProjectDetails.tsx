@@ -44,7 +44,6 @@ export type Project = {
   documentUrl: string;
   dueDate: Date;
   startDate?: Date;
-  createdAt?: Date;
   updatedAt?: Date;
   dateProposed: Date;
   status: string;
@@ -148,14 +147,11 @@ const ProjectDetailsDialog = ({
                   <div>
                     <span className="text-gray-500">Start Date: </span>
                     <span className="font-medium">
-                      {selectedProject.dateProposed.toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
-                        }
-                      )}
+                      {selectedProject.startDate?.toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
                     </span>
                   </div>
                   <div>
