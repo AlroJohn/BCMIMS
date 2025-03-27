@@ -18,7 +18,18 @@ export async function GET(req: Request) {
       // Try to find the user in the database
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, role: true, email: true, phone: true, name: true, profile: true, createdAt: true },
+        select: {
+          id: true,
+          role: true,
+          email: true,
+          phone: true,
+          name: true,
+          middleName: true,
+          lastName: true,
+          suffixName: true,
+          profile: true,
+          createdAt: true,
+        },
       });
 
       if (!user) {
@@ -35,12 +46,14 @@ export async function GET(req: Request) {
           id: user.id,
           email: user.email,
           name: user.name,
+          middleName: user.middleName,
+          lastName: user.lastName,
+          suffixName: user.suffixName,
           phone: user.phone,
           profile: user.profile,
-          createdAt: user.createdAt
-        }
+          createdAt: user.createdAt,
+        },
       });
-
     } catch (dbError) {
       console.error("User role API: Database error:", dbError);
       return NextResponse.json(

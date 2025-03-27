@@ -30,7 +30,8 @@ export default function HomePage() {
             <p className="text-4xl font-bold text-white max-w-3xl mb-8 uppercase">
               Empowering{" "}
               <span className="text-yellow-500">barangay 56, taysan</span>:
-              committee chairperson monitoring information management
+              committee chairperson Monitoring Information Management System
+              with SMS Notification
             </p>
             {/* <div className="flex flex-wrap gap-4">
               <Button size="lg" className="bg-yellow-500 hover:bg-yellow-600 text-black">

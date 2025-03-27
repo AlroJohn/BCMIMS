@@ -86,6 +86,9 @@ export default function AddUserModal({
 }: AddUserModalProps) {
   // Form state
   const [name, setName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+  const [suffixName, setSuffixName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -101,6 +104,7 @@ export default function AddUserModal({
   // Form validation state
   const [errors, setErrors] = useState<{
     name?: string;
+    lastName?: string;
     email?: string;
     password?: string;
     confirmPassword?: string;
@@ -110,6 +114,9 @@ export default function AddUserModal({
   // Reset form state
   const resetForm = () => {
     setName("");
+    setLastName("");
+    setMiddleName("");
+    setSuffixName("");
     setEmail("");
     setPassword("");
     setConfirmPassword("");
@@ -174,7 +181,11 @@ export default function AddUserModal({
     const newErrors: any = {};
 
     if (!name.trim()) {
-      newErrors.name = "Name is required";
+      newErrors.name = "First name is required";
+    }
+
+    if (!lastName.trim()) {
+      newErrors.lastName = "Last name is required";
     }
 
     if (!email.trim()) {
@@ -226,6 +237,7 @@ export default function AddUserModal({
 
       await createUser({
         name,
+        lastName,
         email,
         password,
         phone: phone || null,
@@ -233,6 +245,8 @@ export default function AddUserModal({
         role,
         subRole: isSubRoleSelected, // Set the subRole boolean field
         metadata, // Store the sub-role name in metadata
+        middleName: middleName || undefined,
+        suffixName: suffixName || undefined,
       });
 
       toast.success("User created successfully");
@@ -295,7 +309,6 @@ export default function AddUserModal({
               disabled={uploadingImage || isSubmitting}
             />
             <p className="text-xs text-gray-500">Maximum size: 25MB</p>
-
             {uploadingImage && (
               <div className="flex items-center mt-1 space-x-2">
                 <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
@@ -304,10 +317,10 @@ export default function AddUserModal({
             )}
           </div>
 
-          {/* Name field */}
+          {/* First Name field */}
           <div className="space-y-2">
             <Label htmlFor="name">
-              Full Name <span className="text-red-500">*</span>
+              First Name <span className="text-red-500">*</span>
             </Label>
             <Input
               id="name"
@@ -319,6 +332,45 @@ export default function AddUserModal({
             {errors.name && (
               <p className="text-sm text-red-500">{errors.name}</p>
             )}
+          </div>
+
+          {/* Last Name field */}
+          <div className="space-y-2">
+            <Label htmlFor="lastName">
+              Last Name <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="lastName"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              disabled={isSubmitting}
+              required
+            />
+            {errors.lastName && (
+              <p className="text-sm text-red-500">{errors.lastName}</p>
+            )}
+          </div>
+
+          {/* Middle Name and Suffix Name fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="middleName">Middle Name (Optional)</Label>
+              <Input
+                id="middleName"
+                value={middleName}
+                onChange={(e) => setMiddleName(e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="suffixName">Suffix Name (Optional)</Label>
+              <Input
+                id="suffixName"
+                value={suffixName}
+                onChange={(e) => setSuffixName(e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
 
           {/* Email field */}
@@ -348,6 +400,7 @@ export default function AddUserModal({
               <Input
                 id="password"
                 type="password"
+                minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isSubmitting}
@@ -357,7 +410,6 @@ export default function AddUserModal({
                 <p className="text-sm text-red-500">{errors.password}</p>
               )}
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">
                 Confirm Password <span className="text-red-500">*</span>
@@ -410,9 +462,7 @@ export default function AddUserModal({
                     </SelectItem>
                   ))}
                 </SelectGroup>
-
                 <SelectSeparator />
-
                 {/* Sub-roles group */}
                 <SelectGroup>
                   <SelectLabel>Sub Roles</SelectLabel>
@@ -427,8 +477,6 @@ export default function AddUserModal({
             {errors.role && (
               <p className="text-sm text-red-500">{errors.role}</p>
             )}
-
-            {/* Show the subRole value that will be set */}
             {selectedRole && (
               <p className="text-xs text-blue-500 mt-1">
                 subRole will be set to:{" "}

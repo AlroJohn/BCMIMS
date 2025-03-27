@@ -12,8 +12,12 @@ export enum UserRole {
 }
 
 export interface User {
+
     id: string;
     email: string;
+    middleName: string | null;
+    lastName: string;
+    suffixName: string | null;
     name: string;
     phone: string | null;
     profile: string | null; // Base64 encoded image
@@ -24,6 +28,9 @@ export interface User {
 
 export interface ProfileUpdateData {
     name: string;
+    middleName?: string | null;
+    lastName: string;
+    suffixName?: string | null;
     phone: string | null;
     profile: string | null;
 }

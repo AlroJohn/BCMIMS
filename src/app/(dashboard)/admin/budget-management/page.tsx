@@ -68,7 +68,7 @@ export default function ManageBudget() {
             >
               <div className="flex justify-between items-center mb-4">
                 <TabsList>
-                  <TabsTrigger value="approved">Approved Budgets</TabsTrigger>
+                  <TabsTrigger value="approved">Total Budget</TabsTrigger>
                 </TabsList>
               </div>
 

@@ -83,6 +83,9 @@ const subRoleOptions = [
 interface User {
   id: string;
   name: string;
+  lastName: string;
+  middleName?: string;
+  suffixName?: string;
   email: string;
   phone: string | null;
   profile: string | null;
@@ -243,7 +246,7 @@ const UserManagement = () => {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{user.name}</p>
+                          <p className="font-medium">{user.name} <span>{user.middleName}</span> <span>{user.lastName}</span> <span>{user.suffixName}</span></p>
                           <p className="text-sm text-gray-500">{user.email}</p>
                         </div>
                       </div>

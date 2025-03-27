@@ -73,10 +73,13 @@ const subRoleOptions = [
   { value: "Women:Sub-Women", label: "Sub-Women", mainRole: UserRole.Women },
 ];
 
-// User type definition
+// Updated user type including name fields
 interface User {
   id: string;
   name: string;
+  middleName?: string;
+  lastName: string;
+  suffixName?: string;
   email: string;
   phone: string | null;
   profile: string | null;
@@ -97,6 +100,9 @@ interface EditUserModalProps {
 const EditUserModal = ({ isOpen, onClose, user, onSuccess }: EditUserModalProps) => {
   // User edit form state
   const [editName, setEditName] = useState("");
+  const [editMiddleName, setEditMiddleName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editSuffixName, setEditSuffixName] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editProfile, setEditProfile] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
@@ -108,6 +114,9 @@ const EditUserModal = ({ isOpen, onClose, user, onSuccess }: EditUserModalProps)
   useEffect(() => {
     if (user) {
       setEditName(user.name);
+      setEditMiddleName(user.middleName || "");
+      setEditLastName(user.lastName || "");
+      setEditSuffixName(user.suffixName || "");
       setEditPhone(user.phone || "");
       setEditProfile(user.profile || "");
       setProfilePreview(user.profile);
@@ -209,10 +218,13 @@ const EditUserModal = ({ isOpen, onClose, user, onSuccess }: EditUserModalProps)
       const metadata =
         isSubRoleSelected && subRoleName ? { subRoleName } : undefined;
 
-      // Use the server action to update the user
+      // Use the server action to update the user, including new name fields
       await updateUser({
         id: user.id,
         name: editName,
+        middleName: editMiddleName,
+        lastName: editLastName,
+        suffixName: editSuffixName,
         phone: editPhone,
         profile: profileData,
         role,
@@ -283,12 +295,43 @@ const EditUserModal = ({ isOpen, onClose, user, onSuccess }: EditUserModalProps)
             )}
           </div>
 
+          {/* First Name */}
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">First Name</Label>
             <Input
               id="name"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
+            />
+          </div>
+
+          {/* Middle Name */}
+          <div className="space-y-2">
+            <Label htmlFor="middleName">Middle Name (optional)</Label>
+            <Input
+              id="middleName"
+              value={editMiddleName}
+              onChange={(e) => setEditMiddleName(e.target.value)}
+            />
+          </div>
+
+          {/* Last Name */}
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Last Name</Label>
+            <Input
+              id="lastName"
+              value={editLastName}
+              onChange={(e) => setEditLastName(e.target.value)}
+            />
+          </div>
+
+          {/* Suffix Name */}
+          <div className="space-y-2">
+            <Label htmlFor="suffixName">Suffix Name (optional)</Label>
+            <Input
+              id="suffixName"
+              value={editSuffixName}
+              onChange={(e) => setEditSuffixName(e.target.value)}
             />
           </div>
 
@@ -316,13 +359,11 @@ const EditUserModal = ({ isOpen, onClose, user, onSuccess }: EditUserModalProps)
                 {/* Main roles group */}
                 <SelectGroup>
                   <SelectLabel>Main Roles</SelectLabel>
-                  {Object.entries(committeeNames).map(
-                    ([roleKey, roleName]) => (
-                      <SelectItem key={roleKey} value={roleKey}>
-                        {roleName}
-                      </SelectItem>
-                    )
-                  )}
+                  {Object.entries(committeeNames).map(([roleKey, roleName]) => (
+                    <SelectItem key={roleKey} value={roleKey}>
+                      {roleName}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
 
                 <SelectSeparator />
