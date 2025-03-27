@@ -226,6 +226,8 @@ export function PasswordUpdateModal({
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="Enter your current password"
+              min={8}
+              minLength={8}
               required
             />
           </div>
