@@ -135,6 +135,12 @@ export function CommitteeSidebar({
       icon: FileText,
       isActive: pathname.includes("/project-proposals"),
     },
+    // {
+    //   title: "Approved Projects",
+    //   url: `${committeeInfo.path}/projects`,
+    //   icon: FileText,
+    //   isActive: pathname.includes("/projects"),
+    // },
   ];
 
   // This structure allows for future committee-specific menu items

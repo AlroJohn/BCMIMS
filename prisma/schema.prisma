@@ -30,6 +30,7 @@ model ProjectProposal {
   id               String         @id @default(uuid())
   title            String
   description      String
+  startDate        DateTime?
   proposedDate     DateTime       @default(now())
   fileUrl          String
   postedById       String

@@ -15,6 +15,8 @@ export async function POST(request: Request) {
     const description = formData.get("description") as string;
     const postedById = formData.get("postedById") as string;
     const proposedDateStr = formData.get("proposedDate") as string;
+    const startDateStr = formData.get("startDate") as string;
+    const completionDateStr = formData.get("completionDate") as string;
     const budgetStr = formData.get("budget") as string;
     const committee = formData.get("committee") as string; // Get committee from form data
     const file = formData.get("file") as File;
@@ -27,9 +29,16 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!proposedDateStr) {
+    if (!startDateStr) {
       return NextResponse.json(
-        { message: "Proposed date is required" },
+        { message: "Start date is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!completionDateStr) {
+      return NextResponse.json(
+        { message: "Completion date is required" },
         { status: 400 }
       );
     }
@@ -48,13 +57,41 @@ export async function POST(request: Request) {
       );
     }
 
-    // Convert the proposedDate string to a Date object
-    const proposedDate = new Date(proposedDateStr);
-    if (isNaN(proposedDate.getTime())) {
+    // Convert date strings to Date objects
+    const startDate = new Date(startDateStr);
+    if (isNaN(startDate.getTime())) {
       return NextResponse.json(
-        { message: "Invalid proposed date" },
+        { message: "Invalid start date" },
         { status: 400 }
       );
+    }
+
+    const completionDate = new Date(completionDateStr);
+    if (isNaN(completionDate.getTime())) {
+      return NextResponse.json(
+        { message: "Invalid completion date" },
+        { status: 400 }
+      );
+    }
+
+    // Ensure completion date is after start date
+    if (completionDate <= startDate) {
+      return NextResponse.json(
+        { message: "Completion date must be after start date" },
+        { status: 400 }
+      );
+    }
+
+    // For backward compatibility, if proposedDate is provided use it
+    let proposedDate = startDate;
+    if (proposedDateStr) {
+      proposedDate = new Date(proposedDateStr);
+      if (isNaN(proposedDate.getTime())) {
+        return NextResponse.json(
+          { message: "Invalid proposed date" },
+          { status: 400 }
+        );
+      }
     }
 
     // Parse the budget to a number
@@ -101,6 +138,7 @@ export async function POST(request: Request) {
         description,
         fileUrl: publicUrl,
         postedById,
+        startDate,
         proposedDate,
         budget,
         createdAt: new Date(),
@@ -139,6 +177,8 @@ export async function PUT(request: Request) {
     const description = formData.get("description") as string;
     const postedById = formData.get("postedById") as string;
     const proposedDateStr = formData.get("proposedDate") as string;
+    const startDateStr = formData.get("startDate") as string;
+    const completionDateStr = formData.get("completionDate") as string;
     const budgetStr = formData.get("budget") as string;
     const committee = formData.get("committee") as string;
     const file = formData.get("file") as File | null;
@@ -169,9 +209,16 @@ export async function PUT(request: Request) {
       );
     }
 
-    if (!proposedDateStr) {
+    if (!startDateStr) {
       return NextResponse.json(
-        { message: "Proposed date is required" },
+        { message: "Start date is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!completionDateStr) {
+      return NextResponse.json(
+        { message: "Completion date is required" },
         { status: 400 }
       );
     }
@@ -190,13 +237,41 @@ export async function PUT(request: Request) {
       );
     }
 
-    // Convert the proposedDate string to a Date object
-    const proposedDate = new Date(proposedDateStr);
-    if (isNaN(proposedDate.getTime())) {
+    // Convert date strings to Date objects
+    const startDate = new Date(startDateStr);
+    if (isNaN(startDate.getTime())) {
       return NextResponse.json(
-        { message: "Invalid proposed date" },
+        { message: "Invalid start date" },
         { status: 400 }
       );
+    }
+
+    const completionDate = new Date(completionDateStr);
+    if (isNaN(completionDate.getTime())) {
+      return NextResponse.json(
+        { message: "Invalid completion date" },
+        { status: 400 }
+      );
+    }
+
+    // Ensure completion date is after start date
+    if (completionDate <= startDate) {
+      return NextResponse.json(
+        { message: "Completion date must be after start date" },
+        { status: 400 }
+      );
+    }
+
+    // For backward compatibility, if proposedDate is provided use it
+    let proposedDate = startDate;
+    if (proposedDateStr) {
+      proposedDate = new Date(proposedDateStr);
+      if (isNaN(proposedDate.getTime())) {
+        return NextResponse.json(
+          { message: "Invalid proposed date" },
+          { status: 400 }
+        );
+      }
     }
 
     // Parse the budget to a number
@@ -212,6 +287,8 @@ export async function PUT(request: Request) {
     const updateData: any = {
       title,
       description,
+      startDate,
+      completionDate,
       proposedDate,
       budget,
       committee,
