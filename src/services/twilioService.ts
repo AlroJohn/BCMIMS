@@ -1,7 +1,7 @@
 // src/services/sms-service.ts
 
 /**
- * Service for sending SMS notifications
+ * Service for sending SMS notifications using Telerivet
  */
 export const SmsService = {
   /**
@@ -30,20 +30,51 @@ export const SmsService = {
   /**
    * Send a project proposal notification
    * @param data Project proposal data
-   * @param recipientNumber Recipient phone number
    * @returns Response from the SMS API
    */
   async sendProjectProposalNotification(data: {
     title: string;
     budget: number | string;
     proposedDate: string | Date;
-  }, recipientNumber = '+639630305154') {
-    const formattedDate = typeof data.proposedDate === 'string'
-      ? new Date(data.proposedDate).toLocaleDateString()
-      : data.proposedDate.toLocaleDateString();
+  }) {
+    try {
+      // Fetch admin users with phone numbers
+      const response = await fetch('/api/users/admin', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-    const message = `New Project Proposal: "${data.title}" has been submitted with a budget of ₱${data.budget}. Proposed date: ${formattedDate}. Come and check it out at https://barangay56taysan.vercel.app/auth`;
+      const { success, admins } = await response.json();
 
-    return this.sendSms(recipientNumber, message);
+      if (!success || !admins || admins.length === 0) {
+        console.warn('No admin users with phone numbers found');
+        return { success: false, error: 'No admin recipients available' };
+      }
+
+      const formattedDate = typeof data.proposedDate === 'string'
+        ? new Date(data.proposedDate).toLocaleDateString()
+        : data.proposedDate.toLocaleDateString();
+
+      const message = `New Project Proposal: "${data.title}" has been submitted with a budget of ₱${data.budget}. Proposed date: ${formattedDate}. Check it at https://barangay56taysan.vercel.app/auth`;
+
+      // Send to all admins with phone numbers
+      const results = await Promise.all(
+        admins
+          .filter((admin: any) => admin.phone) // Only send to admins with phone numbers
+          .map((admin: any) => this.sendSms(admin.phone, message))
+      );
+
+      return {
+        success: true,
+        results
+      };
+    } catch (error) {
+      console.error('Error in sendProjectProposalNotification:', error);
+      return { success: false, error: 'Failed to send notifications' };
+    }
   }
 };
+
+export default SmsService;

@@ -102,7 +102,7 @@ export function RejectedProjectsRadarChart() {
   return (
     <Card>
       <CardHeader className="items-center pb-4">
-        <CardTitle>Rejected Projects</CardTitle>
+        <CardTitle>Disapproved Projects</CardTitle>
         <CardDescription>
           {startMonth} - {currentMonth} {currentYear}
         </CardDescription>

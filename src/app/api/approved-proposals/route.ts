@@ -4,6 +4,13 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const proposals = await prisma.projectProposal.findMany({
+      where: {
+        approvedBy: {
+          some: {
+            status: "Approved", // Only include proposals with an approval status of Approved
+          },
+        },
+      },
       include: {
         postedBy: {
           select: { id: true, name: true, role: true },
@@ -65,8 +72,7 @@ export async function GET() {
           createdAt: approval.createdAt?.toISOString(),
         })),
         proposedDate: proposal.proposedDate.toISOString(),
-        startDate: proposal.startDate?.toISOString(),
-        updatedAt: proposal.updatedAt?.toISOString(),
+        createdAt: proposal.createdAt?.toISOString(),
         voteCount: proposal.votes.length,
       };
     });
@@ -81,15 +87,13 @@ export async function GET() {
       };
 
       // First compare by status priority
-      const statusComparison =
-        statusPriority[b.status] - statusPriority[a.status];
+      const statusComparison = statusPriority[b.status] - statusPriority[a.status];
 
       // If status is the same, sort by vote count (descending)
       if (statusComparison === 0) {
         return b.voteCount - a.voteCount;
       }
 
-      // Otherwise sort by status priority
       return statusComparison;
     });
 

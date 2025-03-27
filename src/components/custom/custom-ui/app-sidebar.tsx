@@ -55,13 +55,19 @@ const data = {
       isActive: true,
     },
     {
+      title: "Approved Projects",
+      url: "/admin/projects",
+      icon: FileText,
+      isActive: true,
+    },
+    {
       title: "Manage Users",
       url: "/admin/manage-user",
       icon: Users,
       isActive: true,
     },
     {
-      title: "Manage Budget",
+      title: "Budget",
       url: "/admin/budget-management",
       icon: Users,
       isActive: true,

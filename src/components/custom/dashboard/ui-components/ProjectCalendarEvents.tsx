@@ -310,8 +310,8 @@ const ProjectCalendarEvents = ({
   };
 
   return (
-    <Card className="h-full w-full overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-primary/20 to-primary/5 pb-4">
+    <Card className="h-full w-full overflow-hidden pt-0">
+      <CardHeader className="bg-gradient-to-r from-primary/20 to-primary/5 py-4">
         <div className="flex justify-between items-center">
           <div>
             <CardTitle className="flex items-center gap-2 text-xl">

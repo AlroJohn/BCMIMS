@@ -116,7 +116,7 @@ export function StatusPieGraph() {
         fill: statusColors.Approved,
       },
       {
-        status: "rejected",
+        status: "disapproved",
         value: data.counts.rejected,
         fill: statusColors.Rejected,
       },
@@ -217,7 +217,7 @@ export function StatusPieGraph() {
                   hideLabel
                   formatter={(value, name) => {
                     return [
-                      `${value} proposals`,
+                      `${value} Proposals `,
                       typeof name === "string"
                         ? name.charAt(0).toUpperCase() + name.slice(1)
                         : name,

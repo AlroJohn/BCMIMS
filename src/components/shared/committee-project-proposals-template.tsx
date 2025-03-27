@@ -140,6 +140,8 @@ export default function CommitteeProjectProposalsTemplate({
 
         return {
           id: p.id || "unknown-id",
+          startDate: p.startDate ? new Date(p.startDate) : null,
+          updatedAt: p.updatedAt,
           name: p.title || "Untitled Project",
           description: p.description || "",
           committee: committeeObj.name,
@@ -195,7 +197,7 @@ export default function CommitteeProjectProposalsTemplate({
 
   // Memoize filtered projects based on search and tab
   const filteredProjects = useMemo(() => {
-    return projectProposals.filter((project) => {
+    const filtered = projectProposals.filter((project) => {
       const matchesSearch =
         !searchTerm ||
         project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -203,10 +205,45 @@ export default function CommitteeProjectProposalsTemplate({
 
       if (!matchesSearch) return false;
 
-      if (activeTab === "all") return true;
+      // For the "to-vote" tab, check if the project is pending and if the user hasn't voted yet
+      if (activeTab === "to-vote" && !isAdmin) {
+        const committeeVote = project.votes.find(
+          (vote) => vote.user.role === committeeInfo.name.replace(" & ", "")
+        );
+        return project.status === "Pending" && !committeeVote;
+      }
+
+      if (activeTab === "all" || activeTab === "to-vote") return true;
       return project.status.toLowerCase() === activeTab.toLowerCase();
     });
-  }, [projectProposals, searchTerm, activeTab]);
+
+    // Sorting logic
+    filtered.sort((a, b) => {
+      // Always show approved projects first
+      if (a.status === "Approved" && b.status !== "Approved") return -1;
+      if (b.status === "Approved" && a.status !== "Approved") return 1;
+
+      // Always show rejected projects last
+      if (a.status === "Rejected" && b.status !== "Rejected") return 1;
+      if (b.status === "Rejected" && a.status !== "Rejected") return -1;
+
+      // Sort by votes if there are votes
+      if (a.votes.length > 0 || b.votes.length > 0) {
+        const aVotes = a.votes.filter(
+          (vote) => vote.vote === "Approved"
+        ).length;
+        const bVotes = b.votes.filter(
+          (vote) => vote.vote === "Approved"
+        ).length;
+        return bVotes - aVotes; // Most to lowest votes
+      }
+
+      // Sort by dateProposed (oldest to newest)
+      return a.dateProposed.getTime() - b.dateProposed.getTime();
+    });
+
+    return filtered;
+  }, [projectProposals, searchTerm, activeTab, isAdmin, committeeInfo.name]);
 
   // Get current page projects
   const currentProjects = useMemo(() => {
@@ -371,7 +408,9 @@ export default function CommitteeProjectProposalsTemplate({
     const defaultColumns = [
       { key: "project", header: "Project" },
       { key: "committee", header: "Committee" },
-      { key: "dueDate", header: "Due Date" },
+      { key: "StartDate", header: "Start Date" },
+      { key: "dueDate", header: "Target Completion" },
+      { key: "ExtendDate", header: "Extended Date" },
     ];
 
     // Additional columns based on tab
@@ -432,22 +471,51 @@ export default function CommitteeProjectProposalsTemplate({
         );
       case "committee":
         return project.committee;
+      case "StartDate":
+        return (
+          <div>
+            {project.startDate
+              ? project.startDate.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "N/A"}
+          </div>
+        );
       case "dueDate":
+        const diffDays = Math.ceil(
+          (project.dueDate.getTime() - new Date().getTime()) /
+            (1000 * 60 * 60 * 24)
+        );
         return (
           <div>
             {project.dueDate.toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
+              year: "numeric",
             })}
             {activeTab !== "approved" && activeTab !== "rejected" && (
               <div className="text-xs text-gray-500">
-                {Math.ceil(
-                  (project.dueDate.getTime() - new Date().getTime()) /
-                    (1000 * 60 * 60 * 24)
-                )}{" "}
-                days left
+                {diffDays <= 0 ? "Due" : `${diffDays} days left`}
               </div>
             )}
+          </div>
+        );
+
+      case "ExtendDate":
+        const extendDate = project.updatedAt
+          ? new Date(project.updatedAt)
+          : null;
+        return (
+          <div>
+            {extendDate && !isNaN(extendDate.getTime())
+              ? extendDate.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "N/A"}
           </div>
         );
       case "priority":
@@ -472,7 +540,7 @@ export default function CommitteeProjectProposalsTemplate({
             {project.rejectionReason || "No reason provided"}
           </span>
         );
-      case "actions":
+      case "remarks":
         return (
           <ActionButtons
             project={project}
@@ -715,13 +783,17 @@ export default function CommitteeProjectProposalsTemplate({
             ? {
                 ...selectedProject,
                 title: selectedProject.name,
-                proposedDate: selectedProject.dateProposed.toISOString(),
+                proposedDate: selectedProject.dueDate.toISOString(),
+                startDate: selectedProject.startDate
+                  ? selectedProject.startDate.toISOString()
+                  : undefined,
                 fileUrl: selectedProject.documentUrl,
                 postedById: selectedProject.postedBy.id,
               }
             : null
         }
         isEditing={selectedProject !== null}
+        onSubmit={fetchProjects} // Refresh the list after submission
       />
     </div>
   );

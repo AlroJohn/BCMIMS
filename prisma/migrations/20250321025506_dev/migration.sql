@@ -13,6 +13,8 @@ CREATE TABLE "users" (
     "phone" TEXT,
     "profile" TEXT,
     "role" "UserRole" NOT NULL,
+    "subRole" BOOLEAN,
+    "metadata" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

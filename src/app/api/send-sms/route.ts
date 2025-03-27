@@ -1,47 +1,89 @@
 // src/app/api/send-sms/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import twilio from 'twilio';
+import telerivet from 'telerivet';
 
-// Function to send SMS using Twilio
+// Function to send SMS using Telerivet
 async function sendSMS(to: string, message: string) {
   try {
-    // Get Twilio credentials from environment variables
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+    // Get Telerivet credentials from environment variables
+    const apiKey = process.env.TELERIVET_API_KEY;
+    const projectId = process.env.TELERIVET_PROJECT_ID;
 
-    // Check if Twilio credentials are available
-    if (!accountSid || !authToken || !fromNumber) {
-      console.error('Missing Twilio credentials');
-      return { 
-        success: false, 
-        error: 'SMS service is not properly configured' 
+    // Check if Telerivet credentials are available
+    if (!apiKey || !projectId) {
+      console.error('Missing Telerivet credentials');
+      return {
+        success: false,
+        error: 'SMS service is not properly configured'
       };
     }
 
-    // Initialize Twilio client
-    const client = twilio(accountSid, authToken);
+    // Format phone number
+    const formattedPhone = formatPhoneNumber(to);
 
-    // Send the SMS
-    const result = await client.messages.create({
-      body: message,
-      from: fromNumber,
-      to: to
+    // Initialize Telerivet client
+    const tr = new telerivet.API(apiKey);
+    const project = tr.initProjectById(projectId);
+
+    // Send the SMS using a Promise wrapper
+    const result: { id: string } = await new Promise((resolve, reject) => {
+      project.sendMessage({
+        content: message,
+        to_number: formattedPhone
+      }, function (err: any, message: any) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(message);
+        }
+      });
     });
 
-    console.log('SMS sent successfully:', result.sid);
-    return { 
-      success: true, 
-      sid: result.sid
+    console.log('SMS sent successfully via Telerivet:', result);
+    return {
+      success: true,
+      messageId: result.id
     };
   } catch (error: any) {
-    console.error('Twilio error:', error);
-    return { 
-      success: false, 
+    console.error('Telerivet error:', error);
+    return {
+      success: false,
       error: error.message || 'Failed to send SMS'
     };
   }
+}
+
+// Helper function to format phone number
+function formatPhoneNumber(phone: string): string {
+  // Remove any non-digit characters except the + sign at the beginning
+  const formattedPhone = phone.trim();
+
+  // If it already starts with +63, return as is
+  if (formattedPhone.startsWith('+63')) {
+    return formattedPhone;
+  }
+
+  // Remove any non-digit characters
+  const digitsOnly = formattedPhone.replace(/\D/g, '');
+
+  // If starting with 0, replace with +63
+  if (digitsOnly.startsWith('0') && digitsOnly.length === 11) {
+    return `+63${digitsOnly.substring(1)}`;
+  }
+
+  // If it's just a 10-digit number (assuming Philippines)
+  if (digitsOnly.length === 10) {
+    return `+63${digitsOnly}`;
+  }
+
+  // If it starts with 63 already but without +
+  if (digitsOnly.startsWith('63')) {
+    return `+${digitsOnly}`;
+  }
+
+  // If unknown format, add +63 anyway
+  return `+63${digitsOnly}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -62,17 +104,17 @@ export async function POST(request: NextRequest) {
 
     if (result.success) {
       return NextResponse.json(
-        { 
-          success: true, 
+        {
+          success: true,
           message: 'SMS sent successfully',
-          sid: result.sid
+          messageId: result.messageId
         },
         { status: 200 }
       );
     } else {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: 'Failed to send SMS',
           error: result.error
         },
@@ -82,8 +124,8 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('API error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         message: 'Server error',
         error: error.message || 'Unknown error'
       },

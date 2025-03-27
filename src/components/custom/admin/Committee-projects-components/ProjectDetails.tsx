@@ -43,6 +43,8 @@ export type Project = {
   documentTitle: string;
   documentUrl: string;
   dueDate: Date;
+  startDate?: Date;
+  updatedAt?: Date;
   dateProposed: Date;
   status: string;
   rejectionReason: string | null;
@@ -92,14 +94,14 @@ const ProjectDetailsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Project Details</DialogTitle>
           <DialogDescription>
-            Detailed information for "{selectedProject.name}"
+            Detailed informations for "{selectedProject.name}"
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 overflow-y-auto flex-grow pr-2">
+        <div className="py-4 overflow-y-auto scroll-none flex-grow pr-2">
           <div className="space-y-6">
             {/* Project Info Section */}
             <div className="space-y-2">
@@ -129,8 +131,9 @@ const ProjectDetailsDialog = ({
                       </Badge>
                     </span>
                   </div>
+
                   <div>
-                    <span className="text-gray-500">Budget: </span>
+                    <span className="text-gray-500">Total Budget: </span>
                     <span className="font-medium">
                       ₱{selectedProject.budget.toLocaleString()}
                     </span>
@@ -142,9 +145,9 @@ const ProjectDetailsDialog = ({
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">Due Date: </span>
+                    <span className="text-gray-500">Start Date: </span>
                     <span className="font-medium">
-                      {selectedProject.dueDate.toLocaleDateString("en-US", {
+                      {selectedProject.startDate?.toLocaleDateString("en-US", {
                         month: "long",
                         day: "numeric",
                         year: "numeric",
@@ -152,16 +155,13 @@ const ProjectDetailsDialog = ({
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">Proposed Date: </span>
+                    <span className="text-gray-500">Target Date: </span>
                     <span className="font-medium">
-                      {selectedProject.dateProposed.toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
-                        }
-                      )}
+                      {selectedProject.dueDate.toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
                     </span>
                   </div>
                 </div>
@@ -172,11 +172,11 @@ const ProjectDetailsDialog = ({
               <h3 className="text-sm font-medium text-gray-500">
                 Project Document
               </h3>
-              <div className="bg-gray-50 p-4 rounded-md border">
-                <div className="flex items-center">
+              <div className="bg-gray-50  rounded-md border overflow-hidden">
+                <div className="flex items-center w-full h-full p-4">
                   <FileText className="h-6 w-6 text-blue-600 mr-2" />
                   <div>
-                    <p className="font-medium">
+                    <p className="font-medium line-clamp-1">
                       {selectedProject.documentTitle}
                     </p>
                     {selectedProject.documentUrl && (
@@ -240,7 +240,8 @@ const ProjectDetailsDialog = ({
                             </span>
                           ) : (
                             <span className="inline-flex items-center bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm">
-                              <ThumbsDown className="h-4 w-4 mr-1" /> Rejected
+                              <ThumbsDown className="h-4 w-4 mr-1" />{" "}
+                              Disapproved
                             </span>
                           )}
                         </div>

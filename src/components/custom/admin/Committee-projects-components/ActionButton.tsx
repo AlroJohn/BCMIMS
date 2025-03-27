@@ -1,8 +1,21 @@
 import { Button } from "@/components/ui/button";
-import { FileText, Pencil, ThumbsUp, CheckCircle, XCircle } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  FileText,
+  Pencil,
+  ThumbsUp,
+  CheckCircle,
+  XCircle,
+  MoreHorizontal,
+} from "lucide-react";
 import { Project } from "./ProjectDetails";
 
-// Extracted action buttons functionality
+// Converted action buttons to dropdown menu
 const ActionButtons = ({
   project,
   isAdmin,
@@ -24,84 +37,64 @@ const ActionButtons = ({
   onApprove?: (project: Project) => void;
   onReject?: (project: Project) => void;
 }) => {
-  // Always show Details button for all projects
-  const detailsButton = (
-    <Button
-      size="sm"
-      variant="outline"
-      className="flex items-center gap-1"
-      onClick={() => openProjectDetails(project)}
-    >
-      <FileText className="h-4 w-4" />
-      <span className="hidden sm:inline">View Details</span>
-    </Button>
-  );
-
-  // For rejected or approved projects, only show details button
-  if (project.status === "Rejected" || project.status === "Approved") {
-    return <div className="flex gap-2">{detailsButton}</div>;
-  }
-
   return (
-    <div className="flex gap-2 w-fit">
-      {detailsButton}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-[160px]">
+        {/* Always show Details option for all projects */}
+        <DropdownMenuItem onClick={() => openProjectDetails(project)}>
+          <FileText className="h-4 w-4 mr-2" />
+          View Details
+        </DropdownMenuItem>
 
-      {/* Edit button: only for pending projects where user is the author */}
-      {!isAdmin &&
-        project.postedBy.id === user.id &&
-        project.status === "Pending" && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex items-center gap-1"
-            onClick={() => openEditProject(project)}
-          >
-            <Pencil className="h-4 w-4" />
-            <span className="hidden sm:inline">Edit</span>
-          </Button>
+        {/* Edit option: only for pending projects where user is the author */}
+        {!isAdmin &&
+          project.postedBy.id === user.id &&
+          project.status === "Pending" && (
+            <DropdownMenuItem onClick={() => openEditProject(project)}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
+            </DropdownMenuItem>
+          )}
+
+        {/* Vote option: only for pending projects where user hasn't voted yet */}
+        {!isAdmin && !hasVoted(project) && project.status === "Pending" && (
+          <DropdownMenuItem onClick={() => openVoteDialog(project)}>
+            <ThumbsUp className="h-4 w-4 mr-2" />
+            Vote
+          </DropdownMenuItem>
         )}
 
-      {/* Vote button: only for pending projects where user hasn't voted yet (regardless of authorship) */}
-      {!isAdmin && !hasVoted(project) && project.status === "Pending" && (
-        <Button
-          size="sm"
-          variant="default"
-          className="flex items-center gap-1"
-          onClick={() => openVoteDialog(project)}
-        >
-          <ThumbsUp className="h-4 w-4" />
-          <span className="hidden sm:inline">Vote</span>
-        </Button>
-      )}
-
-      {/* Admin approve/reject buttons: only for pending projects */}
-      {isAdmin && project.status === "Pending" && (
-        <div className="flex gap-1 w-fit">
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-            onClick={() => {
-              if (onApprove) onApprove(project);
-            }}
-          >
-            <CheckCircle className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Approve</span>
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-            onClick={() => {
-              if (onReject) onReject(project);
-            }}
-          >
-            <XCircle className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Disapprove</span>
-          </Button>
-        </div>
-      )}
-    </div>
+        {/* Admin approve/reject options: only for pending projects */}
+        {isAdmin && project.status === "Pending" && (
+          <>
+            <DropdownMenuItem
+              onClick={() => {
+                if (onApprove) onApprove(project);
+              }}
+              className="text-green-700"
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Approve
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                if (onReject) onReject(project);
+              }}
+              className="text-red-700"
+            >
+              <XCircle className="h-4 w-4 mr-2" />
+              Disapprove
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

@@ -41,6 +41,7 @@ type ProjectProposalType = {
   title: string;
   description: string;
   proposedDate: string;
+  startDate?: string;
   fileUrl: string;
   postedById: string;
   budget?: number;
@@ -68,7 +69,8 @@ export default function CreateNewProjectModal({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [budget, setBudget] = useState("");
-  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [proposedDate, setProposedDate] = useState<Date | undefined>(undefined);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [existingFileUrl, setExistingFileUrl] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -82,7 +84,10 @@ export default function CreateNewProjectModal({
       setTitle(project.title || "");
       setDescription(project.description || "");
       setBudget(project.budget ? project.budget.toString() : "");
-      setDueDate(
+      setStartDate(
+        project.startDate ? new Date(project.startDate) : undefined
+      );
+      setProposedDate(
         project.proposedDate ? new Date(project.proposedDate) : undefined
       );
       setExistingFileUrl(project.fileUrl || "");
@@ -91,11 +96,20 @@ export default function CreateNewProjectModal({
       setTitle("");
       setDescription("");
       setBudget("");
-      setDueDate(undefined);
+      setStartDate(undefined);
+      setProposedDate(undefined);
       setFileToUpload(null);
       setExistingFileUrl("");
     }
   }, [isEditing, project, isOpen]);
+
+  // Validate completion date when start date changes
+  useEffect(() => {
+    if (startDate && proposedDate && proposedDate < startDate) {
+      setProposedDate(undefined); // Reset completion date if it's before start date
+      toast.warning("Completion date must be after the start date");
+    }
+  }, [startDate]);
 
   // Send SMS notification function
   const sendSmsNotification = async (proposalData: any) => {
@@ -110,10 +124,11 @@ export default function CreateNewProjectModal({
       if (result.success) {
         console.log("SMS notification sent successfully");
       } else {
-        console.error("Failed to send SMS notification:", result.message);
+        console.error("Error sending admin notification:", result.error);
       }
     } catch (error) {
       console.error("Error sending SMS notification:", error);
+      // Don't throw the error - just log it so it doesn't block the form submission
     }
   };
 
@@ -131,8 +146,12 @@ export default function CreateNewProjectModal({
       formData.append("description", description);
       formData.append("budget", budget);
 
-      if (dueDate) {
-        formData.append("proposedDate", dueDate.toISOString());
+      if (startDate) {
+        formData.append("startDate", startDate.toISOString());
+      }
+      
+      if (proposedDate) {
+        formData.append("proposedDate", proposedDate.toISOString());
       }
 
       // Add the current user's ID
@@ -195,11 +214,11 @@ export default function CreateNewProjectModal({
       }
 
       // Only send SMS for new projects
-      if (!isEditMode && dueDate) {
+      if (!isEditMode && proposedDate) {
         await sendSmsNotification({
           title,
           budget,
-          proposedDate: dueDate.toISOString(),
+          proposedDate: proposedDate.toISOString(),
         });
       }
 
@@ -229,7 +248,7 @@ export default function CreateNewProjectModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !isSubmitting && onClose()}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {isEditing
@@ -246,8 +265,8 @@ export default function CreateNewProjectModal({
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right">
-                Title*
+              <Label htmlFor="title" className="">
+                AIP reference code*
               </Label>
               <Input
                 id="title"
@@ -280,7 +299,7 @@ export default function CreateNewProjectModal({
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="budget" className="text-right">
-                Budget (₱)*
+                Total Cost (₱)*
               </Label>
               <Input
                 id="budget"
@@ -310,10 +329,11 @@ export default function CreateNewProjectModal({
                 </div>
               </div>
             </div>
-
+            
+            {/* Start Date */}
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="dueDate" className="text-right">
-                Due Date*
+              <Label htmlFor="startDate" className="text-right">
+                Start Date*
               </Label>
               <div className="col-span-3">
                 <Popover>
@@ -323,13 +343,13 @@ export default function CreateNewProjectModal({
                       variant={"outline"}
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !dueDate && "text-muted-foreground"
+                        !startDate && "text-muted-foreground"
                       )}
                       disabled={isSubmitting}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dueDate ? (
-                        format(dueDate, "PPP")
+                      {startDate ? (
+                        format(startDate, "PPP")
                       ) : (
                         <span>Pick a date</span>
                       )}
@@ -340,14 +360,14 @@ export default function CreateNewProjectModal({
                       <div className="flex items-center gap-2">
                         <Select
                           onValueChange={(year) => {
-                            const currentDate = dueDate || new Date();
+                            const currentDate = startDate || new Date();
                             const newDate = new Date(currentDate);
                             newDate.setFullYear(Number.parseInt(year));
-                            setDueDate(newDate);
+                            setStartDate(newDate);
                           }}
                           value={
-                            dueDate
-                              ? dueDate.getFullYear().toString()
+                            startDate
+                              ? startDate.getFullYear().toString()
                               : new Date().getFullYear().toString()
                           }
                           disabled={isSubmitting}
@@ -368,14 +388,14 @@ export default function CreateNewProjectModal({
                         </Select>
                         <Select
                           onValueChange={(month) => {
-                            const currentDate = dueDate || new Date();
+                            const currentDate = startDate || new Date();
                             const newDate = new Date(currentDate);
                             newDate.setMonth(Number.parseInt(month));
-                            setDueDate(newDate);
+                            setStartDate(newDate);
                           }}
                           value={
-                            dueDate
-                              ? dueDate.getMonth().toString()
+                            startDate
+                              ? startDate.getMonth().toString()
                               : new Date().getMonth().toString()
                           }
                           disabled={isSubmitting}
@@ -408,13 +428,128 @@ export default function CreateNewProjectModal({
                     </div>
                     <Calendar
                       mode="single"
-                      selected={dueDate}
-                      onSelect={setDueDate}
+                      selected={startDate}
+                      onSelect={setStartDate}
                       initialFocus
-                      defaultMonth={dueDate}
+                      defaultMonth={startDate}
                       className="rounded-md border-0"
                       fromDate={new Date()} // Prevent selecting dates in the past
                       disabled={isSubmitting}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            
+            {/* Date Completion (proposedDate) */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="proposedDate" className="text-right">
+                Date Completion*
+              </Label>
+              <div className="col-span-3">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !proposedDate && "text-muted-foreground"
+                      )}
+                      disabled={isSubmitting || !startDate}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {proposedDate ? (
+                        format(proposedDate, "PPP")
+                      ) : (
+                        <span>{!startDate ? "Set start date first" : "Pick a date"}</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <div className="p-3 border-b bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <Select
+                          onValueChange={(year) => {
+                            const currentDate = proposedDate || new Date();
+                            const newDate = new Date(currentDate);
+                            newDate.setFullYear(Number.parseInt(year));
+                            setProposedDate(newDate);
+                          }}
+                          value={
+                            proposedDate
+                              ? proposedDate.getFullYear().toString()
+                              : startDate 
+                                ? startDate.getFullYear().toString()
+                                : new Date().getFullYear().toString()
+                          }
+                          disabled={isSubmitting}
+                        >
+                          <SelectTrigger className="w-[110px]">
+                            <SelectValue placeholder="Year" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 10 }, (_, i) => {
+                              const year = (startDate ? startDate.getFullYear() : new Date().getFullYear()) + i;
+                              return (
+                                <SelectItem key={year} value={year.toString()}>
+                                  {year}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          onValueChange={(month) => {
+                            const currentDate = proposedDate || new Date();
+                            const newDate = new Date(currentDate);
+                            newDate.setMonth(Number.parseInt(month));
+                            setProposedDate(newDate);
+                          }}
+                          value={
+                            proposedDate
+                              ? proposedDate.getMonth().toString()
+                              : startDate
+                                ? startDate.getMonth().toString()
+                                : new Date().getMonth().toString()
+                          }
+                          disabled={isSubmitting}
+                        >
+                          <SelectTrigger className="w-[110px]">
+                            <SelectValue placeholder="Month" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[
+                              "January",
+                              "February",
+                              "March",
+                              "April",
+                              "May",
+                              "June",
+                              "July",
+                              "August",
+                              "September",
+                              "October",
+                              "November",
+                              "December",
+                            ].map((month, index) => (
+                              <SelectItem key={index} value={index.toString()}>
+                                {month}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <Calendar
+                      mode="single"
+                      selected={proposedDate}
+                      onSelect={setProposedDate}
+                      initialFocus
+                      defaultMonth={startDate || new Date()}
+                      className="rounded-md border-0"
+                      fromDate={startDate || new Date()} // Prevent selecting dates before start date
+                      disabled={isSubmitting || !startDate}
                     />
                   </PopoverContent>
                 </Popover>
@@ -475,7 +610,8 @@ export default function CreateNewProjectModal({
               type="submit"
               disabled={
                 isSubmitting ||
-                !dueDate ||
+                !startDate ||
+                !proposedDate ||
                 (!fileToUpload && !isEditing) ||
                 !title ||
                 !description ||
@@ -498,4 +634,4 @@ export default function CreateNewProjectModal({
       </DialogContent>
     </Dialog>
   );
-}
+};

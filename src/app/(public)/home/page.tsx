@@ -19,13 +19,18 @@ export default function HomePage() {
       <section className="relative">
         <div className="bg-[url('/images/barangay-header.jpg')] bg-cover bg-center h-96 w-full rounded-xl relative">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 to-blue-900/40 rounded-xl flex flex-col justify-center p-8 md:p-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Welcome to Barangay{" "}
-              <span className="text-yellow-400">Monitoring System</span>
+            {/* <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Barangay{" "}
+              
             </h1>
             <p className="text-lg md:text-xl text-white max-w-2xl mb-8">
               Efficient management and monitoring of barangay activities,
               projects, and services for better community governance.
+            </p> */}
+            <p className="text-4xl font-bold text-white max-w-3xl mb-8 uppercase">
+              Empowering{" "}
+              <span className="text-yellow-500">barangay 56, taysan</span>:
+              committee chairperson monitoring information management
             </p>
             {/* <div className="flex flex-wrap gap-4">
               <Button size="lg" className="bg-yellow-500 hover:bg-yellow-600 text-black">

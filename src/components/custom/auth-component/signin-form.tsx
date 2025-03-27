@@ -4,23 +4,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { ThemeToggle } from "@/components/custom/theme/theme-toggle";
+import { Loader2 } from "lucide-react";
 import { useLogin } from "@/hooks/useSignin-hooks";
 import Link from "next/link";
 
 const SigninWrapper = () => {
-  const { formData, handleChange, handleSubmit, loading } = useLogin();
- 
+  const {
+    formData,
+    handleChange,
+    handleSubmit,
+    loading,
+    loadingState,
+    loadingMessage,
+  } = useLogin();
+
   return (
     <div className="flex items-center justify-center h-full w-full p-4">
       <Card className="w-full max-w-md shadow-lg relative bg-white">
         <div className="absolute top-4 right-4">
-          {/* <ThemeToggle 
-                        iconColor="black" 
-                        iconSize={18} 
-                        variant="ghost"
-                        className="hover:bg-gray-100"
-                    /> */}
+          {/* Theme toggle removed for brevity */}
         </div>
         <CardHeader className="space-y-1 flex flex-col items-center">
           <div className="flex flex-col items-center">
@@ -43,6 +45,7 @@ const SigninWrapper = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                disabled={loading}
                 className="bg-white border-black/30 text-black"
               />
             </div>
@@ -58,6 +61,7 @@ const SigninWrapper = () => {
                 maxLength={16}
                 onChange={handleChange}
                 required
+                disabled={loading}
                 className="bg-white border-black/30 text-black"
               />
             </div>
@@ -67,25 +71,15 @@ const SigninWrapper = () => {
               disabled={loading}
               className="w-full bg-blue-950 text-white hover:bg-sky-800 duration-300 ease-in-out transition-all hover:text-accent-foreground mt-2"
             >
-              {loading ? "Logging in..." : "LOGIN"}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {loadingMessage}
+                </>
+              ) : (
+                "LOGIN"
+              )}
             </Button>
-
-            {/* Add buttons for page navigation */}
-            {/* <div className="mt-4 space-y-2">
-                            <p className="text-sm text-gray-600">Quick Access:</p>
-                            <div className="grid grid-cols-2 gap-2">
-                            {pages.map((page) => (
-                                <Button
-                                    key={page.path}
-                                    asChild
-                                >
-                                    <Link href={page.path} className="w-full">
-                                        {page.name}
-                                    </Link>
-                                </Button>
-                            ))}
-                            </div>
-                        </div> */}
           </form>
         </CardContent>
       </Card>
