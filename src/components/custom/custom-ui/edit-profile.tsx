@@ -36,6 +36,9 @@ export function ProfileEditModal({
 }: ProfileEditModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState(user.name);
+  const [middleName, setMiddleName] = useState(user.middleName || "");
+  const [lastName, setLastName] = useState(user.lastName || "");
+  const [suffixName, setSuffixName] = useState(user.suffixName || "");
   const [phone, setPhone] = useState(user.phone || "");
   const [profile, setProfile] = useState<string | null>(user.profile);
   const [previewImage, setPreviewImage] = useState<string | null>(user.profile);
@@ -49,6 +52,9 @@ export function ProfileEditModal({
   useEffect(() => {
     if (isOpen) {
       setName(user.name);
+      setMiddleName(user.middleName || "");
+      setLastName(user.lastName || "");
+      setSuffixName(user.suffixName || "");
       setPhone(user.phone || "");
       setProfile(user.profile);
       setPreviewImage(user.profile);
@@ -92,6 +98,9 @@ export function ProfileEditModal({
     try {
       const result = await updateUserProfile(user.id, {
         name,
+        middleName: middleName || null,
+        lastName,
+        suffixName: suffixName || null,
         phone: phone || null,
         profile,
       });
@@ -172,15 +181,49 @@ export function ProfileEditModal({
 
             {/* Form Fields Grid */}
             <div className="grid grid-cols-1 gap-4">
-              {/* Name */}
+              {/* First Name */}
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">First Name</Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Your full name"
+                  placeholder="Your first name"
                   required
+                />
+              </div>
+
+              {/* Middle Name */}
+              <div className="space-y-2">
+                <Label htmlFor="middleName">Middle Name</Label>
+                <Input
+                  id="middleName"
+                  value={middleName}
+                  onChange={(e) => setMiddleName(e.target.value)}
+                  placeholder="Your middle name"
+                />
+              </div>
+
+              {/* Last Name */}
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Your last name"
+                  required
+                />
+              </div>
+
+              {/* Suffix Name */}
+              <div className="space-y-2">
+                <Label htmlFor="suffixName">Suffix</Label>
+                <Input
+                  id="suffixName"
+                  value={suffixName}
+                  onChange={(e) => setSuffixName(e.target.value)}
+                  placeholder="Suffix (optional)"
                 />
               </div>
 

@@ -9,22 +9,37 @@ import { revalidatePath } from "next/cache";
 // Type definition for creating a user
 interface CreateUserParams {
   name: string;
+  lastName: string;       // Added required field
   email: string;
   password: string;
   phone: string | null;
   profile: string | null;
   role: UserRole;
-  subRole?: boolean; // Map directly to the subRole field in the User model
-  metadata?: any; // For storing sub-role name or other information
+  subRole?: boolean;      // Map directly to the subRole field in the User model
+  metadata?: any;         // For storing sub-role name or other additional information
+  middleName?: string;    // Optional field
+  suffixName?: string;    // Optional field
 }
 
 // Create user function that handles Supabase auth and database creation
 export async function createUser(data: CreateUserParams) {
   try {
-    const { name, email, password, phone, profile, role, subRole, metadata } = data;
+    const {
+      name,
+      lastName,
+      email,
+      password,
+      phone,
+      profile,
+      role,
+      subRole,
+      metadata,
+      middleName,
+      suffixName,
+    } = data;
 
     // Validate required fields
-    if (!name || !email || !password || !role) {
+    if (!name || !lastName || !email || !password || !role) {
       throw new Error("Missing required fields");
     }
 
@@ -40,8 +55,11 @@ export async function createUser(data: CreateUserParams) {
     // Prepare user metadata for Supabase
     const userMetadata = {
       name,
+      lastName,
       role,
       subRole: subRole || false,
+      middleName,
+      suffixName,
       ...(metadata || {}),
     };
 
@@ -62,20 +80,24 @@ export async function createUser(data: CreateUserParams) {
     if (!authData.user) {
       throw new Error("Failed to create user in authentication system");
     }
-    const hashedPassword = await bcrypt.hash(password, 10)
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // 2. Create user in our database with the same ID from Supabase
     const user = await prisma.user.create({
-
       data: {
         id: authData.user.id,
         email,
-        password: hashedPassword, // We don't store actual password hash
+        password: hashedPassword,
         name,
+        lastName,       // Now included as required
         phone,
         profile,
         role,
-        subRole: subRole || false, // Set the subRole field directly
-        metadata, // Store additional info in metadata
+        subRole: subRole || false,
+        metadata,
+        middleName,
+        suffixName,
       },
     });
 
@@ -89,19 +111,20 @@ export async function createUser(data: CreateUserParams) {
   }
 }
 
-// Update fetchUsers to include the subRole field
+// Update fetchUsers to include the newly added fields
 export async function fetchUsers() {
   try {
     const users = await prisma.user.findMany({
       select: {
         id: true,
         name: true,
+        lastName: true,  // Added to fetch the lastName field
         email: true,
         phone: true,
         profile: true,
         role: true,
-        subRole: true, // Include the subRole field
-        metadata: true, // Also include metadata for any additional info
+        subRole: true,   // Include the subRole field
+        metadata: true,  // Also include metadata for any additional info
         createdAt: true,
         updatedAt: true,
       },

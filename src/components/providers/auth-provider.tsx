@@ -11,6 +11,9 @@ interface AuthContextType {
   user: User | null;
   role: string | null;
   name: string | null;
+  middleName: string | null;
+  lastName: string | null;
+  suffixName: string | null;
   phone: string | null;
   profile: string | null;
   loading: boolean;
@@ -30,6 +33,9 @@ const AuthContext = createContext<AuthContextType>({
   phone: null,
   role: null,
   name: null,
+  middleName: null,
+  lastName: null,
+  suffixName: null,
   profile: null,
   loading: true,
   refreshing: false,
@@ -47,9 +53,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<string | null>(null);
   const [phone, setPhone] = useState<string | null>(null);
   const [name, setName] = useState<string | null>(null);
+  const [middleName, setMiddleName] = useState<string | null>(null);
+  const [lastName, setLastName] = useState<string | null>(null);
+  const [suffixName, setSuffixName] = useState<string | null>(null);
   const [profile, setProfile] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false); // Added for refresh operations
+  const [refreshing, setRefreshing] = useState(false); // For refresh operations
   const [error, setError] = useState<string | null>(null);
   const { isAuthInitialized } = useSupabaseAuth();
 
@@ -76,8 +85,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setPhone(userData.userData.phone || null);
               setName(userData.userData.name || null);
               setProfile(userData.userData.profile || null);
+              setMiddleName(userData.userData.middleName || null);
+              setLastName(userData.userData.lastName || null);
+              setSuffixName(userData.userData.suffixName || null);
 
-              // Update the user object
+              // Update the user object with any additional data
               setUser((prevUser) => ({
                 ...prevUser,
                 ...userData.userData,
@@ -118,6 +130,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setRole(null);
           setPhone(null);
           setName(null);
+          setMiddleName(null);
+          setLastName(null);
+          setSuffixName(null);
           setProfile(null);
           setLoading(false);
           return;
@@ -157,6 +172,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setRole(null);
           setPhone(null);
           setName(null);
+          setMiddleName(null);
+          setLastName(null);
+          setSuffixName(null);
           setProfile(null);
         }
       }
@@ -214,6 +232,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setRole(null);
       setPhone(null);
       setName(null);
+      setMiddleName(null);
+      setLastName(null);
+      setSuffixName(null);
       setProfile(null);
     } catch (error) {
       console.error("Sign out error:", error);
@@ -243,6 +264,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role,
         phone,
         name,
+        middleName,
+        lastName,
+        suffixName,
         profile,
         isLoading: loading, // Alias for compatibility
         error,

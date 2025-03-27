@@ -1,7 +1,6 @@
 import { PrismaClient, UserRole } from '@prisma/client'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
-import { sub } from 'date-fns'
 
 const prisma = new PrismaClient()
 
@@ -43,20 +42,117 @@ async function main() {
   await deleteAllSupabaseUsers()
   await prisma.user.deleteMany()
 
-  // Create Users
+  // Create Users with dummy names for middleName, lastName, and suffixName
   const customUsersData = [
-    { name: 'Admin User', email: 'admin@example.com', password: 'test', phone: '+639630305154', role: UserRole.Admin, subRole: false },
-    { name: 'Education User', email: 'education@example.com', password: 'test', phone: '+639123456789', role: UserRole.Education, subRole: false },
-    { name: 'Environment User', email: 'environment@example.com', password: 'test', phone: '+639987654321', role: UserRole.Environment, subRole: false },
-    { name: 'Finance User', email: 'finance@example.com', password: 'test', phone: '+639112233445', role: UserRole.Finance, subRole: false },
-    { name: 'Health Services User', email: 'healthservices@example.com', password: 'test', phone: '+639556677889', role: UserRole.HealthServices, subRole: false },
-    { name: 'Peace Order User', email: 'peaceorder@example.com', password: 'test', phone: '+639998877665', role: UserRole.PeaceOrder, subRole: false },
-    { name: 'Public Works User', email: 'publicworks@example.com', password: 'test', phone: '+639334455667', role: UserRole.PublicWorks, subRole: false },
-    { name: 'Women User', email: 'women@example.com', password: 'test', phone: '+639776655443', role: UserRole.Women, subRole: false },
+    {
+      name: 'Admin',
+      middleName: 'L.',
+      lastName: 'Alfonso',
+      suffixName: 'S.',
+      profile: null,
+      email: 'admin@example.com',
+      password: 'test',
+      phone: '+639630305154',
+      role: UserRole.Admin,
+      subRole: false,
+      metadata: { seeded: true },
+    },
+    {
+      name: 'Education',
+      middleName: 'H.',
+      lastName: 'Boneo',
+      suffixName: 'T.',
+      profile: null,
+      email: 'education@example.com',
+      password: 'test',
+      phone: '+639123456789',
+      role: UserRole.Education,
+      subRole: false,
+      metadata: { seeded: true },
+    },
+    {
+      name: 'Environment',
+      middleName: 'O.',
+      lastName: 'Toledo',
+      suffixName: 'K.',
+      profile: null,
+      email: 'environment@example.com',
+      password: 'test',
+      phone: '+639987654321',
+      role: UserRole.Environment,
+      subRole: false,
+      metadata: { seeded: true },
+    },
+    {
+      name: 'Finance',
+      middleName: 'A.',
+      lastName: 'Apolo',
+      suffixName: 'Jr.',
+      profile: null,
+      email: 'finance@example.com',
+      password: 'test',
+      phone: '+639112233445',
+      role: UserRole.Finance,
+      subRole: false,
+      metadata: { seeded: true },
+    },
+    {
+      name: 'Health Services',
+      middleName: 'P.',
+      lastName: 'Serano',
+      suffixName: 'Jr.',
+      profile: null,
+      email: 'healthservices@example.com',
+      password: 'test',
+      phone: '+639556677889',
+      role: UserRole.HealthServices,
+      subRole: false,
+      metadata: { seeded: true },
+    },
+    {
+      name: 'Peace Order',
+      middleName: 'A.',
+      lastName: 'Mercado',
+      suffixName: 'Jr.',
+      profile: null,
+      email: 'peaceorder@example.com',
+      password: 'test',
+      phone: '+639998877665',
+      role: UserRole.PeaceOrder,
+      subRole: false,
+      metadata: { seeded: true },
+    },
+    {
+      name: 'Public Works',
+      middleName: 'B.',
+      lastName: 'Marcos',
+      suffixName: 'Jr.',
+      profile: null,
+      email: 'publicworks@example.com',
+      password: 'test',
+      phone: '+639334455667',
+      role: UserRole.PublicWorks,
+      subRole: false,
+      metadata: { seeded: true },
+    },
+    {
+      name: 'Women',
+      middleName: 'C.',
+      lastName: 'Duterte',
+      suffixName: 'Jr.',
+      profile: null,
+      email: 'women@example.com',
+      password: 'test',
+      phone: '+639776655443',
+      role: UserRole.Women,
+      subRole: false,
+      metadata: { seeded: true },
+    },
   ]
 
   const users = await Promise.all(
     customUsersData.map(async (user) => {
+      // Create the authentication user in Supabase
       const { data, error } = await supabase.auth.admin.createUser({
         email: user.email,
         password: user.password,
@@ -64,16 +160,24 @@ async function main() {
       })
       if (error || !data?.user) throw error
 
+      // Hash the password for storing in the database
       const hashedPassword = await bcrypt.hash(user.password, 10)
+      
+      // Create the user record in the database with dummy name details
       return prisma.user.create({
         data: {
           id: data.user.id,
           name: user.name,
+          middleName: user.middleName,
+          lastName: user.lastName,
+          suffixName: user.suffixName,
+          profile: user.profile,
           email: user.email,
           password: hashedPassword,
           phone: user.phone,
           role: user.role,
-          subRole: user.subRole, // Add this line to include the subRole field
+          subRole: user.subRole,
+          metadata: user.metadata,
         },
       })
     })

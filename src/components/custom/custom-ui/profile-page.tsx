@@ -140,6 +140,38 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* New: Middle Name */}
+            {user.middleName && (
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Middle Name</p>
+                  <p>{user.middleName || "Not provided"}</p>
+                </div>
+              </div>
+            )}
+
+
+            {/* New: Last Name */}
+            <div className="flex items-center gap-3">
+              <User className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Last Name</p>
+                <p>{user.lastName || "Not provided"}</p>
+              </div>
+            </div>
+
+            {/* New: Suffix Name */}
+            {user.suffixName && (
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Suffix Name</p>
+                  <p>{user.suffixName || "Not provided"}</p>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center gap-3">
               <Mail className="h-5 w-5 text-muted-foreground" />
               <div>

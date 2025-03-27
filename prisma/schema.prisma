@@ -12,6 +12,9 @@ model User {
   email             String              @unique
   password          String              // Hashed password
   name              String
+  middleName        String?
+  lastName          String
+  suffixName        String?
   phone             String?             // For SMS notifications
   profile           String?
   role              UserRole
