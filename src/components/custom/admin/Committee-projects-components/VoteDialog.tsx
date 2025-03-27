@@ -63,18 +63,18 @@ const VoteDialog = ({
             Cancel
           </Button>
           <Button
-            variant="default"
+            className="bg-green-500/20 text-green-800 hover:bg-green-500/20"
             onClick={() => onVote("Approved", voteComment)}
             disabled={loading}
           >
             {loading ? "Approving..." : "Approve"}
           </Button>
           <Button
-            variant="default"
+            className="bg-red-500/30 text-red-800 hover:bg-red-500/30"
             onClick={() => onVote("Rejected", voteComment)}
             disabled={loading}
           >
-            {loading ? "Rejecting..." : "Reject"}
+            {loading ? "Rejecting..." : "Disapprove"}
           </Button>
         </DialogFooter>
       </DialogContent>
