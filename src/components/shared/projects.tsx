@@ -1,12 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -25,7 +20,10 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
-import ProjectDetailsDialog, { Project, ProjectVote } from "../custom/admin/Committee-projects-components/ProjectDetails";
+import ProjectDetailsDialog, {
+  Project,
+  ProjectVote,
+} from "../custom/admin/Committee-projects-components/ProjectDetails";
 import { useAuth } from "../providers/auth-provider";
 import { determinePriority } from "../custom/admin/Committee-projects-components/ProjectUtiliry";
 import Badge from "../custom/admin/Committee-projects-components/Badge";
@@ -72,21 +70,25 @@ const mapProposalToProject = (proposal: Proposal): Project => ({
   committee: proposal.committee,
   committeeId: 0, // Default value; update as needed if you have a committee ID logic
   budget: proposal.budget,
-  documentTitle: proposal.fileUrl ? proposal.fileUrl.split("/").pop() || proposal.title : proposal.title,
+  documentTitle: proposal.fileUrl
+    ? proposal.fileUrl.split("/").pop() || proposal.title
+    : proposal.title,
   documentUrl: proposal.fileUrl,
   dueDate: new Date(proposal.proposedDate), // Using proposedDate as dueDate; adjust if needed
   dateProposed: new Date(proposal.proposedDate),
   status: proposal.status,
   rejectionReason: null, // Set to null; update if your API returns a rejection reason
-  votes: proposal.votes.map((vote): ProjectVote => ({
-    id: vote.id,
-    userId: vote.userId,
-    proposalId: vote.proposalId,
-    vote: vote.vote,
-    votedAt: new Date(vote.votedAt),
-    comment: vote.comment,
-    user: vote.user,
-  })),
+  votes: proposal.votes.map(
+    (vote): ProjectVote => ({
+      id: vote.id,
+      userId: vote.userId,
+      proposalId: vote.proposalId,
+      vote: vote.vote,
+      votedAt: new Date(vote.votedAt),
+      comment: vote.comment,
+      user: vote.user,
+    })
+  ),
   implementation: null, // Default value; update as needed
   postedBy: proposal.postedBy,
 });
@@ -132,10 +134,11 @@ export default function ProjectTable() {
   const filteredProposals = useMemo(() => {
     if (!searchTerm) return proposals;
     const term = searchTerm.toLowerCase();
-    return proposals.filter((proposal) =>
-      proposal.title.toLowerCase().includes(term) ||
-      proposal.description.toLowerCase().includes(term) ||
-      proposal.committee.toLowerCase().includes(term)
+    return proposals.filter(
+      (proposal) =>
+        proposal.title.toLowerCase().includes(term) ||
+        proposal.description.toLowerCase().includes(term) ||
+        proposal.committee.toLowerCase().includes(term)
     );
   }, [proposals, searchTerm]);
 
@@ -187,7 +190,7 @@ export default function ProjectTable() {
                 <TableRow>
                   <TableHead>Project</TableHead>
                   <TableHead>Committee</TableHead>
-                  <TableHead>Due Date</TableHead>
+                  <TableHead>Target Completion</TableHead>
                   <TableHead>Priority</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Remarks</TableHead>
@@ -205,11 +208,14 @@ export default function ProjectTable() {
                       <TableCell>{proposal.title}</TableCell>
                       <TableCell>{proposal.committee}</TableCell>
                       <TableCell>
-                        {new Date(proposal.proposedDate).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
+                        {new Date(proposal.proposedDate).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          }
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge className={priority.badge}>
@@ -270,20 +276,24 @@ export default function ProjectTable() {
                   />
                 </PaginationItem>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      isActive={currentPage === page}
-                      onClick={() => setCurrentPage(page)}
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        isActive={currentPage === page}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                )}
 
                 <PaginationItem>
                   <PaginationNext
-                    onClick={currentPage === totalPages ? undefined : goToNextPage}
+                    onClick={
+                      currentPage === totalPages ? undefined : goToNextPage
+                    }
                     className={
                       currentPage === totalPages
                         ? "pointer-events-none opacity-50"
@@ -305,7 +315,7 @@ export default function ProjectTable() {
           selectedProject={selectedProject}
           isAdmin={isAdmin}
           hasVoted={() => false}
-          openVoteDialog={() => { }}
+          openVoteDialog={() => {}}
         />
       )}
     </>

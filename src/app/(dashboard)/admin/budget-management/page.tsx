@@ -109,7 +109,7 @@ function BudgetCards({ budgets }: { budgets: ApprovedProposal[] }) {
                 </span>
               </p>
               <p className="text-sm text-muted-foreground">
-                Total Appropriation:{" "}
+                Total Budget:{" "}
                 <span className="font-semibold">
                   ₱{budget.totalApprovedBudget.toLocaleString()}
                 </span>

@@ -94,11 +94,11 @@ const ProjectDetailsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Project Details</DialogTitle>
           <DialogDescription>
-            Detailed information for "{selectedProject.name}"
+            Detailed informations for "{selectedProject.name}"
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 overflow-y-auto scroll-none flex-grow pr-2">
@@ -131,8 +131,9 @@ const ProjectDetailsDialog = ({
                       </Badge>
                     </span>
                   </div>
+
                   <div>
-                    <span className="text-gray-500">Budget: </span>
+                    <span className="text-gray-500">Total Budget: </span>
                     <span className="font-medium">
                       ₱{selectedProject.budget.toLocaleString()}
                     </span>
@@ -144,17 +145,7 @@ const ProjectDetailsDialog = ({
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">Due Date: </span>
-                    <span className="font-medium">
-                      {selectedProject.dueDate.toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Proposed Date: </span>
+                    <span className="text-gray-500">Start Date: </span>
                     <span className="font-medium">
                       {selectedProject.dateProposed.toLocaleDateString(
                         "en-US",
@@ -164,6 +155,16 @@ const ProjectDetailsDialog = ({
                           year: "numeric",
                         }
                       )}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Target Date: </span>
+                    <span className="font-medium">
+                      {selectedProject.dueDate.toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
                     </span>
                   </div>
                 </div>
@@ -242,7 +243,8 @@ const ProjectDetailsDialog = ({
                             </span>
                           ) : (
                             <span className="inline-flex items-center bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm">
-                              <ThumbsDown className="h-4 w-4 mr-1" /> Rejected
+                              <ThumbsDown className="h-4 w-4 mr-1" />{" "}
+                              Disapproved
                             </span>
                           )}
                         </div>

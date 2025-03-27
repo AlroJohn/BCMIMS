@@ -135,7 +135,7 @@ export default function CaptainProjectProposals() {
 
       // Show success message
       setActionComplete(true);
-      toast.success("Project Rejected");
+      toast.success("Project Disapproved");
 
       setTimeout(() => {
         setShowRejectionDialog(false);
@@ -254,9 +254,9 @@ export default function CaptainProjectProposals() {
           {actionComplete ? (
             <Alert className="bg-red-50 border-red-200">
               <XCircle className="h-4 w-4 text-red-600" />
-              <AlertTitle>Project Rejected</AlertTitle>
+              <AlertTitle>Project Disapproved</AlertTitle>
               <AlertDescription>
-                The project has been rejected successfully and a notification
+                The project has been Disapproved successfully and a notification
                 has been sent.
               </AlertDescription>
             </Alert>
@@ -273,7 +273,7 @@ export default function CaptainProjectProposals() {
                   htmlFor="rejection-reason"
                   className="text-sm font-medium"
                 >
-                  Rejection Reason <span className="text-red-600">*</span>
+                  Disapproved Reason <span className="text-red-600">*</span>
                 </label>
                 <Textarea
                   id="rejection-reason"
@@ -285,7 +285,7 @@ export default function CaptainProjectProposals() {
                 />
                 <p className="text-xs text-gray-500">
                   A clear explanation helps the committee understand why their
-                  proposal was rejected.
+                  proposal was disapproved.
                 </p>
               </div>
 
@@ -293,8 +293,8 @@ export default function CaptainProjectProposals() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Warning</AlertTitle>
                 <AlertDescription>
-                  This action will mark the project as rejected. The committee
-                  will be notified of your decision via SMS.
+                  This action will mark the project as disapproved. The
+                  committee will be notified of your decision via SMS.
                 </AlertDescription>
               </Alert>
             </div>

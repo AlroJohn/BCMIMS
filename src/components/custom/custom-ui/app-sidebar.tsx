@@ -55,7 +55,7 @@ const data = {
       isActive: true,
     },
     {
-      title: "Projects",
+      title: "Approved Projects",
       url: "/admin/projects",
       icon: FileText,
       isActive: true,
