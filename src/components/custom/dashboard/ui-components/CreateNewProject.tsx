@@ -33,6 +33,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { SmsService } from "@/services/twilioService";
+// Import the SMS service
 
 // Define types
 type ProjectProposalType = {
@@ -40,6 +41,7 @@ type ProjectProposalType = {
   title: string;
   description: string;
   proposedDate: string;
+  startDate?: string;
   fileUrl: string;
   postedById: string;
   budget?: number;
@@ -68,9 +70,7 @@ export default function CreateNewProjectModal({
   const [description, setDescription] = useState("");
   const [budget, setBudget] = useState("");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [completionDate, setCompletionDate] = useState<Date | undefined>(
-    undefined
-  );
+  const [proposedDate, setProposedDate] = useState<Date | undefined>(undefined);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [existingFileUrl, setExistingFileUrl] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,6 +85,9 @@ export default function CreateNewProjectModal({
       setDescription(project.description || "");
       setBudget(project.budget ? project.budget.toString() : "");
       setStartDate(
+        project.startDate ? new Date(project.startDate) : undefined
+      );
+      setProposedDate(
         project.proposedDate ? new Date(project.proposedDate) : undefined
       );
       setExistingFileUrl(project.fileUrl || "");
@@ -94,7 +97,7 @@ export default function CreateNewProjectModal({
       setDescription("");
       setBudget("");
       setStartDate(undefined);
-      setCompletionDate(undefined);
+      setProposedDate(undefined);
       setFileToUpload(null);
       setExistingFileUrl("");
     }
@@ -102,8 +105,8 @@ export default function CreateNewProjectModal({
 
   // Validate completion date when start date changes
   useEffect(() => {
-    if (startDate && completionDate && completionDate < startDate) {
-      setCompletionDate(undefined); // Reset completion date if it's before start date
+    if (startDate && proposedDate && proposedDate < startDate) {
+      setProposedDate(undefined); // Reset completion date if it's before start date
       toast.warning("Completion date must be after the start date");
     }
   }, [startDate]);
@@ -146,9 +149,9 @@ export default function CreateNewProjectModal({
       if (startDate) {
         formData.append("startDate", startDate.toISOString());
       }
-
-      if (completionDate) {
-        formData.append("completionDate", completionDate.toISOString());
+      
+      if (proposedDate) {
+        formData.append("proposedDate", proposedDate.toISOString());
       }
 
       // Add the current user's ID
@@ -211,11 +214,11 @@ export default function CreateNewProjectModal({
       }
 
       // Only send SMS for new projects
-      if (!isEditMode && startDate) {
+      if (!isEditMode && proposedDate) {
         await sendSmsNotification({
           title,
           budget,
-          proposedDate: startDate.toISOString(),
+          proposedDate: proposedDate.toISOString(),
         });
       }
 
@@ -326,7 +329,7 @@ export default function CreateNewProjectModal({
                 </div>
               </div>
             </div>
-
+            
             {/* Start Date */}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="startDate" className="text-right">
@@ -437,10 +440,10 @@ export default function CreateNewProjectModal({
                 </Popover>
               </div>
             </div>
-
-            {/* Completion Date */}
+            
+            {/* Date Completion (proposedDate) */}
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="completionDate" className="text-right">
+              <Label htmlFor="proposedDate" className="text-right">
                 Date Completion*
               </Label>
               <div className="col-span-3">
@@ -451,17 +454,15 @@ export default function CreateNewProjectModal({
                       variant={"outline"}
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !completionDate && "text-muted-foreground"
+                        !proposedDate && "text-muted-foreground"
                       )}
                       disabled={isSubmitting || !startDate}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {completionDate ? (
-                        format(completionDate, "PPP")
+                      {proposedDate ? (
+                        format(proposedDate, "PPP")
                       ) : (
-                        <span>
-                          {!startDate ? "Set start date first" : "Pick a date"}
-                        </span>
+                        <span>{!startDate ? "Set start date first" : "Pick a date"}</span>
                       )}
                     </Button>
                   </PopoverTrigger>
@@ -470,17 +471,17 @@ export default function CreateNewProjectModal({
                       <div className="flex items-center gap-2">
                         <Select
                           onValueChange={(year) => {
-                            const currentDate = completionDate || new Date();
+                            const currentDate = proposedDate || new Date();
                             const newDate = new Date(currentDate);
                             newDate.setFullYear(Number.parseInt(year));
-                            setCompletionDate(newDate);
+                            setProposedDate(newDate);
                           }}
                           value={
-                            completionDate
-                              ? completionDate.getFullYear().toString()
-                              : startDate
-                              ? startDate.getFullYear().toString()
-                              : new Date().getFullYear().toString()
+                            proposedDate
+                              ? proposedDate.getFullYear().toString()
+                              : startDate 
+                                ? startDate.getFullYear().toString()
+                                : new Date().getFullYear().toString()
                           }
                           disabled={isSubmitting}
                         >
@@ -489,10 +490,7 @@ export default function CreateNewProjectModal({
                           </SelectTrigger>
                           <SelectContent>
                             {Array.from({ length: 10 }, (_, i) => {
-                              const year =
-                                (startDate
-                                  ? startDate.getFullYear()
-                                  : new Date().getFullYear()) + i;
+                              const year = (startDate ? startDate.getFullYear() : new Date().getFullYear()) + i;
                               return (
                                 <SelectItem key={year} value={year.toString()}>
                                   {year}
@@ -503,17 +501,17 @@ export default function CreateNewProjectModal({
                         </Select>
                         <Select
                           onValueChange={(month) => {
-                            const currentDate = completionDate || new Date();
+                            const currentDate = proposedDate || new Date();
                             const newDate = new Date(currentDate);
                             newDate.setMonth(Number.parseInt(month));
-                            setCompletionDate(newDate);
+                            setProposedDate(newDate);
                           }}
                           value={
-                            completionDate
-                              ? completionDate.getMonth().toString()
+                            proposedDate
+                              ? proposedDate.getMonth().toString()
                               : startDate
-                              ? startDate.getMonth().toString()
-                              : new Date().getMonth().toString()
+                                ? startDate.getMonth().toString()
+                                : new Date().getMonth().toString()
                           }
                           disabled={isSubmitting}
                         >
@@ -545,8 +543,8 @@ export default function CreateNewProjectModal({
                     </div>
                     <Calendar
                       mode="single"
-                      selected={completionDate}
-                      onSelect={setCompletionDate}
+                      selected={proposedDate}
+                      onSelect={setProposedDate}
                       initialFocus
                       defaultMonth={startDate || new Date()}
                       className="rounded-md border-0"
@@ -613,7 +611,7 @@ export default function CreateNewProjectModal({
               disabled={
                 isSubmitting ||
                 !startDate ||
-                !completionDate ||
+                !proposedDate ||
                 (!fileToUpload && !isEditing) ||
                 !title ||
                 !description ||
@@ -636,4 +634,4 @@ export default function CreateNewProjectModal({
       </DialogContent>
     </Dialog>
   );
-}
+};

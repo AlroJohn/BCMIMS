@@ -140,7 +140,7 @@ export default function CommitteeProjectProposalsTemplate({
 
         return {
           id: p.id || "unknown-id",
-          createdAt: p.createdAt,
+          startDate: p.startDate ? new Date(p.startDate) : null,
           updatedAt: p.updatedAt,
           name: p.title || "Untitled Project",
           description: p.description || "",
@@ -472,13 +472,10 @@ export default function CommitteeProjectProposalsTemplate({
       case "committee":
         return project.committee;
       case "StartDate":
-        const startDate = project.createdAt
-          ? new Date(project.createdAt)
-          : null;
         return (
           <div>
-            {startDate && !isNaN(startDate.getTime())
-              ? startDate.toLocaleDateString("en-US", {
+            {project.startDate
+              ? project.startDate.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
@@ -786,13 +783,17 @@ export default function CommitteeProjectProposalsTemplate({
             ? {
                 ...selectedProject,
                 title: selectedProject.name,
-                proposedDate: selectedProject.dateProposed.toISOString(),
+                proposedDate: selectedProject.dueDate.toISOString(),
+                startDate: selectedProject.startDate
+                  ? selectedProject.startDate.toISOString()
+                  : undefined,
                 fileUrl: selectedProject.documentUrl,
                 postedById: selectedProject.postedBy.id,
               }
             : null
         }
         isEditing={selectedProject !== null}
+        onSubmit={fetchProjects} // Refresh the list after submission
       />
     </div>
   );

@@ -43,6 +43,7 @@ export type Project = {
   documentTitle: string;
   documentUrl: string;
   dueDate: Date;
+  startDate?: Date;
   createdAt?: Date;
   updatedAt?: Date;
   dateProposed: Date;

@@ -65,7 +65,7 @@ export async function GET() {
           createdAt: approval.createdAt?.toISOString(),
         })),
         proposedDate: proposal.proposedDate.toISOString(),
-        createdAt: proposal.createdAt?.toISOString(),
+        startDate: proposal.startDate?.toISOString(),
         updatedAt: proposal.updatedAt?.toISOString(),
         voteCount: proposal.votes.length,
       };
