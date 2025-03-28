@@ -166,6 +166,12 @@ export function PasswordUpdateModal({
     e.preventDefault();
     setError(null);
 
+    // Check if new password is same as current password
+    if (newPassword === currentPassword) {
+      setError("New password cannot be the same as your current password");
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setError("Passwords don't match");
       return;
