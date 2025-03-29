@@ -57,7 +57,7 @@ export const SmsService = {
         ? new Date(data.proposedDate).toLocaleDateString()
         : data.proposedDate.toLocaleDateString();
 
-      const message = `New Project Proposal: "${data.title}" has been submitted with a budget of ₱${data.budget}. Proposed date: ${formattedDate}. Check it at https://barangay56taysan.vercel.app/auth`;
+      const message = `New Project Proposal: "${data.title}" has been submitted with a budget of ₱${data.budget}. Proposed date: ${formattedDate}.`;
 
       // Send to all admins with phone numbers
       const results = await Promise.all(

@@ -171,7 +171,7 @@ export const NotificationService = {
             const statusText = status.toLowerCase();
             const commentText = comment ? `\nComment: ${comment}` : '';
 
-            const message = `Your project proposal "${project.title}" has been ${statusText} by the Admin.${commentText}\nCheck details at: https://barangay56taysan.vercel.app/auth`;
+            const message = `Your project proposal "${project.title}" has been ${statusText} by the Admin.${commentText}\nPlease log in to the app for more details.`;
 
             // Send the notification
             return await this.sendSMS(project.postedBy.phone, message);
